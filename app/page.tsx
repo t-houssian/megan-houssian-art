@@ -1,17 +1,18 @@
 // app/page.tsx
 
-import Hero from '@/app/components/Hero';
-import Gallery from '@/app/components/Gallery';
+import Hero from './components/Hero';
+import AboutSection from './components/AboutSection';
+import Gallery from './components/Gallery';
+import CallToAction from './components/CallToAction';
 
 export default function Home() {
   return (
-    <main>
-      {/* Hero Section */}
+    <>
       <Hero />
-
-      {/* Gallery Section */}
-      {/* Because Gallery is an async Server Component, we can do this: */}
+      <AboutSection />
+      {/* Gallery (Pulled from Sanity) */}
       <Gallery />
-    </main>
+      <CallToAction />
+    </>
   );
 }

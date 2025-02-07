@@ -1,7 +1,8 @@
 // app/layout.tsx
 import "./globals.css";
 import { ReactNode } from 'react';
-import type { Metadata } from "next";
+import Footer from './components/Footer';
+import NavBar from './components/NavBar';
 
 export const metadata = {
   title: 'Megan Houssian Art',
@@ -15,16 +16,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-white text-gray-800">
-        {/* 
-          You might add a header or navigation here 
-          if you want it on every page 
-        */}
-        {children}
-        {/* 
-          You might add a footer here 
-          if you want it on every page 
-        */}
+      <body className="relative min-h-screen flex flex-col">
+        {/* Sticky top NavBar */}
+        <NavBar />
+
+        {/* Page Content */}
+        <main className="flex-grow">
+          {children}
+        </main>
+
+        {/* Footer */}
+        <Footer />
       </body>
     </html>
   );
