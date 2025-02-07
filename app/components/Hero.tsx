@@ -7,7 +7,7 @@ export default function Hero() {
         <h1 className="text-5xl sm:text-7xl font-extrabold text-gray-800 mb-6 drop-shadow-lg">
           Discover the Art of 
           <br className="hidden sm:block" />
-          <span className="text-gray-700">Megan Houssian</span>
+          <span className="text-gray-700"> Megan Houssian</span>
         </h1>
         <p className="text-lg sm:text-xl text-gray-800 mb-8 max-w-xl mx-auto">
           A journey through contemporary expression, capturing the essence 
