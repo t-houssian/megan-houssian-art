@@ -1,5 +1,4 @@
 // components/NavBar.tsx
-
 "use client";
 
 import Link from 'next/link';
@@ -15,40 +14,35 @@ export default function NavBar() {
           </Link>
         </div>
         <ul className="flex space-x-6 text-gray-700 font-medium">
-          {/* About on the homepage */}
           <li>
-            <Link 
-              href="/#about" 
-              className="hover:text-[#8a6d3b] transition-colors duration-200"
-            >
+            <Link href="/#about" className="hover:text-[#8a6d3b] transition-colors duration-200">
               About
             </Link>
           </li>
-          {/* Gallery on the homepage */}
           <li>
-            <Link 
-              href="/#gallery" 
-              className="hover:text-[#8a6d3b] transition-colors duration-200"
-            >
+            <Link href="/#gallery" className="hover:text-[#8a6d3b] transition-colors duration-200">
               Gallery
             </Link>
           </li>
-          {/* Commissions page (new route) */}
           <li>
-            <Link 
-              href="/commissions" 
-              className="hover:text-[#8a6d3b] transition-colors duration-200"
-            >
+            <Link href="/commissions" className="hover:text-[#8a6d3b] transition-colors duration-200">
               Commissions
             </Link>
           </li>
-          {/* Contact page (new route) */}
           <li>
-            <Link 
-              href="/contact" 
-              className="hover:text-[#8a6d3b] transition-colors duration-200"
-            >
+            <Link href="/contact" className="hover:text-[#8a6d3b] transition-colors duration-200">
               Contact
+            </Link>
+          </li>
+          {/* NEW LINKS */}
+          <li>
+            <Link href="/originals" className="hover:text-[#8a6d3b] transition-colors duration-200">
+              Originals
+            </Link>
+          </li>
+          <li>
+            <Link href="/prints" className="hover:text-[#8a6d3b] transition-colors duration-200">
+              Print Shop
             </Link>
           </li>
         </ul>
