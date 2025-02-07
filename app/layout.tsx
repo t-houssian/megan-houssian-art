@@ -1,8 +1,8 @@
 // app/layout.tsx
 import "./globals.css";
-import { ReactNode } from 'react';
-import Footer from './components/Footer';
 import NavBar from './components/NavBar';
+import Footer from './components/Footer';
+import { ReactNode } from 'react';
 
 export const metadata = {
   title: 'Megan Houssian Art',
@@ -16,16 +16,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="relative min-h-screen flex flex-col">
-        {/* Sticky top NavBar */}
+      <body className="bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 min-h-screen flex flex-col">
         <NavBar />
-
-        {/* Page Content */}
         <main className="flex-grow">
           {children}
         </main>
-
-        {/* Footer */}
         <Footer />
       </body>
     </html>

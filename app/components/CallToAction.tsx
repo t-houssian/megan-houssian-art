@@ -1,5 +1,5 @@
 // components/CallToAction.tsx
-"use client";  // <--- add this
+"use client";
 
 export default function CallToAction() {
   return (
@@ -21,12 +21,14 @@ export default function CallToAction() {
           <input
             type="email"
             placeholder="Enter your email"
-            className="w-full sm:w-1/2 px-4 py-3 rounded-md text-gray-800 focus:outline-none"
+            className="w-full sm:w-1/2 px-4 py-3 rounded-md text-gray-800 
+                       focus:outline-none focus:ring-2 focus:ring-white/60"
             required
           />
           <button
             type="submit"
-            className="inline-block bg-white text-gray-900 px-6 py-3 rounded-md font-semibold hover:bg-gray-100 transition-colors"
+            className="inline-block bg-white text-gray-900 px-6 py-3 rounded-md font-semibold 
+                       hover:bg-gray-200 transition-colors"
           >
             Subscribe
           </button>

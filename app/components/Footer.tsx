@@ -4,15 +4,15 @@ export default function Footer() {
     return (
       <footer className="bg-white border-t border-gray-200 py-6">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-600 text-sm mb-3 md:mb-0">
             &copy; {new Date().getFullYear()} Megan Houssian. All rights reserved.
           </p>
-          <div className="flex space-x-4 mt-3 md:mt-0">
+          <div className="flex space-x-4">
             <a
               href="https://instagram.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-gray-700 transition-colors"
             >
               Instagram
             </a>
@@ -20,13 +20,13 @@ export default function Footer() {
               href="https://facebook.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-gray-700 transition-colors"
             >
               Facebook
             </a>
             <a
               href="mailto:someone@example.com"
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-gray-700 transition-colors"
             >
               Email
             </a>

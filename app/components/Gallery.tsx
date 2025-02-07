@@ -34,19 +34,19 @@ export default async function Gallery() {
   const artPieces = await fetchArtPieces();
 
   return (
-    <section
-      id="gallery"
-      className="max-w-7xl mx-auto py-16 px-4"
-    >
+    <section id="gallery" className="max-w-7xl mx-auto py-16 px-4">
       <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-8 text-center">
         Gallery
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
         {artPieces && artPieces.length > 0 ? (
           artPieces.map((piece) => (
-            <div key={piece._id} className="group">
+            <div 
+              key={piece._id} 
+              className="group overflow-hidden rounded-md shadow-lg hover:shadow-2xl transition-shadow duration-200"
+            >
               {piece.mainImage?.asset && (
-                <div className="relative w-full h-72 overflow-hidden rounded-md shadow-lg">
+                <div className="relative w-full h-72 overflow-hidden">
                   <Image
                     src={urlFor(piece.mainImage).width(800).height(800).url()}
                     alt={piece.title}
@@ -56,7 +56,7 @@ export default async function Gallery() {
                   />
                 </div>
               )}
-              <h3 className="text-xl font-semibold mt-4 text-gray-800">
+              <h3 className="text-xl font-semibold mt-4 text-gray-800 px-4 pb-4">
                 {piece.title}
               </h3>
             </div>
