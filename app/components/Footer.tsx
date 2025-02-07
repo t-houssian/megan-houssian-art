@@ -1,5 +1,4 @@
 // components/Footer.tsx
-
 export default function Footer() {
     return (
       <footer className="bg-white border-t border-gray-200 py-6">
@@ -12,7 +11,7 @@ export default function Footer() {
               href="https://instagram.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-400 hover:text-gray-700 transition-colors"
+              className="text-gray-600 hover:text-[#8a6d3b] transition-colors"
             >
               Instagram
             </a>
@@ -20,13 +19,13 @@ export default function Footer() {
               href="https://facebook.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-400 hover:text-gray-700 transition-colors"
+              className="text-gray-600 hover:text-[#8a6d3b] transition-colors"
             >
               Facebook
             </a>
             <a
               href="mailto:someone@example.com"
-              className="text-gray-400 hover:text-gray-700 transition-colors"
+              className="text-gray-600 hover:text-[#8a6d3b] transition-colors"
             >
               Email
             </a>

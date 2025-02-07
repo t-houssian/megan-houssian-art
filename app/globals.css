@@ -3,9 +3,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* You can leave these resets in place as needed */
 html, body {
   margin: 0;
   padding: 0;
   scroll-behavior: smooth;
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  background-color: #ffffff; /* Crisp white background */
 }

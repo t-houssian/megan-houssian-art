@@ -1,38 +1,39 @@
 // components/NavBar.tsx
-"use client"; // If you want to do dynamic effects like onScroll or toggling classes
+"use client";
 
 import Link from 'next/link';
+import { playfair } from '../fonts';
 
 export default function NavBar() {
   return (
-    <header className="sticky top-0 z-50 bg-white/60 backdrop-blur-md border-b border-gray-200">
-      <nav className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between transition-colors">
-        <div className="text-xl md:text-2xl font-bold tracking-tight">
+    <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+      <nav className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className={`${playfair.className} text-2xl font-black text-gray-900 tracking-tight`}>
           <Link href="/">
             Megan Houssian Art
           </Link>
         </div>
         <ul className="flex space-x-6 text-gray-700 font-medium">
           <li>
-            <a
-              href="#about"
-              className="hover:text-gray-900 transition-colors duration-200"
+            <a 
+              href="#about" 
+              className="hover:text-[#8a6d3b] transition-colors duration-200"
             >
               About
             </a>
           </li>
           <li>
-            <a
-              href="#gallery"
-              className="hover:text-gray-900 transition-colors duration-200"
+            <a 
+              href="#gallery" 
+              className="hover:text-[#8a6d3b] transition-colors duration-200"
             >
               Gallery
             </a>
           </li>
           <li>
-            <a
-              href="#contact"
-              className="hover:text-gray-900 transition-colors duration-200"
+            <a 
+              href="#contact" 
+              className="hover:text-[#8a6d3b] transition-colors duration-200"
             >
               Contact
             </a>

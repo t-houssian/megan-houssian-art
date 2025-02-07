@@ -1,8 +1,8 @@
 // components/Gallery.tsx
-
 import { sanityClient } from '../../lib/sanity';
 import ImageUrlBuilder from '@sanity/image-url';
 import Image from 'next/image';
+import { playfair } from '../fonts';
 
 type ArtPiece = {
   _id: string;
@@ -34,8 +34,8 @@ export default async function Gallery() {
   const artPieces = await fetchArtPieces();
 
   return (
-    <section id="gallery" className="max-w-7xl mx-auto py-16 px-4">
-      <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-8 text-center">
+    <section id="gallery" className="max-w-7xl mx-auto py-16 px-4 bg-white">
+      <h2 className={`${playfair.className} text-3xl md:text-4xl font-bold text-gray-900 mb-8 text-center`}>
         Gallery
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
@@ -43,7 +43,7 @@ export default async function Gallery() {
           artPieces.map((piece) => (
             <div 
               key={piece._id} 
-              className="group overflow-hidden rounded-md shadow-lg hover:shadow-2xl transition-shadow duration-200"
+              className="group overflow-hidden rounded-sm shadow hover:shadow-lg transition-shadow duration-200"
             >
               {piece.mainImage?.asset && (
                 <div className="relative w-full h-72 overflow-hidden">
@@ -52,11 +52,11 @@ export default async function Gallery() {
                     alt={piece.title}
                     fill
                     style={{ objectFit: 'cover' }}
-                    className="group-hover:scale-110 transition-transform duration-300"
+                    className="group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
               )}
-              <h3 className="text-xl font-semibold mt-4 text-gray-800 px-4 pb-4">
+              <h3 className="text-lg font-semibold mt-4 text-gray-900 px-4 pb-4">
                 {piece.title}
               </h3>
             </div>
