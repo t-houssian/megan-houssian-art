@@ -1,4 +1,5 @@
 // components/NavBar.tsx
+
 "use client";
 
 import Link from 'next/link';
@@ -14,29 +15,41 @@ export default function NavBar() {
           </Link>
         </div>
         <ul className="flex space-x-6 text-gray-700 font-medium">
+          {/* About on the homepage */}
           <li>
-            <a 
-              href="#about" 
+            <Link 
+              href="/#about" 
               className="hover:text-[#8a6d3b] transition-colors duration-200"
             >
               About
-            </a>
+            </Link>
           </li>
+          {/* Gallery on the homepage */}
           <li>
-            <a 
-              href="#gallery" 
+            <Link 
+              href="/#gallery" 
               className="hover:text-[#8a6d3b] transition-colors duration-200"
             >
               Gallery
-            </a>
+            </Link>
           </li>
+          {/* Commissions page (new route) */}
           <li>
-            <a 
-              href="#contact" 
+            <Link 
+              href="/commissions" 
+              className="hover:text-[#8a6d3b] transition-colors duration-200"
+            >
+              Commissions
+            </Link>
+          </li>
+          {/* Contact page (new route) */}
+          <li>
+            <Link 
+              href="/contact" 
               className="hover:text-[#8a6d3b] transition-colors duration-200"
             >
               Contact
-            </a>
+            </Link>
           </li>
         </ul>
       </nav>
