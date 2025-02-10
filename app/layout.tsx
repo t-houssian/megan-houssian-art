@@ -3,7 +3,7 @@ import './globals.css';
 import NavBar from './components/NavBar';
 import Footer from './components/Footer';
 import { ReactNode } from 'react';
-import { playfair, lora } from './fonts';
+import { lora } from './fonts'; // playfair is also available
 
 export const metadata = {
   title: 'Megan Houssian Art',

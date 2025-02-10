@@ -17,7 +17,7 @@ export default function AboutSection() {
             that shape our experiences, her artwork exudes depth and authenticity.
           </p>
           <p className="text-gray-700 leading-relaxed">
-            Whether it's a textured abstract piece or a serene landscape, 
+            Whether it&apos;s a textured abstract piece or a serene landscape, 
             Megan’s art captures fleeting moments of inspiration, 
             transforming them into timeless visual stories.
           </p>

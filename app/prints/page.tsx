@@ -6,20 +6,20 @@ import Image from 'next/image';
 
 const builder = ImageUrlBuilder(sanityClient);
 
-function urlFor(source: any) {
+function urlFor(source: { asset: { _ref: string } }) {
   return builder.image(source);
 }
 
-// Adjust type to match your "print" schema
+// Adjust type to your "print" schema
 type PrintProduct = {
   _id: string;
   title: string;
   slug: { current: string };
-  mainImage: {
+  mainImage?: {
     asset: { _ref: string };
   };
-  price: number;
-  soldOut: boolean; // If you track sold-out prints (or inventory)
+  price?: number;
+  soldOut?: boolean;
 };
 
 async function fetchPrints(): Promise<PrintProduct[]> {
@@ -44,7 +44,7 @@ export default async function PrintsPage() {
       <h1 className="text-3xl md:text-4xl font-bold mb-8">Print Shop</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
         {prints.map((item) => (
-          <div 
+          <div
             key={item._id}
             className="border border-gray-200 rounded-md overflow-hidden shadow-sm hover:shadow-md transition-shadow"
           >
@@ -68,9 +68,7 @@ export default async function PrintsPage() {
               <p className="text-gray-700 mb-2">${item.price?.toLocaleString() || 0}</p>
 
               {item.soldOut ? (
-                <span className="inline-block text-red-500 font-bold">
-                  Sold Out
-                </span>
+                <span className="inline-block text-red-500 font-bold">Sold Out</span>
               ) : (
                 <button
                   onClick={() => alert(`Purchasing ${item.title}...`)}

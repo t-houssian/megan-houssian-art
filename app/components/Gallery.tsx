@@ -17,7 +17,7 @@ type ArtPiece = {
 
 const builder = ImageUrlBuilder(sanityClient);
 
-function urlFor(source: any) {
+function urlFor(source: ArtPiece["mainImage"]) {
   return builder.image(source);
 }
 

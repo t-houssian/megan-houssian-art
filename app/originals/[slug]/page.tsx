@@ -3,23 +3,25 @@ import { sanityClient } from '../../../lib/sanity';
 import ImageUrlBuilder from '@sanity/image-url';
 import Image from 'next/image';
 
+// Helper
 const builder = ImageUrlBuilder(sanityClient);
-
-function urlFor(source: any) {
+function urlFor(source: { asset: { _ref: string } }) {
   return builder.image(source);
 }
 
+// Adjust type to your schema
 type OriginalArtwork = {
   _id: string;
   title: string;
-  mainImage: {
+  mainImage?: {
     asset: { _ref: string };
   };
-  price: number;
-  sold: boolean;
+  price?: number;
+  sold?: boolean;
   description?: string;
 };
 
+// Fetch an original by the slug
 async function fetchOriginalBySlug(slug: string): Promise<OriginalArtwork | null> {
   const query = `
     *[_type == "original" && slug.current == $slug][0]{
@@ -31,11 +33,15 @@ async function fetchOriginalBySlug(slug: string): Promise<OriginalArtwork | null
       description
     }
   `;
-  const data = await sanityClient.fetch(query, { slug });
-  return data;
+  return sanityClient.fetch(query, { slug });
 }
 
-export default async function OriginalDetailPage({ params }: { params: { slug: string } }) {
+// Note the function signature with `params: { slug: string }`
+export default async function OriginalDetailPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
   const artwork = await fetchOriginalBySlug(params.slug);
 
   if (!artwork) {
@@ -49,7 +55,7 @@ export default async function OriginalDetailPage({ params }: { params: { slug: s
   return (
     <section className="max-w-5xl mx-auto py-16 px-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* IMAGE */}
+        {/* Artwork Image */}
         {artwork.mainImage?.asset && (
           <div className="relative w-full h-96 bg-gray-100">
             <Image
@@ -61,7 +67,7 @@ export default async function OriginalDetailPage({ params }: { params: { slug: s
           </div>
         )}
 
-        {/* DETAILS */}
+        {/* Artwork Info */}
         <div>
           <h1 className="text-3xl font-bold mb-4">{artwork.title}</h1>
           <p className="text-gray-700 mb-2">

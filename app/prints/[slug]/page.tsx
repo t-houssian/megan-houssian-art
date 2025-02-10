@@ -4,19 +4,18 @@ import ImageUrlBuilder from '@sanity/image-url';
 import Image from 'next/image';
 
 const builder = ImageUrlBuilder(sanityClient);
-
-function urlFor(source: any) {
+function urlFor(source: { asset: { _ref: string } }) {
   return builder.image(source);
 }
 
 type PrintProduct = {
   _id: string;
   title: string;
-  mainImage: {
+  mainImage?: {
     asset: { _ref: string };
   };
-  price: number;
-  soldOut: boolean;
+  price?: number;
+  soldOut?: boolean;
   description?: string;
 };
 
@@ -34,7 +33,12 @@ async function fetchPrintBySlug(slug: string): Promise<PrintProduct | null> {
   return sanityClient.fetch(query, { slug });
 }
 
-export default async function PrintDetailPage({ params }: { params: { slug: string } }) {
+// Note the typed definition for params
+export default async function PrintDetailPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
   const printItem = await fetchPrintBySlug(params.slug);
 
   if (!printItem) {
@@ -64,11 +68,8 @@ export default async function PrintDetailPage({ params }: { params: { slug: stri
           <p className="text-gray-700 mb-2">
             Price: ${printItem.price?.toLocaleString()}
           </p>
-
           {printItem.soldOut ? (
-            <span className="inline-block text-red-500 font-bold">
-              Sold Out
-            </span>
+            <span className="inline-block text-red-500 font-bold">Sold Out</span>
           ) : (
             <button
               onClick={() => alert(`Purchasing ${printItem.title}...`)}

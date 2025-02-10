@@ -6,24 +6,24 @@ import Image from 'next/image';
 
 const builder = ImageUrlBuilder(sanityClient);
 
-function urlFor(source: any) {
+// Helper function to build URLs from Sanity image references
+function urlFor(source: { asset: { _ref: string } }) {
   return builder.image(source);
 }
 
-// Adjust this type according to your Sanity schema
+// Adjust the type to match your schema fields
 type OriginalArtwork = {
   _id: string;
   title: string;
   slug: { current: string };
-  mainImage: {
-    asset: {
-      _ref: string;
-    };
+  mainImage?: {
+    asset: { _ref: string };
   };
-  price: number;
-  sold: boolean;
+  price?: number;
+  sold?: boolean;
 };
 
+// Fetch all original artworks for sale
 async function fetchOriginals(): Promise<OriginalArtwork[]> {
   const query = `
     *[_type == "original" && defined(slug.current)]{
@@ -35,7 +35,7 @@ async function fetchOriginals(): Promise<OriginalArtwork[]> {
       sold
     } | order(_createdAt desc)
   `;
-  return await sanityClient.fetch(query);
+  return sanityClient.fetch(query);
 }
 
 export default async function OriginalsPage() {
@@ -68,11 +68,9 @@ export default async function OriginalsPage() {
                 <h2 className="text-xl font-semibold mb-2">{art.title}</h2>
               </Link>
               <p className="text-gray-700 mb-2">${art.price?.toLocaleString() || 0}</p>
-              
+
               {art.sold ? (
-                <span className="inline-block text-red-500 font-bold">
-                  SOLD
-                </span>
+                <span className="inline-block text-red-500 font-bold">SOLD</span>
               ) : (
                 <button
                   onClick={() => alert(`Placeholder purchase for ${art.title}!`)}

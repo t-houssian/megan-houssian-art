@@ -31,10 +31,10 @@ export default function ContactPage() {
       <p className="text-gray-700 mb-8">
         Fill out the form below or email me at{" "}
         <a 
-          href="mailto:hannahwinters@hannahwintersart.com" 
+          href="mailto:meganhoussian@gmail.com" 
           className="underline text-blue-600 hover:text-blue-800"
         >
-          hannahwinters@hannahwintersart.com
+          meganhoussian@gmail.com
         </a>
       </p>
       
