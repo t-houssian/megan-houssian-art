@@ -261,22 +261,22 @@ export default function FreeAddressValidator({
           className={`${className} ${validationErrors.country ? 'border-red-500' : ''}`}
         >
           <option value="">Select Country *</option>
-          <option value="US">🇺🇸 United States</option>
-          <option value="CA">🇨🇦 Canada</option>
-          <option value="GB">🇬🇧 United Kingdom</option>
-          <option value="AU">🇦🇺 Australia</option>
-          <option value="DE">🇩🇪 Germany</option>
-          <option value="FR">🇫🇷 France</option>
-          <option value="IT">🇮🇹 Italy</option>
-          <option value="ES">🇪🇸 Spain</option>
-          <option value="NL">🇳🇱 Netherlands</option>
-          <option value="JP">🇯🇵 Japan</option>
+          <option value="US">United States</option>
+          <option value="CA">Canada</option>
+          <option value="GB">United Kingdom</option>
+          <option value="AU">Australia</option>
+          <option value="DE">Germany</option>
+          <option value="FR">France</option>
+          <option value="IT">Italy</option>
+          <option value="ES">Spain</option>
+          <option value="NL">Netherlands</option>
+          <option value="JP">Japan</option>
         </select>
       </div>
 
       {/* Helpful Tips */}
       <div className="text-xs text-btn-brown space-y-1">
-        <p>💡 <strong>Tips:</strong></p>
+        <p><strong>Tips:</strong></p>
         <ul className="list-disc list-inside space-y-1">
           <li>Type state name or abbreviation (e.g., &quot;CA&quot; or &quot;California&quot;)</li>
           <li>ZIP codes: 12345 or 12345-6789 format</li>

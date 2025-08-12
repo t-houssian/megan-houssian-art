@@ -203,7 +203,7 @@ const CheckoutContent = () => {
           </h1>
           <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-olive to-transparent mx-auto mb-6"></div>
           <p className={`${lora.className} text-lg text-warm-gray max-w-2xl mx-auto leading-relaxed`}>
-            Acquiring <span className="italic font-medium text-brown">"{product}"</span> - A unique piece from our curated collection
+            Acquiring <span className="italic font-medium text-brown">"{product}"</span> - A unique piece from the curated collection
           </p>
         </div>
 
@@ -213,9 +213,6 @@ const CheckoutContent = () => {
             {/* Delivery Options */}
             <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
               <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown flex items-center`}>
-                <span className="w-8 h-8 bg-olive/10 rounded-full flex items-center justify-center mr-3 text-olive">
-                  🚚
-                </span>
                 Delivery Method
               </h2>
               <div className="space-y-4">
@@ -267,11 +264,11 @@ const CheckoutContent = () => {
                       />
                       <div className="ml-4 flex-1">
                         <h3 className={`${lora.className} font-semibold text-brown mb-2 flex items-center`}>
-                          Private Collection in Marble Falls, TX
+                          Gallery Pickup in Marble Falls, TX
                           <span className="ml-2 px-2 py-1 bg-olive/10 text-olive text-xs rounded-full">FREE</span>
                         </h3>
                         <p className="text-warm-gray text-sm leading-relaxed">
-                          Schedule a personal appointment to collect your artwork. A perfect opportunity to discuss the piece and our artistic process.
+                          Schedule a personal appointment to acquire your artwork. A perfect opportunity to discuss the piece and the artistic process.
                         </p>
                       </div>
                     </div>
@@ -284,9 +281,6 @@ const CheckoutContent = () => {
             {shippingOption === "shipping" ? (
               <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
                 <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown flex items-center`}>
-                  <span className="w-8 h-8 bg-olive/10 rounded-full flex items-center justify-center mr-3 text-olive">
-                    📍
-                  </span>
                   Delivery Address
                 </h2>
                 
@@ -315,29 +309,23 @@ const CheckoutContent = () => {
             ) : (
               <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
                 <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown flex items-center`}>
-                  <span className="w-8 h-8 bg-olive/10 rounded-full flex items-center justify-center mr-3 text-olive">
-                    🏛️
-                  </span>
-                  Collection Details
+                  Gallery Appointment Details
                 </h2>
                 <div className="bg-gradient-to-r from-accent-cream to-paper rounded-xl p-6 border border-tan/30">
                   <div className="space-y-4">
                     <div className="flex items-start space-x-3">
-                      <span className="text-olive">📍</span>
                       <div>
                         <h4 className="font-semibold text-brown">Gallery Location</h4>
                         <p className="text-warm-gray">Marble Falls, Texas</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
-                      <span className="text-olive">📧</span>
                       <div>
                         <h4 className="font-semibold text-brown">Appointment Coordination</h4>
-                        <p className="text-warm-gray">Collection instructions will be sent via email after payment</p>
+                        <p className="text-warm-gray">Gallery Pickup instructions will be sent via email after payment</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
-                      <span className="text-olive">⏰</span>
                       <div>
                         <h4 className="font-semibold text-brown">Flexible Scheduling</h4>
                         <p className="text-warm-gray">Personal appointments available by arrangement</p>
@@ -346,7 +334,7 @@ const CheckoutContent = () => {
                   </div>
                   <div className="mt-6 p-3 bg-olive/10 rounded-lg">
                     <p className="text-sm text-olive font-medium">
-                      💡 Your billing information will be collected securely during checkout
+                      Your billing information will be collected securely during checkout
                     </p>
                   </div>
                 </div>
@@ -356,9 +344,6 @@ const CheckoutContent = () => {
             {/* Payment Method */}
             <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
               <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown flex items-center`}>
-                <span className="w-8 h-8 bg-olive/10 rounded-full flex items-center justify-center mr-3 text-olive">
-                  💳
-                </span>
                 Payment Method
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
@@ -494,8 +479,8 @@ const CheckoutContent = () => {
                   </div>
                 ) : (
                   <div className="flex justify-between items-center py-3 border-b border-tan/30">
-                    <span className={`${lora.className} text-warm-gray`}>Collection</span>
-                    <span className={`${lora.className} font-semibold text-olive`}>Complimentary</span>
+                    <span className={`${lora.className} text-warm-gray`}>Gallery Pickup</span>
+                    <span className={`${lora.className} font-semibold text-olive`}>${(shippingCost / 100).toFixed(2)}</span>
                   </div>
                 )}
               </div>

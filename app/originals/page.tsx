@@ -45,7 +45,7 @@ export default async function OriginalsPage() {
           </h1>
           <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-olive to-transparent mx-auto mb-8"></div>
           <p className={`${lora.className} text-lg text-warm-gray max-w-3xl mx-auto leading-relaxed`}>
-            Each piece in our collection is a unique, one-of-a-kind creation. Discover the perfect artwork to grace your space and become part of your personal story.
+            Each piece in the collection is a unique, one-of-a-kind creation. Discover the perfect artwork to grace your space and become part of your personal story.
           </p>
         </div>
 

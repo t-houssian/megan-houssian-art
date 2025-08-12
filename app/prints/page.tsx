@@ -112,7 +112,7 @@ export default async function PrintsPage() {
         <div className="text-center mt-16">
           <div className="bg-white/60 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 max-w-2xl mx-auto">
             <p className={`${lora.className} text-warm-gray leading-relaxed mb-4`}>
-              Looking for something unique and original? Explore our one-of-a-kind pieces or commission a custom artwork.
+              Looking for something unique and original? Explore one-of-a-kind pieces or commission a custom artwork.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/originals">
