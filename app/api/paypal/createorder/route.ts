@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { amount, shippingAddress, billingAddress, shippingOption } = await request.json();
+    const { amount, shippingAddress, shippingOption } = await request.json();
 
     // PayPal API configuration
     const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;

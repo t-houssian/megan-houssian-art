@@ -43,14 +43,6 @@ const CheckoutContent = () => {
     postalCode: "",
     country: "",
   });
-  const [billingAddress, setBillingAddress] = useState<ShippingAddress>({
-    name: "",
-    addressLine1: "",
-    city: "",
-    state: "",
-    postalCode: "",
-    country: "",
-  });
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<"stripe" | "paypal">("stripe");
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
@@ -203,7 +195,7 @@ const CheckoutContent = () => {
           </h1>
           <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-olive to-transparent mx-auto mb-6"></div>
           <p className={`${lora.className} text-lg text-warm-gray max-w-2xl mx-auto leading-relaxed`}>
-            Acquiring <span className="italic font-medium text-brown">"{product}"</span> - A unique piece from the curated collection
+            Acquiring <span className="italic font-medium text-brown">&ldquo;{product}&rdquo;</span> - A unique piece from the curated collection
           </p>
         </div>
 
@@ -449,7 +441,7 @@ const CheckoutContent = () => {
                           }
                         }}
                         onApprove={onPayPalApprove}
-                        onError={(err) => {
+                        onError={(err: unknown) => {
                           console.error("PayPal Error:", err);
                           setErrorMessage("PayPal payment failed. Please try again or use card payment.");
                         }}

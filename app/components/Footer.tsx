@@ -1,4 +1,5 @@
 // components/Footer.tsx
+import Link from 'next/link';
 import { lora, cormorant } from "../fonts";
 
 export default function Footer() {
@@ -22,12 +23,12 @@ export default function Footer() {
                 Explore
               </h4>
               <div className="space-y-2">
-                <a href="/#gallery" className={`block text-warm-gray hover:text-olive transition-colors duration-200 ${lora.className} text-sm`}>
+                <Link href="/#gallery" className={`block text-warm-gray hover:text-olive transition-colors duration-200 ${lora.className} text-sm`}>
                   Collections
-                </a>
-                <a href="/originals" className={`block text-warm-gray hover:text-olive transition-colors duration-200 ${lora.className} text-sm`}>
+                </Link>
+                <Link href="/originals" className={`block text-warm-gray hover:text-olive transition-colors duration-200 ${lora.className} text-sm`}>
                   Original Artworks
-                </a>
+                </Link>
                 <a href="/commissions" className={`block text-warm-gray hover:text-olive transition-colors duration-200 ${lora.className} text-sm`}>
                   Commissions
                 </a>
@@ -64,7 +65,7 @@ export default function Footer() {
                     </svg>
                     <span>Facebook</span>
                   </a>
-                  <a
+                  <Link
                     href="/contact"
                     className={`text-warm-gray hover:text-olive transition-colors duration-200 ${lora.className} text-sm flex items-center justify-center md:justify-end space-x-2`}
                   >
@@ -73,7 +74,7 @@ export default function Footer() {
                       <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
                     </svg>
                     <span>Get in Touch</span>
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>

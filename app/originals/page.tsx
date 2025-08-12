@@ -108,7 +108,7 @@ export default async function OriginalsPage() {
         <div className="text-center mt-16">
           <div className="bg-white/60 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 max-w-2xl mx-auto">
             <p className={`${lora.className} text-warm-gray leading-relaxed mb-4`}>
-              Can't find exactly what you're looking for? We'd love to create something unique just for you.
+              Can&apos;t find exactly what you&apos;re looking for? We&apos;d love to create something unique just for you.
             </p>
             <Link href="/commissions">
               <button className={`bg-gradient-to-r from-btn-brown to-btn-brown-hover text-paper px-8 py-4 rounded-lg hover:from-btn-brown-hover hover:to-brown transition-all duration-500 font-serif text-lg shadow-vintage hover:shadow-vintage-lg transform hover:-translate-y-1 border border-opacity-20 border-paper relative overflow-hidden group ${lora.className}`}>

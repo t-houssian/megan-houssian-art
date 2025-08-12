@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { amount, shippingAddress, billingAddress, product, shippingOption } = await request.json();
+    const { amount, shippingAddress, product, shippingOption } = await request.json();
 
     // Validate required fields
     if (!amount || amount <= 0) {
