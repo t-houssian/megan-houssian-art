@@ -1,0 +1,46 @@
+/* app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-ivory: #f7f3e9;
+  --bg-paper: #fefbf3;
+  --text-brown: #4a3f35;
+  --btn-brown: #8b4513;
+  --btn-brown-hover: #654321;
+  --link-olive: #6b5b47;
+  --border-tan: #d4c4a8;
+  --accent-cream: #f5ede0;
+  --text-warm-gray: #6d5a4f;
+  --hero-overlay: #d2b48c;
+}
+
+/* Custom font styles for enhanced vintage feel */
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-ivory);
+  scroll-behavior: smooth;
+  line-height: 1.6;
+}
+
+/* Add some vintage styling for forms */
+@layer components {
+  .vintage-input {
+    @apply border border-tan rounded-md px-4 py-3 bg-paper text-brown;
+    @apply focus:outline-none focus:ring-2 focus:ring-btn-brown focus:border-btn-brown;
+    @apply transition-all duration-200;
+  }
+  
+  .vintage-button {
+    @apply bg-btn-brown text-paper px-6 py-3 rounded-md font-semibold;
+    @apply hover:bg-btn-brown-hover transition-colors duration-300;
+    @apply shadow-md hover:shadow-lg;
+  }
+  
+  .vintage-card {
+    @apply bg-paper border border-tan rounded-lg shadow-md;
+    @apply hover:shadow-lg transition-shadow duration-200;
+  }
+}

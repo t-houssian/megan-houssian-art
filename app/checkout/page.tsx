@@ -1,0 +1,529 @@
+"use client";
+
+import React, { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { loadStripe } from "@stripe/stripe-js";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import axios, { AxiosResponse } from "axios";
+import { SiStripe, SiPaypal } from "react-icons/si";
+import { cormorant, lora } from "../fonts";
+import FreeAddressValidator from "../components/FreeAddressValidator";
+
+// Initialize Stripe (make sure your NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is set in .env)
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+  : null;
+
+type ShippingAddress = {
+  name: string;
+  addressLine1: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+};
+
+const CheckoutContent = () => {
+  // Read product details from URL query parameters
+  const searchParams = useSearchParams();
+  const product = searchParams.get("product") || "";
+  const basePriceDollars = searchParams.get("price")
+    ? parseFloat(searchParams.get("price")!)
+    : 20;
+  // Stripe expects amounts in cents.
+  const BASE_PRICE = basePriceDollars * 100;
+
+  // Local state
+  const [shippingOption, setShippingOption] = useState<"shipping" | "pickup">("shipping");
+  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
+    name: "",
+    addressLine1: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    country: "",
+  });
+  const [billingAddress, setBillingAddress] = useState<ShippingAddress>({
+    name: "",
+    addressLine1: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    country: "",
+  });
+  const [shippingCost, setShippingCost] = useState<number>(0);
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "paypal">("stripe");
+  const [isCalculating, setIsCalculating] = useState<boolean>(false);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Calculate shipping by calling your shipping API endpoint (e.g. using EasyPost)
+  const calculateShipping = async (): Promise<void> => {
+    setIsCalculating(true);
+    setErrorMessage(null);
+    try {
+      const response: AxiosResponse<{ shippingCost: number }> = await axios.post(
+        "/api/calculate-shipping",
+        {
+          shippingAddress,
+          // Include package details as needed
+          package: { weight: 2, dimensions: { length: 10, width: 5, height: 4 } },
+        }
+      );
+      setShippingCost(response.data.shippingCost);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setErrorMessage("Failed to calculate shipping: " + error.message);
+        console.error(error.message);
+      } else {
+        setErrorMessage("Failed to calculate shipping.");
+        console.error(error);
+      }
+    } finally {
+      setIsCalculating(false);
+    }
+  };
+
+  // Total price in cents
+  const totalPrice = shippingOption === "pickup" ? BASE_PRICE : BASE_PRICE + shippingCost;
+
+  // Handler for Stripe checkout: call your API route that creates a Stripe Checkout session.
+  const handleStripeCheckout = async (): Promise<void> => {
+    // Check if Stripe is configured
+    if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
+      setErrorMessage("Stripe payment is not configured. Please contact support.");
+      return;
+    }
+
+    // Validate address only for shipping option
+    if (shippingOption === "shipping") {
+      if (!shippingAddress.name || !shippingAddress.addressLine1 || !shippingAddress.city) {
+        setErrorMessage("Please fill in all required shipping fields.");
+        return;
+      }
+    }
+
+    setIsProcessing(true);
+    setErrorMessage(null);
+    try {
+      const response = await axios.post("/api/create-stripe-checkout-session", {
+        amount: totalPrice,
+        product: product,
+        shippingAddress: shippingOption === "pickup" ? null : shippingAddress,
+        billingAddress: null, // Let Stripe collect billing info
+        shippingOption: shippingOption,
+      });
+      const { sessionId } = response.data;
+      const stripe = await stripePromise;
+      if (!stripe) throw new Error("Stripe failed to load. Please check configuration.");
+      const { error } = await stripe.redirectToCheckout({ sessionId });
+      if (error) throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message || "Stripe checkout failed.");
+        console.error(error.message);
+      } else {
+        setErrorMessage("Stripe checkout failed.");
+        console.error(error);
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Handler for PayPal: create an order on your server.
+  const createPayPalOrder = async (): Promise<string> => {
+    try {
+      console.log('Creating PayPal order with:', {
+        amount: (totalPrice / 100).toFixed(2),
+        shippingOption,
+        hasShippingAddress: !!shippingAddress.name,
+      });
+      
+      const response = await axios.post("/api/paypal/createorder", {
+        amount: (totalPrice / 100).toFixed(2), // converting cents to dollars
+        shippingAddress: shippingOption === "pickup" ? null : shippingAddress,
+        billingAddress: null, // Let PayPal collect billing info
+        shippingOption: shippingOption,
+      });
+      
+      console.log('PayPal order response:', response.data);
+      
+      if (!response.data || !response.data.orderId) {
+        throw new Error('No order ID received from server');
+      }
+      
+      return response.data.orderId as string;
+    } catch (error: unknown) {
+      console.error('PayPal order creation error:', error);
+      let errorMessage = "PayPal order creation failed.";
+      
+      if (error instanceof Error) {
+        errorMessage = "PayPal order creation failed: " + error.message;
+      } else if (axios.isAxiosError(error)) {
+        const errorMsg = error.response?.data?.error || error.message;
+        errorMessage = "PayPal order creation failed: " + errorMsg;
+      }
+      
+      setErrorMessage(errorMessage);
+      
+      // Throw error to prevent PayPal SDK from proceeding with empty order ID
+      throw new Error(errorMessage);
+    }
+  };
+
+  // onPayPalApprove: handle approval by capturing the order on the server.
+  const onPayPalApprove = async (data: Record<string, unknown>): Promise<void> => {
+    try {
+      const orderId = data.orderID as string;
+      const response = await axios.post("/api/paypal/captureorder", { orderId });
+      if (response.data.success) {
+        window.location.href = "/success";
+      } else {
+        throw new Error("Order capture failed");
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setErrorMessage("PayPal capture failed: " + error.message);
+        console.error(error.message);
+      } else {
+        setErrorMessage("PayPal capture failed.");
+        console.error(error);
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-ivory via-paper to-accent-cream">
+      <div className="max-w-4xl mx-auto py-12 px-6">
+        {/* Elegant Header */}
+        <div className="text-center mb-12">
+          <h1 className={`${cormorant.className} text-4xl md:text-5xl font-light text-brown mb-4 tracking-wide`}>
+            Complete Your Purchase
+          </h1>
+          <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-olive to-transparent mx-auto mb-6"></div>
+          <p className={`${lora.className} text-lg text-warm-gray max-w-2xl mx-auto leading-relaxed`}>
+            Acquiring <span className="italic font-medium text-brown">"{product}"</span> - A unique piece from our curated collection
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Order Details */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Delivery Options */}
+            <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
+              <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown flex items-center`}>
+                <span className="w-8 h-8 bg-olive/10 rounded-full flex items-center justify-center mr-3 text-olive">
+                  🚚
+                </span>
+                Delivery Method
+              </h2>
+              <div className="space-y-4">
+                <label className="group cursor-pointer block">
+                  <div className={`border-2 rounded-xl p-6 transition-all duration-300 ${
+                    shippingOption === "shipping" 
+                      ? "border-olive bg-olive/5 shadow-md" 
+                      : "border-tan/50 hover:border-olive/50 hover:bg-olive/2"
+                  }`}>
+                    <div className="flex items-start">
+                      <input
+                        type="radio"
+                        name="shippingOption"
+                        value="shipping"
+                        checked={shippingOption === "shipping"}
+                        onChange={() => {
+                          setShippingOption("shipping");
+                          setShippingCost(0);
+                        }}
+                        className="mt-1 h-5 w-5 text-olive focus:ring-olive border-tan"
+                      />
+                      <div className="ml-4 flex-1">
+                        <h3 className={`${lora.className} font-semibold text-brown mb-2`}>Professional Shipping</h3>
+                        <p className="text-warm-gray text-sm leading-relaxed">
+                          Your artwork will be carefully packaged and shipped directly to your address with full insurance coverage.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </label>
+                
+                <label className="group cursor-pointer block">
+                  <div className={`border-2 rounded-xl p-6 transition-all duration-300 ${
+                    shippingOption === "pickup" 
+                      ? "border-olive bg-olive/5 shadow-md" 
+                      : "border-tan/50 hover:border-olive/50 hover:bg-olive/2"
+                  }`}>
+                    <div className="flex items-start">
+                      <input
+                        type="radio"
+                        name="shippingOption"
+                        value="pickup"
+                        checked={shippingOption === "pickup"}
+                        onChange={() => {
+                          setShippingOption("pickup");
+                          setShippingCost(0);
+                        }}
+                        className="mt-1 h-5 w-5 text-olive focus:ring-olive border-tan"
+                      />
+                      <div className="ml-4 flex-1">
+                        <h3 className={`${lora.className} font-semibold text-brown mb-2 flex items-center`}>
+                          Private Collection in Marble Falls, TX
+                          <span className="ml-2 px-2 py-1 bg-olive/10 text-olive text-xs rounded-full">FREE</span>
+                        </h3>
+                        <p className="text-warm-gray text-sm leading-relaxed">
+                          Schedule a personal appointment to collect your artwork. A perfect opportunity to discuss the piece and our artistic process.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* Address Section */}
+            {shippingOption === "shipping" ? (
+              <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
+                <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown flex items-center`}>
+                  <span className="w-8 h-8 bg-olive/10 rounded-full flex items-center justify-center mr-3 text-olive">
+                    📍
+                  </span>
+                  Delivery Address
+                </h2>
+                
+                <FreeAddressValidator
+                  currentAddress={shippingAddress}
+                  onAddressChange={setShippingAddress}
+                  className="block w-full rounded-lg border border-tan/50 bg-white/90 px-4 py-3 text-brown placeholder-warm-gray/60 focus:border-olive focus:ring-2 focus:ring-olive/20 transition-all duration-200"
+                />
+                
+                <button
+                  onClick={calculateShipping}
+                  disabled={isCalculating || !shippingAddress.addressLine1 || !shippingAddress.city || !shippingAddress.country}
+                  className={`mt-6 w-full bg-gradient-to-r from-olive to-warm-gray text-white px-6 py-4 rounded-lg hover:from-warm-gray hover:to-olive transition-all duration-400 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${lora.className} font-medium`}
+                >
+                  {isCalculating ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Calculating...
+                    </span>
+                  ) : "Calculate Shipping Costs"}
+                </button>
+              </div>
+            ) : (
+              <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
+                <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown flex items-center`}>
+                  <span className="w-8 h-8 bg-olive/10 rounded-full flex items-center justify-center mr-3 text-olive">
+                    🏛️
+                  </span>
+                  Collection Details
+                </h2>
+                <div className="bg-gradient-to-r from-accent-cream to-paper rounded-xl p-6 border border-tan/30">
+                  <div className="space-y-4">
+                    <div className="flex items-start space-x-3">
+                      <span className="text-olive">📍</span>
+                      <div>
+                        <h4 className="font-semibold text-brown">Gallery Location</h4>
+                        <p className="text-warm-gray">Marble Falls, Texas</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <span className="text-olive">📧</span>
+                      <div>
+                        <h4 className="font-semibold text-brown">Appointment Coordination</h4>
+                        <p className="text-warm-gray">Collection instructions will be sent via email after payment</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <span className="text-olive">⏰</span>
+                      <div>
+                        <h4 className="font-semibold text-brown">Flexible Scheduling</h4>
+                        <p className="text-warm-gray">Personal appointments available by arrangement</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-6 p-3 bg-olive/10 rounded-lg">
+                    <p className="text-sm text-olive font-medium">
+                      💡 Your billing information will be collected securely during checkout
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Payment Method */}
+            <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
+              <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown flex items-center`}>
+                <span className="w-8 h-8 bg-olive/10 rounded-full flex items-center justify-center mr-3 text-olive">
+                  💳
+                </span>
+                Payment Method
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                <label className="group cursor-pointer">
+                  <div className={`border-2 rounded-xl p-6 transition-all duration-300 ${
+                    paymentMethod === "stripe" 
+                      ? "border-olive bg-olive/5 shadow-md" 
+                      : "border-tan/50 hover:border-olive/50 hover:bg-olive/2"
+                  }`}>
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="stripe"
+                        checked={paymentMethod === "stripe"}
+                        onChange={() => setPaymentMethod("stripe")}
+                        className="h-5 w-5 text-olive focus:ring-olive border-tan"
+                      />
+                      <SiStripe className="w-8 h-8 ml-4 mr-3 text-brown" />
+                      <span className={`${lora.className} font-medium text-brown`}>Stripe/Card</span>
+                    </div>
+                  </div>
+                </label>
+                <label className="group cursor-pointer">
+                  <div className={`border-2 rounded-xl p-6 transition-all duration-300 ${
+                    paymentMethod === "paypal" 
+                      ? "border-olive bg-olive/5 shadow-md" 
+                      : "border-tan/50 hover:border-olive/50 hover:bg-olive/2"
+                  }`}>
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="paypal"
+                        checked={paymentMethod === "paypal"}
+                        onChange={() => setPaymentMethod("paypal")}
+                        className="h-5 w-5 text-olive focus:ring-olive border-tan"
+                      />
+                      <SiPaypal className="w-8 h-8 ml-4 mr-3 text-brown" />
+                      <span className={`${lora.className} font-medium text-brown`}>PayPal</span>
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              {/* Error Messages */}
+              {errorMessage && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-red-700 text-sm">{errorMessage}</p>
+                </div>
+              )}
+
+              {/* Payment Buttons */}
+              {paymentMethod === "stripe" ? (
+                <button
+                  onClick={handleStripeCheckout}
+                  disabled={isProcessing}
+                  className={`w-full bg-gradient-to-r from-btn-brown to-btn-brown-hover text-white px-8 py-4 rounded-xl hover:from-btn-brown-hover hover:to-brown transition-all duration-500 text-lg shadow-vintage hover:shadow-vintage-lg transform hover:-translate-y-1 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none border border-opacity-20 border-white relative overflow-hidden group ${lora.className} font-medium`}
+                >
+                  <span className="relative z-10 flex items-center justify-center">
+                    {isProcessing ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                      </>
+                    ) : "Complete Purchase with Stripe"}
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 transform -skew-x-12 group-hover:translate-x-full transition-all duration-700"></div>
+                </button>
+              ) : (
+                <div>
+                  {!process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ? (
+                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                      <p className="text-amber-700 text-sm">PayPal payment is temporarily unavailable. Please use card payment or contact support.</p>
+                    </div>
+                  ) : (
+                    <PayPalScriptProvider
+                      options={{
+                        clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!,
+                        currency: "USD",
+                        intent: "capture",
+                      }}
+                    >
+                      <PayPalButtons
+                        style={{ layout: "vertical", color: "gold", shape: "rect", label: "paypal", height: 55 }}
+                        createOrder={async (): Promise<string> => {
+                          try {
+                            if (shippingOption === "shipping") {
+                              if (!shippingAddress.name || !shippingAddress.addressLine1 || !shippingAddress.city) {
+                                setErrorMessage("Please fill in all required shipping fields.");
+                                throw new Error("Please fill in all required shipping fields.");
+                              }
+                            }
+                            const orderId = await createPayPalOrder();
+                            return orderId;
+                          } catch (error) {
+                            console.error("PayPal createOrder error:", error);
+                            // Re-throw the error to prevent PayPal from proceeding
+                            throw error;
+                          }
+                        }}
+                        onApprove={onPayPalApprove}
+                        onError={(err) => {
+                          console.error("PayPal Error:", err);
+                          setErrorMessage("PayPal payment failed. Please try again or use card payment.");
+                        }}
+                      />
+                    </PayPalScriptProvider>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column - Order Summary */}
+          <div className="lg:col-span-1">
+            <div className="bg-white/90 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg sticky top-8">
+              <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown`}>Order Summary</h2>
+              
+              <div className="space-y-4 mb-6">
+                <div className="flex justify-between items-center py-3 border-b border-tan/30">
+                  <span className={`${lora.className} text-warm-gray`}>Artwork Price</span>
+                  <span className={`${lora.className} font-semibold text-brown`}>${(BASE_PRICE / 100).toFixed(2)}</span>
+                </div>
+                
+                {shippingOption === "shipping" ? (
+                  <div className="flex justify-between items-center py-3 border-b border-tan/30">
+                    <span className={`${lora.className} text-warm-gray`}>Shipping</span>
+                    <span className={`${lora.className} font-semibold text-brown`}>${(shippingCost / 100).toFixed(2)}</span>
+                  </div>
+                ) : (
+                  <div className="flex justify-between items-center py-3 border-b border-tan/30">
+                    <span className={`${lora.className} text-warm-gray`}>Collection</span>
+                    <span className={`${lora.className} font-semibold text-olive`}>Complimentary</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="bg-gradient-to-r from-olive/10 to-brown/10 rounded-xl p-4 mb-6">
+                <div className="flex justify-between items-center">
+                  <span className={`${cormorant.className} text-xl font-medium text-brown`}>Total</span>
+                  <span className={`${cormorant.className} text-2xl font-bold text-brown`}>${(totalPrice / 100).toFixed(2)}</span>
+                </div>
+              </div>
+              
+              <div className="text-center">
+                <p className="text-xs text-warm-gray leading-relaxed">
+                  Secure payment processing. Your information is protected with industry-standard encryption.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default function CheckoutPageWrapper() {
+  return (
+    <Suspense fallback={<div className="text-brown bg-ivory min-h-screen flex items-center justify-center">Loading checkout...</div>}>
+      <CheckoutContent />
+    </Suspense>
+  );
+}
