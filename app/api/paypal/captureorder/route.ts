@@ -66,6 +66,30 @@ export async function POST(request: NextRequest) {
       // - Update your database
       // - Fulfill the order
       console.log('PayPal payment captured successfully:', captureData.id);
+      
+      // TODO: For PayPal shipping label purchasing, you'll need to:
+      // 1. Store shipment_id and rate_id in a temporary storage (Redis, database, etc.) when creating the order
+      // 2. Retrieve that data here using the PayPal order ID
+      // 3. Purchase the shipping label similar to the Stripe webhook
+      // 
+      // Example implementation:
+      // const shippingData = await getStoredShippingData(orderId);
+      // if (shippingData?.shipmentId && shippingData?.rateId) {
+      //   try {
+      //     const labelResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/purchase-shipping`, {
+      //       method: 'POST',
+      //       headers: { 'Content-Type': 'application/json' },
+      //       body: JSON.stringify({
+      //         shipmentId: shippingData.shipmentId,
+      //         rateId: shippingData.rateId,
+      //         orderId: captureData.id,
+      //       }),
+      //     });
+      //     // Handle label response...
+      //   } catch (error) {
+      //     console.error('Error purchasing shipping label:', error);
+      //   }
+      // }
     }
 
     return NextResponse.json({ 

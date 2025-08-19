@@ -17,10 +17,20 @@ const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 type ShippingAddress = {
   name: string;
   addressLine1: string;
+  addressLine2?: string;
   city: string;
   state: string;
   postalCode: string;
   country: string;
+};
+
+type ShippingRate = {
+  id: string;
+  service: string;
+  carrier: string;
+  rate: number;
+  delivery_days?: number;
+  delivery_date?: string;
 };
 
 const CheckoutContent = () => {
@@ -33,16 +43,34 @@ const CheckoutContent = () => {
   // Stripe expects amounts in cents.
   const BASE_PRICE = basePriceDollars * 100;
 
+  // Read shipping parameters from URL (with fallback defaults)
+  const shippingWeight = searchParams.get("weight") 
+    ? parseFloat(searchParams.get("weight")!)
+    : 16; // Default to 16 oz
+  const shippingLength = searchParams.get("length")
+    ? parseFloat(searchParams.get("length")!)
+    : 12; // Default to 12 inches
+  const shippingWidth = searchParams.get("width")
+    ? parseFloat(searchParams.get("width")!)
+    : 9; // Default to 9 inches
+  const shippingHeight = searchParams.get("height")
+    ? parseFloat(searchParams.get("height")!)
+    : 2; // Default to 2 inches
+
   // Local state
   const [shippingOption, setShippingOption] = useState<"shipping" | "pickup">("shipping");
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
     name: "",
     addressLine1: "",
+    addressLine2: "",
     city: "",
     state: "",
     postalCode: "",
     country: "",
   });
+  const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
+  const [selectedRate, setSelectedRate] = useState<string>('');
+  const [shipmentId, setShipmentId] = useState<string>('');
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<"stripe" | "paypal">("stripe");
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
@@ -54,15 +82,40 @@ const CheckoutContent = () => {
     setIsCalculating(true);
     setErrorMessage(null);
     try {
-      const response: AxiosResponse<{ shippingCost: number }> = await axios.post(
+      const response: AxiosResponse<{ 
+        rates: ShippingRate[]; 
+        shipmentId: string; 
+        success: boolean; 
+        fallback?: boolean;
+      }> = await axios.post(
         "/api/calculate-shipping",
         {
           shippingAddress,
-          // Include package details as needed
-          package: { weight: 2, dimensions: { length: 10, width: 5, height: 4 } },
+          // Use dynamic package details from URL parameters
+          package: { 
+            weight: shippingWeight, // Dynamic weight from Sanity
+            dimensions: { 
+              length: shippingLength, 
+              width: shippingWidth, 
+              height: shippingHeight 
+            } 
+          },
         }
       );
-      setShippingCost(response.data.shippingCost);
+      
+      const { rates, shipmentId: newShipmentId } = response.data;
+      setShippingRates(rates);
+      setShipmentId(newShipmentId || '');
+      
+      // Auto-select cheapest rate
+      if (rates.length > 0) {
+        const cheapestRate = rates.reduce((prev, curr) => 
+          prev.rate < curr.rate ? prev : curr
+        );
+        setSelectedRate(cheapestRate.id);
+        setShippingCost(cheapestRate.rate);
+      }
+      
     } catch (error: unknown) {
       if (error instanceof Error) {
         setErrorMessage("Failed to calculate shipping: " + error.message);
@@ -104,6 +157,9 @@ const CheckoutContent = () => {
         shippingAddress: shippingOption === "pickup" ? null : shippingAddress,
         billingAddress: null, // Let Stripe collect billing info
         shippingOption: shippingOption,
+        // Add EasyPost data for automatic label purchasing
+        shipmentId: shipmentId,
+        selectedRateId: selectedRate,
       });
       const { sessionId } = response.data;
       const stripe = await stripePromise;
@@ -137,6 +193,9 @@ const CheckoutContent = () => {
         shippingAddress: shippingOption === "pickup" ? null : shippingAddress,
         billingAddress: null, // Let PayPal collect billing info
         shippingOption: shippingOption,
+        // Add EasyPost data for automatic label purchasing
+        shipmentId: shipmentId,
+        selectedRateId: selectedRate,
       });
       
       console.log('PayPal order response:', response.data);
@@ -285,18 +344,85 @@ const CheckoutContent = () => {
                 <button
                   onClick={calculateShipping}
                   disabled={isCalculating || !shippingAddress.addressLine1 || !shippingAddress.city || !shippingAddress.country}
-                  className={`mt-6 w-full bg-gradient-to-r from-olive to-warm-gray text-white px-6 py-4 rounded-lg hover:from-warm-gray hover:to-olive transition-all duration-400 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${lora.className} font-medium`}
+                  className={`mt-6 w-full px-8 py-4 rounded-xl transition-all duration-500 text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 border border-opacity-20 relative overflow-hidden group ${lora.className} font-medium ${
+                    isCalculating || !shippingAddress.addressLine1 || !shippingAddress.city || !shippingAddress.country
+                      ? 'bg-tan/60 text-brown border-tan cursor-not-allowed opacity-70 transform-none'
+                      : 'bg-gradient-to-r from-olive to-warm-gray text-ivory hover:from-warm-gray hover:to-olive border-white'
+                  }`}
                 >
-                  {isCalculating ? (
-                    <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Calculating...
-                    </span>
-                  ) : "Calculate Shipping Costs"}
+                  <span className="relative z-10 flex items-center justify-center text-current">
+                    {isCalculating ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Calculating Shipping...
+                      </>
+                    ) : !shippingAddress.addressLine1 || !shippingAddress.city || !shippingAddress.country ? (
+                      "Complete Address to Calculate Shipping"
+                    ) : (
+                      "Calculate Shipping Costs"
+                    )}
+                  </span>
+                  {!isCalculating && shippingAddress.addressLine1 && shippingAddress.city && shippingAddress.country && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 transform -skew-x-12 group-hover:translate-x-full transition-all duration-700"></div>
+                  )}
                 </button>
+
+                {/* Address completion hint */}
+                {(!shippingAddress.addressLine1 || !shippingAddress.city || !shippingAddress.country) && (
+                  <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div className="flex items-start">
+                      <svg className="h-5 w-5 text-amber-400 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      <div>
+                        <p className="text-amber-800 text-sm font-medium">Complete your address to calculate shipping</p>
+                        <p className="text-amber-700 text-xs mt-1">
+                          Required: Street Address, City, and Country
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Shipping Rate Selection */}
+                {shippingRates.length > 0 && (
+                  <div className="mt-6 space-y-3">
+                    <h4 className={`${lora.className} font-medium text-brown`}>Select Shipping Option:</h4>
+                    {shippingRates.map((rate) => (
+                      <label key={rate.id} className="flex items-center space-x-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="shippingRate"
+                          value={rate.id}
+                          checked={selectedRate === rate.id}
+                          onChange={() => {
+                            setSelectedRate(rate.id);
+                            setShippingCost(rate.rate);
+                          }}
+                          className="h-4 w-4 text-olive focus:ring-olive"
+                        />
+                        <div className="flex-1 flex justify-between items-center bg-olive/5 rounded-lg p-3 border border-tan/30 hover:border-olive/50 transition-colors">
+                          <div>
+                            <span className="text-brown font-medium">
+                              {rate.carrier} {rate.service}
+                            </span>
+                            {rate.delivery_days && (
+                              <div className="text-sm text-warm-gray">
+                                Estimated delivery: {rate.delivery_days} business days
+                              </div>
+                            )}
+                          </div>
+                          <span className="font-semibold text-brown">
+                            ${(rate.rate / 100).toFixed(2)}
+                          </span>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">

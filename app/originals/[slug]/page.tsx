@@ -13,6 +13,14 @@ type OriginalArtwork = {
   price?: number;
   sold?: boolean;
   description?: string;
+  shipping?: {
+    weight?: number;
+    dimensions?: {
+      length?: number;
+      width?: number;
+      height?: number;
+    };
+  };
 };
 
 async function fetchOriginalBySlug(slug: string): Promise<OriginalArtwork | null> {
@@ -24,7 +32,8 @@ async function fetchOriginalBySlug(slug: string): Promise<OriginalArtwork | null
       gallery,
       price,
       sold,
-      description
+      description,
+      shipping
     }
   `;
   return sanityClient.fetch(query, { slug });
@@ -92,7 +101,11 @@ export default async function OriginalDetailPage(props: unknown) {
                   </p>
                 </div>
               ) : (
-                <PurchaseSection title={artwork.title} basePrice={artwork.price || 0} />
+                <PurchaseSection 
+                  title={artwork.title} 
+                  basePrice={artwork.price || 0} 
+                  shipping={artwork.shipping}
+                />
               )}
             </div>
 

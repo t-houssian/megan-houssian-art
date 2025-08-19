@@ -54,5 +54,48 @@ export default defineType({
       title: 'Description',
       type: 'text',
     },
+    {
+      name: 'shipping',
+      title: 'Shipping Information',
+      type: 'object',
+      fields: [
+        {
+          name: 'weight',
+          title: 'Weight (ounces)',
+          type: 'number',
+          description: 'Weight of the artwork with packaging in ounces',
+          initialValue: 16,
+        },
+        {
+          name: 'dimensions',
+          title: 'Package Dimensions',
+          type: 'object',
+          fields: [
+            {
+              name: 'length',
+              title: 'Length (inches)',
+              type: 'number',
+              description: 'Package length in inches',
+              initialValue: 12,
+            },
+            {
+              name: 'width',
+              title: 'Width (inches)',
+              type: 'number',
+              description: 'Package width in inches',
+              initialValue: 9,
+            },
+            {
+              name: 'height',
+              title: 'Height (inches)',
+              type: 'number',
+              description: 'Package height/thickness in inches',
+              initialValue: 2,
+            },
+          ],
+        },
+      ],
+      description: 'Shipping weight and package dimensions for accurate shipping calculations',
+    },
   ],
 })

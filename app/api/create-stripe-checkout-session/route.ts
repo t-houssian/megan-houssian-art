@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { amount, shippingAddress, product, shippingOption } = await request.json();
+    const { amount, shippingAddress, product, shippingOption, shipmentId, selectedRateId } = await request.json();
 
     // Validate required fields
     if (!amount || amount <= 0) {
@@ -59,6 +59,9 @@ export async function POST(request: NextRequest) {
       metadata: {
         product: product || 'artwork',
         shipping_option: shippingOption || 'shipping',
+        // Add EasyPost data for automatic label purchasing
+        ...(shipmentId ? { shipment_id: shipmentId } : {}),
+        ...(selectedRateId ? { rate_id: selectedRateId } : {}),
         ...(shippingOption === 'shipping' && shippingAddress ? {
           shipping_name: shippingAddress.name,
           shipping_address: shippingAddress.addressLine1,

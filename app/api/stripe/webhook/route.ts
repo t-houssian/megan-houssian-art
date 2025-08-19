@@ -55,7 +55,46 @@ export async function POST(request: NextRequest) {
         console.log('Customer email:', session.customer_details?.email);
         console.log('Amount paid:', session.amount_total);
         
-        // Here you can:
+        // Extract shipping details from metadata
+        const shipmentId = session.metadata?.shipment_id;
+        const rateId = session.metadata?.rate_id;
+        const shippingOption = session.metadata?.shipping_option;
+        
+        // If this is a shipping order with EasyPost data, purchase the label
+        if (shippingOption === 'shipping' && shipmentId && rateId) {
+          try {
+            console.log('Purchasing shipping label for order:', session.id);
+            const labelResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/purchase-shipping`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                shipmentId,
+                rateId,
+                orderId: session.id,
+              }),
+            });
+            
+            const labelResult = await labelResponse.json();
+            if (labelResult.success) {
+              console.log('Shipping label purchased successfully:', {
+                trackingCode: labelResult.trackingCode,
+                labelUrl: labelResult.labelUrl,
+              });
+              
+              // TODO: You can add additional logic here such as:
+              // - Store tracking code in your database
+              // - Send tracking info to customer via email
+              // - Update order status
+              
+            } else {
+              console.error('Failed to purchase shipping label:', labelResult.error);
+            }
+          } catch (labelError) {
+            console.error('Error purchasing shipping label:', labelError);
+          }
+        }
+        
+        // Here you can also:
         // - Send confirmation email to customer
         // - Update your database with order details
         // - Send notification email to you about the sale

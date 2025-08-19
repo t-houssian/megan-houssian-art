@@ -1,4 +1,7 @@
 // app/prints/page.tsx
+"use client";
+
+import { useState, useEffect } from 'react';
 import { sanityClient } from '../../lib/sanity';
 import ImageUrlBuilder from '@sanity/image-url';
 import Link from 'next/link';
@@ -10,7 +13,6 @@ function urlFor(source: { asset: { _ref: string } }) {
   return builder.image(source);
 }
 
-// Adjust type to your "print" schema
 type PrintProduct = {
   _id: string;
   title: string;
@@ -36,27 +38,54 @@ async function fetchPrints(): Promise<PrintProduct[]> {
   return sanityClient.fetch(query);
 }
 
-export default async function PrintsPage() {
-  const prints = await fetchPrints();
+export default function PrintsPage() {
+  const [prints, setPrints] = useState<PrintProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const printsData = await fetchPrints();
+        setPrints(printsData);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-ivory via-paper to-accent-cream flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-olive mx-auto mb-4"></div>
+          <p className={`${lora.className} text-brown`}>Loading prints...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <section className="min-h-screen bg-gradient-to-br from-ivory via-paper to-accent-cream">
       <div className="max-w-7xl mx-auto py-16 px-6">
         {/* Elegant Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-12">
           <h1 className={`${cormorant.className} text-4xl md:text-5xl font-light mb-6 text-brown tracking-wide`}>
             Print Shop
           </h1>
-          <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-olive to-transparent mx-auto mb-8"></div>
-          <p className={`${lora.className} text-lg text-warm-gray max-w-3xl mx-auto leading-relaxed`}>
-            High-quality reproductions of beloved artworks, professionally printed and ready to enhance your space with timeless beauty.
-          </p>
         </div>
+
 
         {/* Gallery Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {prints.map((item) => (
-            <Link key={item._id} href={`/prints/${item.slug.current}`}>
+            <Link 
+              key={item._id} 
+              href={`/prints/${item.slug.current}`}
+            >
               <div className="group cursor-pointer">
                 <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl overflow-hidden shadow-vintage hover:shadow-vintage-lg transition-all duration-500 transform hover:-translate-y-2">
                   {item.mainImage?.asset && (
@@ -83,13 +112,18 @@ export default async function PrintsPage() {
                     </h2>
                     
                     <div className="flex items-center justify-between">
-                      <p className={`${lora.className} text-lg font-semibold text-warm-gray`}>
-                        ${item.price?.toLocaleString() || 0}
-                      </p>
+                      <div>
+                        <p className={`${lora.className} text-sm text-warm-gray mb-1`}>
+                          Multiple print options available
+                        </p>
+                        <p className={`${lora.className} text-lg font-semibold text-brown`}>
+                          Starting at $15
+                        </p>
+                      </div>
                       
                       {!item.soldOut && (
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <span className="text-olive text-sm font-medium">View Details →</span>
+                          <span className="text-olive text-sm font-medium">View Options →</span>
                         </div>
                       )}
                     </div>
@@ -112,7 +146,7 @@ export default async function PrintsPage() {
         <div className="text-center mt-16">
           <div className="bg-white/60 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 max-w-2xl mx-auto">
             <p className={`${lora.className} text-warm-gray leading-relaxed mb-4`}>
-              Looking for something unique and original? Explore one-of-a-kind pieces or commission a custom artwork.
+              Looking for something unique and original? Explore one-of-a-kind pieces or commission a custom piece.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/originals">

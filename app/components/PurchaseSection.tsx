@@ -6,14 +6,41 @@ import { lora } from "../fonts";
 type PurchaseSectionProps = {
   title: string;
   basePrice: number;
+  shipping?: {
+    weight?: number;
+    dimensions?: {
+      length?: number;
+      width?: number;
+      height?: number;
+    };
+  };
 };
 
-export default function PurchaseSection({ title, basePrice }: PurchaseSectionProps) {
+export default function PurchaseSection({ title, basePrice, shipping }: PurchaseSectionProps) {
   const router = useRouter();
 
   const handlePurchase = () => {
-    // Redirect to the checkout page with product details in query parameters
-    router.push(`/checkout?product=${encodeURIComponent(title)}&price=${basePrice}`);
+    // Build the checkout URL with product details and shipping information
+    const params = new URLSearchParams({
+      product: title,
+      price: basePrice.toString(),
+    });
+
+    // Add shipping parameters if available, with fallback defaults
+    if (shipping?.weight) {
+      params.append('weight', shipping.weight.toString());
+    }
+    if (shipping?.dimensions?.length) {
+      params.append('length', shipping.dimensions.length.toString());
+    }
+    if (shipping?.dimensions?.width) {
+      params.append('width', shipping.dimensions.width.toString());
+    }
+    if (shipping?.dimensions?.height) {
+      params.append('height', shipping.dimensions.height.toString());
+    }
+
+    router.push(`/checkout?${params.toString()}`);
   };
 
   return (
