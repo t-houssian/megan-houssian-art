@@ -52,12 +52,12 @@ export default function NavBar() {
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-olive transition-all duration-300 group-hover:w-full"></span>
             </Link>
           </li>
-          <li>
+          {/* <li>
             <Link href="/prints" className="relative group py-2 px-1 hover:text-olive transition-colors duration-300">
               Prints
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-olive transition-all duration-300 group-hover:w-full"></span>
             </Link>
-          </li>
+          </li> */}
           <li>
             <Link href="/commissions" className="relative group py-2 px-1 hover:text-olive transition-colors duration-300">
               Commissions
@@ -103,7 +103,7 @@ export default function NavBar() {
                 Originals
               </Link>
             </li>
-            <li>
+            {/* <li>
               <Link 
                 href="/prints" 
                 onClick={() => setIsOpen(false)} 
@@ -111,7 +111,7 @@ export default function NavBar() {
               >
                 Prints
               </Link>
-            </li>
+            </li> */}
             <li>
               <Link 
                 href="/commissions" 
