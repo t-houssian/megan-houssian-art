@@ -5,7 +5,6 @@ import CollectionsClient from './CollectionsClient';
 
 export type ArtPiece = {
   _id: string;
-  title: string;
   mainImage: {
     asset: {
       _ref: string;
@@ -24,7 +23,6 @@ export function urlFor(source: ArtPiece["mainImage"]) {
 async function fetchArtPieces(): Promise<ArtPiece[]> {
   const query = `*[_type == "gallery"] | order(_createdAt desc) {
     _id,
-    title,
     mainImage
   }`;
   return await sanityClient.fetch(query);

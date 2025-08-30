@@ -38,7 +38,7 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
                 <div className="relative w-full aspect-square bg-paper">
                   <Image
                     src={urlFor(piece.mainImage).width(800).fit('max').url()}
-                    alt={piece.title}
+                    alt={"Gallery image"}
                     fill
                     style={{ 
                       objectFit: 'contain',
@@ -48,9 +48,7 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
                   />
                 </div>
               )}
-              <h3 className={`${lora.className} text-lg font-semibold mt-4 text-brown px-4 pb-4`}>
-                {piece.title}
-              </h3>
+              {/* Title removed per request; images only */}
             </div>
           ))
         ) : (
@@ -80,7 +78,7 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
               {selectedImage.mainImage?.asset && (
                 <Image
                   src={urlFor(selectedImage.mainImage).width(1200).fit('max').url()}
-                  alt={selectedImage.title}
+                  alt={"Gallery image enlarged"}
                   fill
                   style={{ 
                     objectFit: 'contain',
@@ -90,7 +88,7 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
                 />
               )}
             </div>
-            <h3 className={`${cormorant.className} text-center text-paper mt-4 text-xl`}>{selectedImage.title}</h3>
+            {/* Title removed per request */}
           </div>
         </div>
       )}
