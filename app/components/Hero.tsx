@@ -24,7 +24,7 @@ export default function Hero() {
                        hover:bg-btn-brown hover:text-paper hover:border-btn-brown transition-all duration-300 
                        shadow-md hover:shadow-lg transform hover:scale-105 ${lora.className}`}
           >
-            Explore Collections
+            Explore Gallery
           </a>
         </div>
       </div>

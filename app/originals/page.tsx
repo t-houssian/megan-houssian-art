@@ -41,11 +41,11 @@ export default async function OriginalsPage() {
         {/* Elegant Header */}
         <div className="text-center mb-16">
           <h1 className={`${cormorant.className} text-4xl md:text-5xl font-light mb-6 text-brown tracking-wide`}>
-            Original Artworks
+            Originals
           </h1>
           <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-olive to-transparent mx-auto mb-8"></div>
           <p className={`${lora.className} text-lg text-warm-gray max-w-3xl mx-auto leading-relaxed`}>
-            Each piece in the collection is a unique, one-of-a-kind creation. Discover the perfect artwork to grace your space and become part of your personal story.
+            Each piece is a unique, one-of-a-kind creation. Discover the perfect artwork to grace your space and become part of your personal story.
           </p>
         </div>
 
@@ -66,8 +66,8 @@ export default async function OriginalsPage() {
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
                       {art.sold && (
-                        <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
-                          SOLD
+                        <div className="absolute top-4 left-4 bg-tan/90 text-brown px-3 py-1 rounded-full text-sm font-medium shadow-vintage border border-tan/70 backdrop-blur-sm">
+                          sold
                         </div>
                       )}
                     </div>
@@ -92,8 +92,8 @@ export default async function OriginalsPage() {
                     
                     {art.sold && (
                       <div className="mt-2">
-                        <span className="text-red-600 font-medium text-sm">
-                          This piece has found its home
+                        <span className="inline-block bg-tan/30 text-brown px-2 py-0.5 rounded-md text-xs font-medium">
+                          sold
                         </span>
                       </div>
                     )}

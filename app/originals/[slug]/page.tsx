@@ -89,16 +89,15 @@ export default async function OriginalDetailPage(props: unknown) {
               <div className="w-16 h-0.5 bg-olive mb-6"></div>
               
               {artwork.sold ? (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-                  <div className="flex items-center space-x-3">
-                    <span className="w-3 h-3 bg-red-500 rounded-full"></span>
-                    <span className={`${lora.className} text-red-700 font-semibold text-lg`}>
-                      This piece has found its home
+                <div className="bg-ivory border border-tan/60 rounded-xl p-6">
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex items-center rounded-full bg-tan/60 text-brown px-2.5 py-0.5 text-xs font-semibold border border-tan/80">
+                      sold
+                    </span>
+                    <span className={`${lora.className} text-warm-gray text-sm`}>
+                      This artwork is no longer available for purchase
                     </span>
                   </div>
-                  <p className="text-red-600 text-sm mt-2">
-                    This artwork is no longer available for purchase
-                  </p>
                 </div>
               ) : (
                 <PurchaseSection 

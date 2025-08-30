@@ -17,14 +17,15 @@ export default function AboutPage() {
               About Megan
             </h1>
             <p className={`${lora.className} text-brown leading-relaxed mb-6 text-lg`}>
-              Entering into the painting process, I feel inexplicably happy.
-              Time stands still, I let go of expectations, and I sink into the flow of materials.
-              Once finished, I walk out of my studio with the entire world glowing brighter.
+              When I step into the painting process, I feel a deep sense of joy and calm.
+              Time seems to pause as I release expectations and immerse myself in the
+              rhythm of creation. Afterwards, I leave my studio with a renewed clarity
+              and everything around me feels more vibrant.
             </p>
             <p className={`${lora.className} text-brown leading-relaxed mb-6 text-lg`}>
-              I often scoop my toddler into my arms and spin her around as my mind floats away from my art and back into my regular life.
-              But now, I have an extra measure of appreciation and gratitude for everything around me.
-              Because that’s what my art is truly about- my joy that is centered in my family, my blessings, and God.
+              Returning to the routines of life, I carry with me
+              a heightened sense of gratitude. My art is, at its core, an expression
+              of joyrooted in the blessings of family and in God.
             </p>
           </div>
           <div>

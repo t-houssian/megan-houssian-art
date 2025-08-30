@@ -22,7 +22,7 @@ export function urlFor(source: ArtPiece["mainImage"]) {
 }
 
 async function fetchArtPieces(): Promise<ArtPiece[]> {
-  const query = `*[_type == "collection"] | order(_createdAt desc) {
+  const query = `*[_type == "gallery"] | order(_createdAt desc) {
     _id,
     title,
     mainImage

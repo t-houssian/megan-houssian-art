@@ -1,9 +1,9 @@
 import { defineType } from 'sanity'
 
 export default defineType({
-  name: 'collection',         // Unique identifier – must be lowercase
-  title: 'Collection (legacy)',       // Human-readable title
-  type: 'document',         // This marks it as a document
+  name: 'gallery',         // New document type
+  title: 'Gallery',        // Display title in Studio
+  type: 'document',
   fields: [
     {
       name: 'title',

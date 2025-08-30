@@ -5,7 +5,8 @@
     "scripts": {
         "dev": "sanity start",
         "build": "sanity build",
-        "deploy": "sanity deploy"
+        "deploy": "sanity deploy",
+        "migrate:collections-to-gallery": "sanity exec ./migrations/rename-collection-to-gallery.mjs --with-user-token"
     },
     "dependencies": {
         "@sanity/cli": "^3.84.0",

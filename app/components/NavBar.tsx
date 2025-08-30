@@ -36,7 +36,7 @@ export default function NavBar() {
         <ul className={`hidden md:flex space-x-8 text-brown font-medium ${lora.className}`}>
           <li>
             <Link href="/#gallery" className="relative group py-2 px-1 hover:text-olive transition-colors duration-300">
-              Collections
+              Gallery
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-olive transition-all duration-300 group-hover:w-full"></span>
             </Link>
           </li>
@@ -46,7 +46,7 @@ export default function NavBar() {
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-olive transition-all duration-300 group-hover:w-full"></span>
             </Link>
           </li>
-          {/* <li>
+          <li>
             <Link href="/originals" className="relative group py-2 px-1 hover:text-olive transition-colors duration-300">
               Originals
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-olive transition-all duration-300 group-hover:w-full"></span>
@@ -57,7 +57,7 @@ export default function NavBar() {
               Prints
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-olive transition-all duration-300 group-hover:w-full"></span>
             </Link>
-          </li> */}
+          </li>
           <li>
             <Link href="/commissions" className="relative group py-2 px-1 hover:text-olive transition-colors duration-300">
               Commissions
@@ -91,10 +91,10 @@ export default function NavBar() {
                 onClick={() => setIsOpen(false)} 
                 className="block py-3 px-4 rounded-lg hover:bg-olive/10 hover:text-olive transition-all duration-200 border-l-4 border-transparent hover:border-olive"
               >
-                Collections
+                Gallery
               </Link>
             </li>
-            {/* <li>
+            <li>
               <Link 
                 href="/originals" 
                 onClick={() => setIsOpen(false)} 
@@ -111,7 +111,7 @@ export default function NavBar() {
               >
                 Prints
               </Link>
-            </li> */}
+            </li>
             <li>
               <Link 
                 href="/commissions" 

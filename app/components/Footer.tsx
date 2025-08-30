@@ -24,10 +24,10 @@ export default function Footer() {
               </h4>
               <div className="space-y-2">
                 <Link href="/#gallery" className={`block text-warm-gray hover:text-olive transition-colors duration-200 ${lora.className} text-sm`}>
-                  Collections
+                  Gallery
                 </Link>
                 <Link href="/originals" className={`block text-warm-gray hover:text-olive transition-colors duration-200 ${lora.className} text-sm`}>
-                  Original Artworks
+                  Originals
                 </Link>
                 <a href="/commissions" className={`block text-warm-gray hover:text-olive transition-colors duration-200 ${lora.className} text-sm`}>
                   Commissions
