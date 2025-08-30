@@ -49,7 +49,7 @@ export default async function OriginalDetailPage(props: unknown) {
   if (!artwork) {
     return (
       <div className="max-w-7xl mx-auto py-16 px-4">
-        <h1 className={`text-2xl font-bold text-[var(--text-brown)] ${cormorant.className}`}>Artwork Not Found</h1>
+  <h1 className={`text-2xl font-medium text-[var(--text-brown)] ${cormorant.className}`}>Artwork Not Found</h1>
       </div>
     );
   }

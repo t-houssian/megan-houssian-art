@@ -476,7 +476,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                             </span>
                           </div>
                           <div className="text-right">
-                            <span className={`${cormorant.className} text-3xl font-bold text-btn-brown block`}>
+                            <span className={`${cormorant.className} text-3xl font-medium text-btn-brown block`}>
                               ${printOptions[selectedProduct]?.sizes.find(s => s.value === selectedSize)?.price.toFixed(2)}
                             </span>
                             <span className={`${lora.className} text-warm-gray text-sm`}>
@@ -621,7 +621,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className={`${cormorant.className} text-3xl font-bold text-btn-brown mb-1`}>
+                      <p className={`${cormorant.className} text-3xl font-medium text-btn-brown mb-1`}>
                         ${getSelectedPrice().toFixed(2)}
                       </p>
                       <p className={`${lora.className} text-sm text-warm-gray`}>

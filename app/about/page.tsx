@@ -13,7 +13,7 @@ export default function AboutPage() {
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-16">
           <div>
-            <h1 className={`${cormorant.className} text-4xl md:text-5xl font-bold text-brown mb-6`}>
+            <h1 className={`${cormorant.className} text-4xl md:text-5xl font-light text-brown mb-6`}>
               About Megan
             </h1>
             <p className={`${lora.className} text-brown leading-relaxed mb-6 text-lg`}>
@@ -42,12 +42,12 @@ export default function AboutPage() {
 
         {/* Additional content section */}
         {/* <div className="bg-ivory border border-tan rounded-lg p-8">
-          <h2 className={`${cormorant.className} text-3xl font-semibold text-brown mb-6`}>
+          <h2 className={`${cormorant.className} text-3xl font-medium text-brown mb-6`}>
             My Artistic Journey
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <h3 className={`${lora.className} text-xl font-semibold text-brown mb-3`}>
+              <h3 className={`${lora.className} text-xl font-medium text-brown mb-3`}>
                 Inspiration & Process
               </h3>
               <p className={`${lora.className} text-brown leading-relaxed`}>
@@ -57,7 +57,7 @@ export default function AboutPage() {
               </p>
             </div>
             <div>
-              <h3 className={`${lora.className} text-xl font-semibold text-brown mb-3`}>
+              <h3 className={`${lora.className} text-xl font-medium text-brown mb-3`}>
                 Medium & Technique
               </h3>
               <p className={`${lora.className} text-brown leading-relaxed`}>

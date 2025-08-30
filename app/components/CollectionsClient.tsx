@@ -53,7 +53,7 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
 
   return (
     <section id="gallery" className="max-w-7xl mx-auto py-16 px-4 bg-ivory">
-      <h2 className={`${cormorant.className} text-3xl md:text-4xl font-bold text-brown mb-8 text-center`}>
+  <h2 className={`${cormorant.className} text-3xl md:text-4xl font-light text-brown mb-8 text-center`}>
         Gallery
       </h2>
   <div className="grid grid-cols-1 sm:grid-cols-6 gap-8">

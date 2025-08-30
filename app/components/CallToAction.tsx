@@ -9,7 +9,7 @@ export default function CallToAction() {
       className="py-16 px-4 bg-[var(--bg-paper)] text-[var(--text-brown)]"
     >
       <div className="max-w-4xl mx-auto text-center">
-        <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${cormorant.className}`}>
+  <h2 className={`text-3xl md:text-4xl font-light mb-4 ${cormorant.className}`}>
           Stay Connected
         </h2>
         <p className={`text-[var(--text-brown)] mb-8 ${lora.className}`}>
@@ -28,7 +28,7 @@ export default function CallToAction() {
           />
           <button
             type="submit"
-            className={`inline-block border border-[var(--btn-brown)] bg-[var(--btn-brown)] text-white px-6 py-3 rounded-sm font-semibold 
+            className={`inline-block border border-[var(--btn-brown)] bg-[var(--btn-brown)] text-white px-6 py-3 rounded-sm font-medium 
                        hover:bg-white hover:text-[var(--btn-brown)] transition-colors duration-300 ${lora.className}`}
           >
             Subscribe

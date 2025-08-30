@@ -286,7 +286,7 @@ const CheckoutContent = () => {
                         className="mt-1 h-5 w-5 text-olive focus:ring-olive border-tan"
                       />
                       <div className="ml-4 flex-1">
-                        <h3 className={`${lora.className} font-semibold text-brown mb-2`}>Professional Shipping</h3>
+                        <h3 className={`${lora.className} font-medium text-brown mb-2`}>Professional Shipping</h3>
                         <p className="text-warm-gray text-sm leading-relaxed">
                           Your artwork will be carefully packaged and shipped directly to your address with full insurance coverage.
                         </p>
@@ -314,7 +314,7 @@ const CheckoutContent = () => {
                         className="mt-1 h-5 w-5 text-olive focus:ring-olive border-tan"
                       />
                       <div className="ml-4 flex-1">
-                        <h3 className={`${lora.className} font-semibold text-brown mb-2 flex items-center`}>
+                        <h3 className={`${lora.className} font-medium text-brown mb-2 flex items-center`}>
                           Gallery Pickup in Marble Falls, TX
                           <span className="ml-2 px-2 py-1 bg-olive/10 text-olive text-xs rounded-full">FREE</span>
                         </h3>
@@ -415,7 +415,7 @@ const CheckoutContent = () => {
                               </div>
                             )}
                           </div>
-                          <span className="font-semibold text-brown">
+                          <span className="font-medium text-brown">
                             ${(rate.rate / 100).toFixed(2)}
                           </span>
                         </div>
@@ -433,19 +433,19 @@ const CheckoutContent = () => {
                   <div className="space-y-4">
                     <div className="flex items-start space-x-3">
                       <div>
-                        <h4 className="font-semibold text-brown">Gallery Location</h4>
+                        <h4 className="font-medium text-brown">Gallery Location</h4>
                         <p className="text-warm-gray">Marble Falls, Texas</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
                       <div>
-                        <h4 className="font-semibold text-brown">Appointment Coordination</h4>
+                        <h4 className="font-medium text-brown">Appointment Coordination</h4>
                         <p className="text-warm-gray">Gallery Pickup instructions will be sent via email after payment</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
                       <div>
-                        <h4 className="font-semibold text-brown">Flexible Scheduling</h4>
+                        <h4 className="font-medium text-brown">Flexible Scheduling</h4>
                         <p className="text-warm-gray">Personal appointments available by arrangement</p>
                       </div>
                     </div>
@@ -587,18 +587,18 @@ const CheckoutContent = () => {
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between items-center py-3 border-b border-tan/30">
                   <span className={`${lora.className} text-warm-gray`}>Artwork Price</span>
-                  <span className={`${lora.className} font-semibold text-brown`}>${(BASE_PRICE / 100).toFixed(2)}</span>
+                  <span className={`${lora.className} font-medium text-brown`}>${(BASE_PRICE / 100).toFixed(2)}</span>
                 </div>
                 
                 {shippingOption === "shipping" ? (
                   <div className="flex justify-between items-center py-3 border-b border-tan/30">
                     <span className={`${lora.className} text-warm-gray`}>Shipping</span>
-                    <span className={`${lora.className} font-semibold text-brown`}>${(shippingCost / 100).toFixed(2)}</span>
+                    <span className={`${lora.className} font-medium text-brown`}>${(shippingCost / 100).toFixed(2)}</span>
                   </div>
                 ) : (
                   <div className="flex justify-between items-center py-3 border-b border-tan/30">
                     <span className={`${lora.className} text-warm-gray`}>Gallery Pickup</span>
-                    <span className={`${lora.className} font-semibold text-olive`}>${(shippingCost / 100).toFixed(2)}</span>
+                    <span className={`${lora.className} font-medium text-olive`}>${(shippingCost / 100).toFixed(2)}</span>
                   </div>
                 )}
               </div>

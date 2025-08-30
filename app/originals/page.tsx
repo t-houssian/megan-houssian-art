@@ -79,7 +79,7 @@ export default async function OriginalsPage() {
                     </h2>
                     
                     <div className="flex items-center justify-between">
-                      <p className={`${lora.className} text-lg font-semibold text-warm-gray`}>
+                      <p className={`${lora.className} text-lg font-medium text-warm-gray`}>
                         ${art.price?.toLocaleString() || 0}
                       </p>
                       

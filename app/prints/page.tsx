@@ -116,7 +116,7 @@ export default function PrintsPage() {
                         <p className={`${lora.className} text-sm text-warm-gray mb-1`}>
                           Multiple print options available
                         </p>
-                        <p className={`${lora.className} text-lg font-semibold text-brown`}>
+                        <p className={`${lora.className} text-lg font-medium text-brown`}>
                           Starting at $15
                         </p>
                       </div>

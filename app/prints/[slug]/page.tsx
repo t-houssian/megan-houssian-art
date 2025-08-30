@@ -46,7 +46,7 @@ export default async function PrintDetailPage({ params }: PageProps) {
   if (!printItem) {
     return (
       <div className="max-w-7xl mx-auto py-16 px-4">
-        <h1 className={`text-2xl font-bold text-[var(--text-brown)] ${cormorant.className}`}>Print Not Found</h1>
+  <h1 className={`text-2xl font-medium text-[var(--text-brown)] ${cormorant.className}`}>Print Not Found</h1>
       </div>
     );
   }
@@ -109,7 +109,7 @@ export default async function PrintDetailPage({ params }: PageProps) {
             {/* Luma Labs Purchase Section */}
             {printItem.soldOut ? (
               <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg text-center">
-                <span className={`${lora.className} text-red-600 font-semibold text-lg`}>
+                <span className={`${lora.className} text-red-600 font-medium text-lg`}>
                   This print is currently unavailable
                 </span>
               </div>
