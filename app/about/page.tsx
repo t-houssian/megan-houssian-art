@@ -30,16 +30,12 @@ export default function AboutPage() {
           </div>
           <div className="flex justify-center md:justify-end">
             <div className="group relative w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
-              <div
-                className="absolute -inset-4 hidden md:block -z-10 rounded-[2rem] bg-gradient-to-br from-white via-amber-50/70 to-transparent blur-2xl opacity-90"
-                aria-hidden="true"
-              ></div>
-              <figure className="relative aspect-[3/4] md:aspect-[4/5] overflow-hidden rounded-[1.5rem] border border-tan shadow-[0_35px_65px_-35px_rgba(80,64,50,0.55)] bg-white/40">
+              <figure className="relative aspect-[3/4] md:aspect-[4/5] overflow-hidden bg-paper shadow-[0_28px_48px_-32px_rgba(40,34,28,0.4)]">
                 <Image
                   src="/images/about.JPEG"
                   alt="Megan Houssian"
                   fill
-                  className="object-cover transition-transform duration-[1800ms] ease-out group-hover:scale-[1.03]"
+                  className="object-cover transition-transform duration-[1600ms] ease-out group-hover:scale-[1.02]"
                   style={{ objectPosition: 'center top' }}
                   sizes="(min-width: 1024px) 40vw, (min-width: 768px) 45vw, 90vw"
                   priority
