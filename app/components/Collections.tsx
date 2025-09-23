@@ -25,7 +25,7 @@ async function fetchArtPieces(): Promise<ArtPiece[]> {
     _id,
     mainImage
   }`;
-  return await sanityClient.fetch(query);
+  return await sanityClient.fetch(query, {}, { cache: 'no-store' });
 }
 
 export default async function Collections() {
