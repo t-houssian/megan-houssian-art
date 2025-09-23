@@ -5,6 +5,7 @@ import CollectionsClient from './CollectionsClient';
 
 export type ArtPiece = {
   _id: string;
+  title?: string;
   mainImage: {
     asset: {
       _ref: string;
@@ -21,11 +22,36 @@ export function urlFor(source: ArtPiece["mainImage"]) {
 }
 
 async function fetchArtPieces(): Promise<ArtPiece[]> {
-  const query = `*[_type == "gallery"] | order(_createdAt desc) {
-    _id,
-    mainImage
+  // Fetch manually ordered entries and append any pieces not yet in the order doc.
+  const query = `{
+    "orderDoc": *[_type == "galleryOrder"][0]{
+      items[]->{
+        _id,
+        title,
+        mainImage
+      },
+      "orderedIds": items[]._ref
+    },
+    "all": *[_type == "gallery"] | order(_createdAt desc) {
+      _id,
+      title,
+      mainImage
+    }
   }`;
-  return await sanityClient.fetch(query, {}, { cache: 'no-store' });
+
+  const { orderDoc, all } = await sanityClient.fetch<{
+    orderDoc?: {
+      items?: ArtPiece[];
+      orderedIds?: string[];
+    };
+    all?: ArtPiece[];
+  }>(query, {}, { cache: 'no-store' });
+
+  const orderedPieces = orderDoc?.items ?? [];
+  const orderedIds = new Set(orderDoc?.orderedIds ?? []);
+  const fallbackPieces = (all ?? []).filter((piece) => !orderedIds.has(piece._id));
+
+  return [...orderedPieces, ...fallbackPieces];
 }
 
 export default async function Collections() {

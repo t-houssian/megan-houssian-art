@@ -18,6 +18,9 @@ export default function Hero() {
           <h1 className={`${cormorant.className} text-5xl sm:text-7xl font-bold text-brown mb-6`}>
             Megan Houssian Art
           </h1>
+          <p className={`${cormorant.className} text-lg sm:text-2xl text-brown/80 italic tracking-wide mb-8`}>
+            Brushstrokes of sky and field, bringing the calm of nature indoors
+          </p>
           <a
             href="#gallery"
             className={`inline-block border-2 border-brown text-brown px-8 py-3 rounded-full font-semibold

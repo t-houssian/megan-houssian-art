@@ -31,10 +31,11 @@ export default function AboutPage() {
           <div>
             <div className="relative w-full h-96 md:h-[32rem] bg-ivory rounded-lg overflow-hidden shadow-lg border border-tan">
               <Image
-                src="/images/about.jpg"
+                src="/images/about.JPEG"
                 alt="Megan Houssian"
                 fill
-                style={{ objectFit: 'cover' }}
+                style={{ objectFit: 'contain', objectPosition: 'center top' }}
+                sizes="(min-width: 768px) 50vw, 100vw"
               />
             </div>
           </div>
