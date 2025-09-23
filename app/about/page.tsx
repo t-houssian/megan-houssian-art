@@ -28,15 +28,23 @@ export default function AboutPage() {
               of joyrooted in the blessings of family and in God.
             </p>
           </div>
-          <div>
-            <div className="relative w-full h-96 md:h-[32rem] bg-ivory rounded-lg overflow-hidden shadow-lg border border-tan">
-              <Image
-                src="/images/about.JPEG"
-                alt="Megan Houssian"
-                fill
-                style={{ objectFit: 'contain', objectPosition: 'center top' }}
-                sizes="(min-width: 768px) 50vw, 100vw"
-              />
+          <div className="flex justify-center md:justify-end">
+            <div className="group relative w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
+              <div
+                className="absolute -inset-4 hidden md:block -z-10 rounded-[2rem] bg-gradient-to-br from-white via-amber-50/70 to-transparent blur-2xl opacity-90"
+                aria-hidden="true"
+              ></div>
+              <figure className="relative aspect-[3/4] md:aspect-[4/5] overflow-hidden rounded-[1.5rem] border border-tan shadow-[0_35px_65px_-35px_rgba(80,64,50,0.55)] bg-white/40">
+                <Image
+                  src="/images/about.JPEG"
+                  alt="Megan Houssian"
+                  fill
+                  className="object-cover transition-transform duration-[1800ms] ease-out group-hover:scale-[1.03]"
+                  style={{ objectPosition: 'center top' }}
+                  sizes="(min-width: 1024px) 40vw, (min-width: 768px) 45vw, 90vw"
+                  priority
+                />
+              </figure>
             </div>
           </div>
         </div>
