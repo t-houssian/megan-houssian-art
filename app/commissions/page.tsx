@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent, FormEvent, KeyboardEvent } from "react";
 import { cormorant, lora } from "../fonts";
@@ -394,13 +395,13 @@ export default function CommissionsPage() {
               <li>Upload an inspiration photo that reflects the landscape you’re envisioning. Please keep the focus on nature; no buildings, animals, or people.</li>
               <li>Images should be your own original photos, clear and well lit.</li>
               <li>I can possibly combine multiple photos if they fit naturally together.</li>
-              <li>Still deciding? I’m happy to help you choose the strongest reference.</li>
-              <li>Include any notes about specific colors or palettes you'd like to complement your space.</li>
+              <li>Still deciding? I&apos;m happy to help you choose the strongest reference.</li>
+              <li>Include any notes about specific colors or palettes you&apos;d like to complement your space.</li>
               <li>Commissions begin at $1 per square inch, and a 20% upfront, non-recoverable deposit secures your spot and covers materials.</li>
             </ul>
           </div>
           <p className={`${lora.className} text-brown/80 leading-relaxed`}>
-            To request a spot or receive exact pricing, simply fill out the form below. There’s no need to have every detail figured out; share your photos and initial ideas, and we’ll refine the vision together. I can’t wait to create something beautiful with you!
+            To request a spot or receive exact pricing, simply fill out the form below. There&apos;s no need to have every detail figured out; share your photos and initial ideas, and we&apos;ll refine the vision together. I can&apos;t wait to create something beautiful with you!
           </p>
         </div>
 
@@ -522,9 +523,12 @@ export default function CommissionsPage() {
                       key={`${image.file.name}-${index}`}
                       className="group relative overflow-hidden rounded-xl border border-tan/40 bg-white/90 shadow-sm"
                     >
-                      <img
+                      <Image
                         src={image.preview}
                         alt={`Reference ${image.file.name}`}
+                        width={640}
+                        height={256}
+                        unoptimized
                         className="h-32 w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                       <div className="p-3 text-left">
@@ -641,7 +645,7 @@ export default function CommissionsPage() {
                 {item.option === "custom" && (
                   <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                     <p className="text-sm text-amber-700">
-                      Note: I'll source the canvas for custom sizes, and pricing may increase depending on the dimensions.
+                      Note: I&apos;ll source the canvas for custom sizes, and pricing may increase depending on the dimensions.
                     </p>
                   </div>
                 )}
