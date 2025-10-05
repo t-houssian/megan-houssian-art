@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { ChangeEvent, DragEvent, FormEvent, KeyboardEvent } from "react";
 import { cormorant, lora } from "../fonts";
 import { useRouter } from "next/navigation";
 
@@ -10,6 +11,11 @@ interface CanvasItem {
   customWidth: string; // used when option === "custom"
   customHeight: string; // used when option === "custom"
   quantity: number;
+}
+
+interface ReferenceImage {
+  file: File;
+  preview: string;
 }
 
 // Predefined canvas options (no duplicates)
@@ -49,12 +55,18 @@ const predefinedOptions = [
 ];
 
 const pricePerSqInch = 1;
+const MAX_UPLOAD_TOTAL_BYTES = 25 * 1024 * 1024;
 
 export default function CommissionsPage() {
   // Client info state
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [description, setDescription] = useState("");
+  const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isDragActive, setIsDragActive] = useState(false);
+  const referenceInputRef = useRef<HTMLInputElement | null>(null);
+  const referenceImagesCacheRef = useRef<ReferenceImage[]>([]);
 
   // Canvas items state
   const [canvasItems, setCanvasItems] = useState<CanvasItem[]>([
@@ -175,8 +187,146 @@ export default function CommissionsPage() {
     setCanvasItems((prev) => prev.filter((item) => item.id !== id));
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const appendReferenceImages = (files: File[]) => {
+    if (!files.length) return;
+
+    setReferenceImages((prev) => {
+      const signatures = new Set(
+        prev.map((item) => `${item.file.name}-${item.file.size}-${item.file.lastModified}`)
+      );
+
+      const newItems: ReferenceImage[] = [];
+      let newBytes = 0;
+      let hasNonImage = false;
+      let hasDuplicates = false;
+
+      files.forEach((file) => {
+        if (!file.type.startsWith("image/")) {
+          hasNonImage = true;
+          return;
+        }
+        const signature = `${file.name}-${file.size}-${file.lastModified}`;
+        if (signatures.has(signature)) {
+          hasDuplicates = true;
+          return;
+        }
+        const preview = URL.createObjectURL(file);
+        newItems.push({ file, preview });
+        signatures.add(signature);
+        newBytes += file.size;
+      });
+
+      if (!newItems.length) {
+        if (hasNonImage) {
+          setUploadError("Only image files can be uploaded.");
+        } else if (hasDuplicates) {
+          setUploadError("These files are already added.");
+        }
+        return prev;
+      }
+
+      const existingBytes = prev.reduce((sum, item) => sum + item.file.size, 0);
+      if (existingBytes + newBytes > MAX_UPLOAD_TOTAL_BYTES) {
+        newItems.forEach((item) => URL.revokeObjectURL(item.preview));
+        setUploadError("Please keep reference images under 25MB in total.");
+        return prev;
+      }
+
+      setUploadError(
+        hasNonImage
+          ? "Some files were skipped because they were not images."
+          : hasDuplicates
+          ? "Some files were skipped because they were already added."
+          : null
+      );
+
+      return [...prev, ...newItems];
+    });
+  };
+
+  const handleReferenceImagesChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    appendReferenceImages(files);
+    event.target.value = "";
+  };
+
+  const handleDropZoneClick = () => {
+    referenceInputRef.current?.click();
+  };
+
+  const handleDropZoneKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
+      event.preventDefault();
+      referenceInputRef.current?.click();
+    }
+  };
+
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    setIsDragActive(true);
+  };
+
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    const target = event.relatedTarget as Node | null;
+    if (target && event.currentTarget.contains(target)) {
+      return;
+    }
+    setIsDragActive(false);
+  };
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragActive(false);
+    const files = Array.from(event.dataTransfer?.files ?? []);
+    appendReferenceImages(files);
+  };
+
+  const removeReferenceImage = (index: number) => {
+    setReferenceImages((prev) => {
+      const next = [...prev];
+      const [removed] = next.splice(index, 1);
+      if (removed) {
+        URL.revokeObjectURL(removed.preview);
+      }
+      return next;
+    });
+    setUploadError(null);
+    if (referenceInputRef.current) {
+      referenceInputRef.current.value = "";
+    }
+  };
+
+  useEffect(() => {
+    referenceImagesCacheRef.current = referenceImages;
+  }, [referenceImages]);
+
+  useEffect(() => {
+    return () => {
+      referenceImagesCacheRef.current.forEach((image) => URL.revokeObjectURL(image.preview));
+    };
+  }, []);
+
+  const referenceImagesTotalSize = referenceImages.reduce(
+    (sum, image) => sum + image.file.size,
+    0
+  );
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 B";
+    const units = ["B", "KB", "MB", "GB"];
+    const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+    const size = bytes / Math.pow(1024, exponent);
+    return `${size.toFixed(size >= 10 || exponent === 0 ? 0 : 1)} ${units[exponent]}`;
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (referenceImagesTotalSize > MAX_UPLOAD_TOTAL_BYTES) {
+      setUploadError("Please keep reference images under 25MB in total.");
+      return;
+    }
+
     console.log("Form submitted", {
       name,
       email,
@@ -184,24 +334,40 @@ export default function CommissionsPage() {
       canvasItems,
       effectiveTotal,
       upfrontCost,
+      referenceImages: referenceImages.map(({ file }) => ({ name: file.name, size: file.size })),
     });
-    // Prepare submission data
-    const formData = { name, email, description, canvasItems, effectiveTotal, upfrontCost };
+
+    const submission = new FormData();
+    submission.append("formType", "commission");
+    submission.append("name", name);
+    submission.append("email", email);
+    submission.append("description", description);
+    submission.append("canvasItems", JSON.stringify(canvasItems));
+    submission.append("effectiveTotal", effectiveTotal.toString());
+    submission.append("upfrontCost", upfrontCost.toString());
+    submission.append("referenceImagesTotalBytes", referenceImagesTotalSize.toString());
+    referenceImages.forEach(({ file }) => {
+      submission.append("referenceImages", file);
+    });
 
     try {
       const res = await fetch("/api/send-email", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: submission,
       });
       if (!res.ok) {
-        throw new Error("Failed to send email");
+        const errorBody = await res.json().catch(() => null);
+        throw new Error(errorBody?.error || "Failed to send email");
       }
       console.log("Email sent successfully!");
       router.push("/success");
     } catch (error) {
       console.error("Error sending email:", error);
-      alert("There was an error sending your message. Please try again later.");
+      if (error instanceof Error && error.message.includes("25MB")) {
+        setUploadError("Attachments exceed the 25MB limit. Please remove or compress your files.");
+      } else {
+        alert("There was an error sending your message. Please try again later.");
+      }
     }
   };
 
@@ -274,6 +440,103 @@ export default function CommissionsPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             ></textarea>
+          </div>
+
+          <div className="mt-6">
+            <label
+              htmlFor="referenceImages"
+              className={`block text-brown font-medium mb-3 ${lora.className}`}
+            >
+              Reference Images (optional)
+            </label>
+            <input
+              ref={referenceInputRef}
+              id="referenceImages"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleReferenceImagesChange}
+              className="sr-only"
+            />
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={handleDropZoneClick}
+              onKeyDown={handleDropZoneKeyDown}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-6 py-10 text-center transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-olive/30 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${isDragActive ? "border-olive bg-olive/10 shadow-vintage-lg" : "border-tan/60 bg-white/70 hover:border-olive/60 hover:bg-olive/10"}`}
+              aria-label="Upload reference images"
+            >
+              <svg
+                className="h-12 w-12 text-olive/80"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 16V4m0 0-4 4m4-4 4 4M4 16h16v4H4z"
+                />
+              </svg>
+              <p className={`${lora.className} text-brown font-medium`}>
+                Drag & drop inspiration images
+              </p>
+              <p className="text-sm text-warm-gray">
+                or <span className="text-olive font-semibold">click to browse</span>. JPG, PNG, or WEBP. Max 25MB total.
+              </p>
+            </div>
+            {uploadError && (
+              <p
+                className={`mt-3 text-sm ${
+                  uploadError.includes("skipped") || uploadError.includes("already added")
+                    ? "text-amber-600"
+                    : "text-red-600"
+                }`}
+              >
+                {uploadError}
+              </p>
+            )}
+            {referenceImages.length > 0 && (
+              <div className="mt-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {referenceImages.map((image, index) => (
+                    <div
+                      key={`${image.file.name}-${index}`}
+                      className="group relative overflow-hidden rounded-xl border border-tan/40 bg-white/90 shadow-sm"
+                    >
+                      <img
+                        src={image.preview}
+                        alt={`Reference ${image.file.name}`}
+                        className="h-32 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                      <div className="p-3 text-left">
+                        <p className="text-sm font-medium text-brown truncate">{image.file.name}</p>
+                        <p className="mt-1 text-xs text-warm-gray">{formatFileSize(image.file.size)}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeReferenceImage(index)}
+                        className="absolute top-2 right-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-sm font-semibold text-red-600 shadow-sm transition-colors duration-200 hover:bg-red-600 hover:text-white"
+                        aria-label={`Remove ${image.file.name}`}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-2 flex items-center justify-between text-xs text-warm-gray">
+                  <span>
+                    {referenceImages.length} {referenceImages.length === 1 ? "image" : "images"}
+                  </span>
+                  <span>Total: {formatFileSize(referenceImagesTotalSize)}</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
