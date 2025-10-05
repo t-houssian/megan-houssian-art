@@ -1,16 +1,52 @@
 // components/Hero.tsx
 import Image from 'next/image';
+import { sanityClient } from '../../lib/sanity';
+import { urlFor } from '../../sanity/lib/image';
 import { cormorant, lora } from "../fonts";
 
-export default function Hero() {
+type HeroSettings = {
+  backgroundImage?: {
+    asset?: {
+      _ref: string;
+    };
+    alt?: string;
+  };
+};
+
+const heroQuery = `*[_type == "heroSettings"][0]{
+  backgroundImage{
+    asset,
+    alt
+  }
+}`;
+
+async function fetchHeroSettings(): Promise<HeroSettings | null> {
+  try {
+    return await sanityClient.fetch<HeroSettings | null>(heroQuery, {}, { next: { revalidate: 60 } });
+  } catch (error) {
+    console.error('Failed to load hero settings from Sanity', error);
+    return null;
+  }
+}
+
+export default async function Hero() {
+  const heroSettings = await fetchHeroSettings();
+
+  const heroImageUrl = heroSettings?.backgroundImage?.asset
+    ? urlFor(heroSettings.backgroundImage).width(2400).quality(80).url()
+    : '/images/blueBG.jpg';
+
+  const heroAlt = heroSettings?.backgroundImage?.alt?.trim() || 'Hero Image';
+
   return (
     <section className="relative w-full h-[80vh] overflow-hidden">
       <Image
-        src="/images/blueBG.jpg"
-        alt="Hero Image"
+        src={heroImageUrl}
+        alt={heroAlt}
         fill
         style={{ objectFit: 'cover' }}
         className="object-cover object-center"
+        priority
       />
       <div className="absolute inset-0 bg-hero-overlay/80"></div>
       <div className="relative z-10 flex items-center justify-center h-full">
