@@ -666,7 +666,7 @@ export default function CommissionsPage() {
             <button
               type="button"
               onClick={addCanvasItem}
-              className="w-full bg-gradient-to-r from-tan to-brown text-white px-6 py-3 rounded-lg hover:from-brown hover:to-warm-gray transition-all duration-400 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium"
+              className={`${lora.className} w-full bg-gradient-to-r from-btn-brown to-btn-brown-hover text-paper px-6 py-3 rounded-lg border border-paper/20 hover:from-btn-brown-hover hover:to-brown transition-all duration-500 shadow-vintage hover:shadow-vintage-lg transform hover:-translate-y-0.5 font-medium`}
             >
               Add Another Canvas
             </button>
