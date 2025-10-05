@@ -13,7 +13,7 @@ export default function CommissionsLink() {
         Interested in a Commission?
       </h2>
       <p className={`${lora.className} text-brown mb-8 max-w-2xl font-light mx-auto`}>
-        I create custom artwork at a rate of <b>$0.33 per square inch</b>. 
+        I create custom artwork at a rate of <b>$1 per square inch</b>. 
         Let me know your desired style, size, and details, and I&apos;ll get back to you.
       </p>
       <a

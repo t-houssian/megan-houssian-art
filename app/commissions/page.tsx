@@ -18,6 +18,8 @@ const predefinedOptions = [
   `24" X 48"`,
   `30" X 40"`,
   `6" X 6"`,
+  `4" X 6"`,
+  `5" X 7"`,
   `8" X 8"`,
   `10" X 10"`,
   `12" X 12"`,
@@ -46,7 +48,7 @@ const predefinedOptions = [
   `48" X 60"`,
 ];
 
-const pricePerSqInch = 0.33;
+const pricePerSqInch = 1;
 
 export default function CommissionsPage() {
   // Client info state
@@ -113,10 +115,8 @@ export default function CommissionsPage() {
   //     * Otherwise, round up to the next multiple of $25.
   // - If $100 or more, use the raw price.
   const getEffectivePrice = (raw: number): number => {
-    if (raw < 100) {
-      return raw > 0 && raw < 50 ? 50 : Math.ceil(raw / 25) * 25;
-    }
-    return raw;
+    if (raw <= 0) return 0;
+    return raw < 250 ? 250 : raw;
   };
 
   // Calculate overall effective total by summing each item's effective price
@@ -217,7 +217,7 @@ export default function CommissionsPage() {
           <div className={`${lora.className} text-lg text-warm-gray max-w-3xl mx-auto leading-relaxed space-y-4`}>
             <p>
               Thank you for your interest in a custom piece. Commissions are available at a
-              rate of <span className="font-semibold text-brown">$0.33 per square inch</span>.
+              rate of <span className="font-semibold text-brown">$1 per square inch</span>.
             </p>
             <p className="text-base">
               <span className="italic">Please note:</span> A 20% upfront non‐recoverable deposit is required to cover materials.
@@ -363,7 +363,7 @@ export default function CommissionsPage() {
                 {item.option === "custom" && (
                   <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                     <p className="text-sm text-amber-700">
-                      📝 Note: For custom canvas sizes, you will need to purchase and ship the canvas to me.
+                      Note: I'll source the canvas for custom sizes, and pricing may increase depending on the dimensions.
                     </p>
                   </div>
                 )}
@@ -371,7 +371,7 @@ export default function CommissionsPage() {
                 {/* Updated per-item total using the effective pricing */}
                 <div className="mt-4 p-4 bg-olive/10 rounded-lg">
                   <p className={`${lora.className} font-semibold text-brown`}>
-                    Item Total: ${getEffectivePrice(calculateItemPrice(item)).toFixed(2)}
+                    Estimated Total: ${getEffectivePrice(calculateItemPrice(item)).toFixed(2)}
                   </p>
                 </div>
 
@@ -418,7 +418,7 @@ export default function CommissionsPage() {
             <div className="flex items-start space-x-3">
               <div className="w-2 h-2 bg-olive rounded-full mt-2 flex-shrink-0"></div>
               <p className={`${lora.className} text-sm text-brown leading-relaxed`}>
-                Smaller canvas sizes 14&quot; x 18&quot; and under have fixed prices rather than the normal $0.33 per square inch to account for creation time and materials.
+                Smaller canvas sizes 14&quot; x 18&quot; and under have fixed prices rather than the normal $1 per square inch to account for creation time and materials.
               </p>
             </div>
             <div className="flex items-start space-x-3">
