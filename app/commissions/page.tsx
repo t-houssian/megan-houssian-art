@@ -560,15 +560,22 @@ export default function CommissionsPage() {
             Canvas Selections
           </h2>
           <div className="space-y-6">
-            {canvasItems.map((item) => (
-              <div key={item.id} className="border border-tan/50 bg-gradient-to-r from-ivory to-paper p-6 rounded-xl shadow-sm">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Canvas Size Selector */}
-                  <div>
-                    <label className={`block text-brown font-medium mb-2 ${lora.className}`}>Canvas Size</label>
-                    <select
-                      value={item.option}
-                      onChange={(e) => handleCanvasOptionChange(item.id, e.target.value)}
+            {canvasItems.map((item) => {
+              const isCustom = item.option === "custom";
+              const gridCols = isCustom ? "md:grid-cols-4" : "md:grid-cols-2";
+              const quantityColClasses = isCustom
+                ? "md:col-span-1 md:col-start-4"
+                : "md:col-span-1 md:col-start-2";
+
+              return (
+                <div key={item.id} className="border border-tan/50 bg-gradient-to-r from-ivory to-paper p-6 rounded-xl shadow-sm">
+                  <div className={`grid grid-cols-1 ${gridCols} gap-4`}>
+                    {/* Canvas Size Selector */}
+                    <div className="md:col-span-1">
+                      <label className={`block text-brown font-medium mb-2 ${lora.className}`}>Canvas Size</label>
+                      <select
+                        value={item.option}
+                        onChange={(e) => handleCanvasOptionChange(item.id, e.target.value)}
                       className="w-full border border-tan/50 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-olive/20 focus:border-olive bg-white/90 transition-all duration-200"
                     >
                       {sortedPredefinedOptions.map((option) => (
@@ -583,7 +590,7 @@ export default function CommissionsPage() {
                   {/* Custom Dimensions */}
                   {item.option === "custom" && (
                     <>
-                      <div>
+                      <div className="md:col-span-1">
                         <label className={`block text-brown font-medium mb-2 ${lora.className}`}>
                           Custom Width (inches)
                         </label>
@@ -598,7 +605,7 @@ export default function CommissionsPage() {
                           required
                         />
                       </div>
-                      <div>
+                      <div className="md:col-span-1">
                         <label className={`block text-brown font-medium mb-2 ${lora.className}`}>
                           Custom Height (inches)
                         </label>
@@ -615,13 +622,8 @@ export default function CommissionsPage() {
                       </div>
                     </>
                   )}
-                  {item.option !== "custom" && (
-                    <div className="md:col-span-2">
-                      <div className="h-14"></div>
-                    </div>
-                  )}
                   {/* Quantity */}
-                  <div className={item.option === "custom" ? "md:col-start-1" : "md:col-start-3"}>
+                  <div className={`md:self-end ${quantityColClasses}`}>
                     <label className={`block text-brown font-medium mb-2 ${lora.className}`}>Quantity</label>
                     <input
                       type="number"
@@ -660,8 +662,9 @@ export default function CommissionsPage() {
                     Remove Item
                   </button>
                 )}
-              </div>
-            ))}
+                </div>
+              );
+            })}
 
             <button
               type="button"
