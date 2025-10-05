@@ -388,43 +388,15 @@ export default function CommissionsPage() {
           </p>
           <div className="mb-6">
             <h3 className={`${lora.className} text-brown font-semibold mb-3`}>A few notes before we begin:</h3>
-            <ul className={`${lora.className} space-y-2 text-sm text-warm-gray leading-relaxed`}> 
-              <li className="flex items-start gap-2">
-                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-olive"></span>
-                <span>{"Commission spots are limited, so be sure to reserve early."}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-olive"></span>
-                <span>{"I work in a few signature styles, such as: impressionistic, monochromatic, and raw canvas. Feel free to browse my site to get a feel for each, and let me know which direction speaks to you the most."}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-olive"></span>
-                <span>{"Upload an inspiration photo that reflects the landscape you’re envisioning. Please keep the focus on nature; no buildings, animals, or people."}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-olive"></span>
-                <span>{"Images should be your own original photos, clear and well lit."}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-olive"></span>
-                <span>{"I can possibly combine multiple photos if they fit naturally together."}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-olive"></span>
-                <span>{"Still deciding? I’m happy to help you choose the strongest reference."}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-olive"></span>
-                <span>{"Include any notes about specific colors or palettes you'd like to complement your space."}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-olive"></span>
-                <span>
-                  {"Commissions begin at "}
-                  <span className="font-semibold text-brown">$1 per square inch</span>
-                  {", and a 20% upfront, non-recoverable deposit secures your spot and covers materials."}
-                </span>
-              </li>
+            <ul className={`${lora.className} list-disc list-outside pl-6 space-y-2 text-sm text-warm-gray leading-relaxed marker:text-olive/80`}> 
+              <li>Commission spots are limited, so be sure to reserve early.</li>
+              <li>I work in a few signature styles, such as: impressionistic, monochromatic, and raw canvas. Feel free to browse my site to get a feel for each, and let me know which direction speaks to you the most.</li>
+              <li>Upload an inspiration photo that reflects the landscape you’re envisioning. Please keep the focus on nature; no buildings, animals, or people.</li>
+              <li>Images should be your own original photos, clear and well lit.</li>
+              <li>I can possibly combine multiple photos if they fit naturally together.</li>
+              <li>Still deciding? I’m happy to help you choose the strongest reference.</li>
+              <li>Include any notes about specific colors or palettes you'd like to complement your space.</li>
+              <li>Commissions begin at $1 per square inch, and a 20% upfront, non-recoverable deposit secures your spot and covers materials.</li>
             </ul>
           </div>
           <p className={`${lora.className} text-brown/80 leading-relaxed`}>
