@@ -384,7 +384,7 @@ export default function CommissionsPage() {
 
         <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg mb-10">
           <p className={`${lora.className} text-brown/80 leading-relaxed mb-3`}>
-            Thank you for your interest! I can't wait to create something beautiful for your home.
+            Thank you for your interest!
           </p>
           <div className="mb-6">
             <h3 className={`${lora.className} text-brown font-semibold mb-3`}>A few notes before we begin:</h3>
