@@ -391,6 +391,51 @@ export default function CommissionsPage() {
           </div>
         </div>
 
+        <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg mb-10">
+          <h2 className={`${cormorant.className} text-2xl font-medium text-brown mb-4`}>
+            Interested in Commissioning a Custom Painting?
+          </h2>
+          <p className={`${lora.className} text-brown/80 leading-relaxed mb-4`}>
+            Reach out below to request a custom landscape or botanical commission.
+          </p>
+          <div className="mb-6">
+            <h3 className={`${lora.className} text-brown font-semibold mb-3`}>A few notes before we begin:</h3>
+            <ul className={`${lora.className} space-y-2 text-sm text-warm-gray leading-relaxed`}> 
+              <li className="flex items-start gap-2">
+                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-olive"></span>
+                <span>Commission spots are limited, so be sure to reserve early.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-olive"></span>
+                <span>I work in a few signature styles—impressionistic, monochromatic, and raw canvas. Browse the site to see examples and share the direction that speaks to you.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-olive"></span>
+                <span>Upload an inspiration photo that reflects the landscape you’re envisioning. Please keep the focus on nature—no buildings, animals, or people.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-olive"></span>
+                <span>Images should be your own, original photographs, clear, and well lit.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-olive"></span>
+                <span>I can combine multiple photos if they complement each other naturally—feel free to include a few options.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-olive"></span>
+                <span>Still deciding? I’m happy to help you choose the strongest reference.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-olive"></span>
+                <span>Include notes about any colors or palettes you want to echo in your space.</span>
+              </li>
+            </ul>
+          </div>
+          <p className={`${lora.className} text-brown/80 leading-relaxed`}>
+            To request a spot or receive exact pricing, simply fill out the form below. There’s no need to have every detail figured out—share your photos and initial ideas, and we’ll refine the vision together. I can’t wait to create something beautiful with you!
+          </p>
+        </div>
+
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Client Information */}
         <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
