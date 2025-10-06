@@ -188,6 +188,11 @@ type HeroSettings = {
   stylePreset?: HeroStylePresetKey | null;
 };
 
+type HeroCustomProperties = CSSProperties & Record<
+  '--button-text-color' | '--button-border-color' | '--button-hover-bg-color' | '--button-hover-text-color',
+  string
+>;
+
 const heroQuery = `*[_type == "heroSettings"][0]{
   backgroundImage{
     asset,
@@ -229,7 +234,7 @@ export default async function Hero() {
     buttonHoverTextColor,
   } = HERO_COLOR_PRESETS[presetKey];
 
-  const buttonStyle: CSSProperties = {
+  const buttonStyle: HeroCustomProperties = {
     '--button-text-color': buttonTextColor,
     '--button-border-color': buttonBorderColor,
     '--button-hover-bg-color': buttonHoverBackgroundColor,
