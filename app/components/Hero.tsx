@@ -217,7 +217,12 @@ export default async function Hero() {
   const heroSettings = await fetchHeroSettings();
 
   const heroImageUrl = heroSettings?.backgroundImage?.asset
-    ? urlFor(heroSettings.backgroundImage).width(2400).quality(80).url()
+    ? urlFor(heroSettings.backgroundImage)
+        // Request the original-size crop with minimal compression.
+        .fit('max')
+        .quality(100)
+        .format('jpg')
+        .url()
     : '/images/blueBG.jpg';
 
   const heroAlt = heroSettings?.backgroundImage?.alt?.trim() || 'Hero Image';
@@ -247,11 +252,14 @@ export default async function Hero() {
         src={heroImageUrl}
         alt={heroAlt}
         fill
+        quality={95}
+        sizes="100vw"
+        unoptimized
         style={{ objectFit: 'cover' }}
         className="object-cover object-center"
         priority
       />
-      <div className="absolute inset-0 bg-hero-overlay/80"></div>
+      <div className="absolute inset-0 bg-hero-overlay/40"></div>
       <div className="relative z-10 flex items-center justify-center h-full">
         <div className="text-center max-w-3xl px-4">
           <h1
