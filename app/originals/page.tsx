@@ -4,6 +4,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { cormorant, lora } from '../fonts';
 
+export const revalidate = 0;
+
 const builder = ImageUrlBuilder(sanityClient);
 function urlFor(source: { asset: { _ref: string } }) {
   return builder.image(source);
