@@ -54,7 +54,7 @@ export default async function OriginalsPage() {
         {/* Gallery Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {originals.map((art) => (
-            <Link key={art._id} href={`/originals/${art.slug.current}`}>
+            <Link key={art._id} href={`/originals/${encodeURIComponent(art.slug.current)}`}>
               <div className="group cursor-pointer">
                 <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl overflow-hidden shadow-vintage hover:shadow-vintage-lg transition-all duration-500 transform hover:-translate-y-2">
                   {art.mainImage?.asset && (
