@@ -58,13 +58,15 @@ export default async function OriginalsPage() {
               <div className="group cursor-pointer">
                 <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl overflow-hidden shadow-vintage hover:shadow-vintage-lg transition-all duration-500 transform hover:-translate-y-2">
                   {art.mainImage?.asset && (
-                    <div className="relative w-full h-80 overflow-hidden bg-paper">
+                    <div
+                      className="relative w-full overflow-hidden bg-gradient-to-br from-paper via-white to-paper flex items-center justify-center aspect-[4/5]"
+                    >
                       <Image
-                        src={urlFor(art.mainImage).width(600).height(600).url()}
+                        src={urlFor(art.mainImage).width(1200).fit('max').quality(85).url()}
                         alt={art.title}
                         fill
-                        style={{ objectFit: 'cover' }}
-                        className="transition-transform duration-700 group-hover:scale-105"
+                        className="transition-transform duration-700 group-hover:scale-105 object-contain"
+                        sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, 90vw"
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
                       {art.sold && (

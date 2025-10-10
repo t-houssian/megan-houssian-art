@@ -42,10 +42,9 @@ async function fetchOriginalBySlug(slug: string): Promise<OriginalArtwork | null
 }
 
 // Instead of typing props directly, we accept props as unknown and then assert its type.
-export default async function OriginalDetailPage(props: unknown) {
-  // Assert the shape of props to have a params property with a slug.
-  const { params } = props as { params: { slug: string } };
-  const slugParam = params.slug;
+export default async function OriginalDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug: rawSlug } = await params;
+  const slugParam = rawSlug;
   const slug = decodeURIComponent(slugParam);
   const artwork = await fetchOriginalBySlug(slug);
 

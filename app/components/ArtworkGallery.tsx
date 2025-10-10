@@ -35,58 +35,79 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
     setIsModalOpen(false);
   };
 
-  const prevImage = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering openModal
+  const prevImage = (e?: React.MouseEvent) => {
+    e?.stopPropagation(); // Prevent triggering openModal
     setSelectedIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : images.length - 1));
   };
 
-  const nextImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const nextImage = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setSelectedIndex((prevIndex) => (prevIndex < images.length - 1 ? prevIndex + 1 : 0));
   };
 
   return (
-    <div>
-      {/* Main image container with arrows */}
-      <div className="relative w-full h-96 bg-gray-100 cursor-pointer" onClick={openModal}>
+    <div className="space-y-6">
+      {/* Main image */}
+      <div
+        className="relative w-full cursor-pointer rounded-2xl bg-gradient-to-br from-paper via-white to-paper shadow-vintage overflow-hidden aspect-[4/5] sm:aspect-[3/4] lg:aspect-[4/5] min-h-[360px] sm:min-h-[420px] lg:min-h-[520px]"
+        onClick={openModal}
+      >
+        <div className="absolute inset-0">
+          {selectedImage && (
+            <Image
+              src={urlFor(selectedImage).width(1600).fit("max").quality(90).url()}
+              alt={`${title} image ${selectedIndex + 1}`}
+              fill
+              className="object-contain"
+              sizes="(min-width: 1280px) 40vw, (min-width: 1024px) 45vw, (min-width: 768px) 60vw, 90vw"
+              priority
+            />
+          )}
+        </div>
         {selectedImage && (
-          <Image
-            src={urlFor(selectedImage).width(800).height(800).url()}
-            alt={`${title} image ${selectedIndex + 1}`}
-            fill
-            style={{ objectFit: "cover" }}
-          />
+          <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-transparent to-black/5" />
         )}
-        {/* Left and Right arrows on the normal view */}
-        <button
-          onClick={prevImage}
-          className="absolute top-1/2 left-4 transform -translate-y-1/2 text-white text-2xl z-10"
-        >
-          ❮
-        </button>
-        <button
-          onClick={nextImage}
-          className="absolute top-1/2 right-4 transform -translate-y-1/2 text-white text-2xl z-10"
-        >
-          ❯
-        </button>
       </div>
 
+      {/* Gallery navigation */}
+      {images.length > 1 && (
+        <div className="flex justify-center gap-4">
+          <button
+            onClick={() => prevImage()}
+            className="inline-flex items-center gap-2 rounded-full border border-tan/50 bg-white/80 px-5 py-2 text-sm font-medium text-brown shadow-vintage hover:bg-olive/10 hover:border-olive/40 transition"
+            aria-label="Previous image"
+            type="button"
+          >
+            ❮
+            <span className="hidden sm:inline">Previous</span>
+          </button>
+          <button
+            onClick={() => nextImage()}
+            className="inline-flex items-center gap-2 rounded-full border border-tan/50 bg-white/80 px-5 py-2 text-sm font-medium text-brown shadow-vintage hover:bg-olive/10 hover:border-olive/40 transition"
+            aria-label="Next image"
+            type="button"
+          >
+            <span className="hidden sm:inline">Next</span>
+            ❯
+          </button>
+        </div>
+      )}
+
       {/* Thumbnails */}
-      <div className="flex space-x-2 mt-4 overflow-x-auto">
+      <div className="flex gap-3 mt-6 overflow-x-auto pb-1">
         {images.map((img, index) => (
           <div
             key={index}
-            className={`relative w-24 h-24 flex-shrink-0 cursor-pointer border ${
-              index === selectedIndex ? "border-blue-500" : "border-gray-300"
-            }`}
+            className={`relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 cursor-pointer rounded-xl border-2 transition ${
+              index === selectedIndex ? "border-olive shadow-vintage" : "border-tan/40"
+            } bg-white/80`}
             onClick={() => setSelectedIndex(index)}
           >
             <Image
-              src={urlFor(img).width(200).height(200).url()}
+              src={urlFor(img).width(400).fit("max").quality(80).url()}
               alt={`${title} thumbnail ${index + 1}`}
               fill
-              style={{ objectFit: "cover" }}
+              className="object-contain p-2"
             />
           </div>
         ))}
@@ -101,11 +122,11 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
           <div className="relative w-full max-w-3xl h-full max-h-screen" onClick={(e) => e.stopPropagation()}>
             {selectedImage && (
               <Image
-                src={urlFor(selectedImage).width(1600).height(1600).url()}
+                src={urlFor(selectedImage).width(2400).fit("max").quality(95).url()}
                 alt={`${title} enlarged image`}
                 fill
-                style={{ objectFit: "contain" }}
-              />
+                className="object-contain"
+                />
             )}
             {/* Left and Right Navigation Arrows in modal */}
             <button
