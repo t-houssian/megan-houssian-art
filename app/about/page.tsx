@@ -17,15 +17,10 @@ export default function AboutPage() {
               About Megan
             </h1>
             <p className={`${lora.className} text-brown leading-relaxed mb-6 text-lg`}>
-              When I step into the painting process, I feel a deep sense of joy and calm.
-              Time seems to pause as I release expectations and immerse myself in the
-              rhythm of creation. Afterwards, I leave my studio with a renewed clarity
-              and everything around me feels more vibrant.
+              I’ve always loved to paint, but it truly came alive as a hobby after becoming a mom. There was a pull in me- almost an ache- to create. I started with small pieces, little studies of flowers and landscapes, and before long I was painting large-scale works to fill the walls of my own home. That simple beginning slowly grew into creating art for others. Along the way, I’ve had to remind myself to shift my focus away from the end product and back toward the joy of creating itself.
             </p>
             <p className={`${lora.className} text-brown leading-relaxed mb-6 text-lg`}>
-              Returning to the routines of life, I carry with me
-              a heightened sense of gratitude. My art is, at its core, an expression
-              of joyrooted in the blessings of family and in God.
+              Painting brings a burst of joy into my heart. It adds depth and reflection to a life already full of blessings- my family, my faith, and the love that surrounds me. I feel profoundly grateful for the peace and purpose God has woven into both my art and my everyday life.
             </p>
           </div>
           <div className="flex justify-center md:justify-end">
