@@ -55,6 +55,17 @@ export default function Footer() {
                     <span>Instagram</span>
                   </a> */}
                   <a
+                    href="https://pin.it/1Scq2kp48"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`text-warm-gray hover:text-olive transition-colors duration-200 ${lora.className} text-sm flex items-center justify-center md:justify-end space-x-2`}
+                  >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12.04 2C6.58 2 2 6.58 2 12.04c0 4.2 2.58 7.86 6.27 9.36-.09-.8-.17-2.03.03-2.9.18-.8 1.17-5.08 1.17-5.08s-.3-.6-.3-1.5c0-1.4.81-2.45 1.82-2.45.86 0 1.27.65 1.27 1.42 0 .87-.55 2.18-.83 3.4-.24 1.02.51 1.85 1.52 1.85 1.82 0 3.22-1.92 3.22-4.68 0-2.45-1.76-4.16-4.27-4.16-2.91 0-4.62 2.18-4.62 4.43 0 .87.34 1.8.75 2.3.08.1.09.2.07.31-.07.34-.23 1.09-.26 1.24-.04.2-.14.24-.33.14-1.23-.57-2-2.36-2-3.8 0-3.1 2.25-5.95 6.5-5.95 3.41 0 6.06 2.43 6.06 5.68 0 3.39-2.14 6.12-5.12 6.12-1 0-1.94-.52-2.26-1.13l-.62 2.36c-.22.86-.82 1.93-1.22 2.58.92.28 1.9.43 2.93.43 5.46 0 10.04-4.58 10.04-10.04C22.08 6.58 17.5 2 12.04 2z"/>
+                    </svg>
+                    <span>Pinterest</span>
+                  </a>
+                  <a
                     href="https://www.facebook.com/marketplace/profile/61550348800548/?ref=permalink&mibextid=6ojiHh"
                     target="_blank"
                     rel="noopener noreferrer"

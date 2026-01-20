@@ -397,7 +397,7 @@ export default function CommissionsPage() {
               <li>I can possibly combine multiple photos if they fit naturally together.</li>
               <li>Still deciding? I&apos;m happy to help you choose the strongest reference.</li>
               <li>Include any notes about specific colors or palettes you&apos;d like to complement your space.</li>
-              <li>Commissions begin at $1 per square inch, and a 20% upfront, non-recoverable deposit secures your spot and covers materials.</li>
+              <li>Pricing is based on size, and a 20% upfront, non-recoverable deposit secures your spot and covers materials.</li>
             </ul>
           </div>
           <p className={`${lora.className} text-brown/80 leading-relaxed`}>
@@ -701,13 +701,13 @@ export default function CommissionsPage() {
             <div className="flex items-start space-x-3">
               <div className="w-2 h-2 bg-olive rounded-full mt-2 flex-shrink-0"></div>
               <p className={`${lora.className} text-sm text-brown leading-relaxed`}>
-                Smaller canvas sizes 14&quot; x 18&quot; and under have fixed prices rather than the normal $1 per square inch to account for creation time and materials.
+                Smaller canvas sizes 14&quot; x 18&quot; and under have fixed prices to account for creation time and materials.
               </p>
             </div>
             <div className="flex items-start space-x-3">
               <div className="w-2 h-2 bg-olive rounded-full mt-2 flex-shrink-0"></div>
               <p className={`${lora.className} text-sm text-brown leading-relaxed`}>
-                This form is just a request for a commission. I will reach out to you to discuss the details and provide a final quote.
+                The calculator provides an approximate price based on size. This form is just a request for a commission, and I will reach out to discuss the details and provide a final quote.
               </p>
             </div>
             <div className="flex items-start space-x-3">
