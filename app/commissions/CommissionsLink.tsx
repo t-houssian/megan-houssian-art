@@ -13,8 +13,7 @@ export default function CommissionsLink() {
         Interested in a Commission?
       </h2>
       <p className={`${lora.className} text-brown mb-8 max-w-2xl font-light mx-auto`}>
-        Custom pieces are sized to your space, and pricing is based on dimensions.
-        Use the commission form for an approximate estimate, and I&apos;ll confirm the exact price after we connect.
+        I accept a limited number of commissions each season. If you&apos;re drawn to the mood and atmosphere in my landscapes, I&apos;d love to create a one-of-a-kind piece for your home.
       </p>
       <a
         href="/commissions"

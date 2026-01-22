@@ -1,6 +1,7 @@
 // app/page.tsx
 import { Suspense } from 'react';
 import Hero from './components/Hero';
+import AboutSection from './components/AboutSection';
 import Collections from './components/Collections';
 import CommisionsLink from './commissions/CommissionsLink';
 import ContactLink from './contact/ContactLink';
@@ -13,6 +14,7 @@ export default function Home() {
       <Suspense fallback={<div className="text-brown text-center py-8">Loading gallery…</div>}>
         <Collections />
       </Suspense>
+      <AboutSection />
       <CommisionsLink />
       <ContactLink />
     </>
