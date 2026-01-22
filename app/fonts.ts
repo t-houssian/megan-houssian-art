@@ -9,5 +9,6 @@ export const cormorant = Cormorant_Garamond({
 export const lora = Lora({
   subsets: ['latin'],
   display: 'swap',
+  style: ['normal', 'italic'],
   weight: ['400', '700'],
 });
