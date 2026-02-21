@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { amount, shippingAddress, product, shippingOption, shipmentId, selectedRateId } = await request.json();
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
 
     // Validate required fields
     if (!amount || amount <= 0) {
@@ -52,8 +53,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/checkout`,
+      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/checkout`,
       // Always collect billing address
       billing_address_collection: 'required',
       metadata: {

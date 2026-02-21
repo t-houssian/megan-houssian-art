@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest) {
   try {
     const { amount, shippingAddress, shippingOption } = await request.json();
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
 
     // PayPal API configuration
     const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
@@ -74,8 +75,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       application_context: {
-        return_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/success`,
-        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/checkout`,
+        return_url: `${baseUrl}/success`,
+        cancel_url: `${baseUrl}/checkout`,
         shipping_preference: shippingOption === 'pickup' ? 'NO_SHIPPING' : 'SET_PROVIDED_ADDRESS',
       },
     };

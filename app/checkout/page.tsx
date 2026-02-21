@@ -9,10 +9,26 @@ import { SiStripe, SiPaypal } from "react-icons/si";
 import { cormorant, lora } from "../fonts";
 import FreeAddressValidator from "../components/FreeAddressValidator";
 
-// Initialize Stripe (make sure your NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is set in .env)
-const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
-  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
-  : null;
+let stripePromise: ReturnType<typeof loadStripe> | null = null;
+
+const getStripeClient = async () => {
+  if (!stripePromise) {
+    let publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+
+    // Fallback to server-provided key if NEXT_PUBLIC env is not present at build time.
+    if (!publishableKey) {
+      const response: AxiosResponse<{ publishableKey?: string; error?: string }> = await axios.get("/api/stripe-config");
+      publishableKey = response.data.publishableKey;
+      if (!publishableKey) {
+        throw new Error(response.data.error || "Stripe publishable key is not configured.");
+      }
+    }
+
+    stripePromise = loadStripe(publishableKey);
+  }
+
+  return stripePromise;
+};
 
 type ShippingAddress = {
   name: string;
@@ -134,12 +150,6 @@ const CheckoutContent = () => {
 
   // Handler for Stripe checkout: call your API route that creates a Stripe Checkout session.
   const handleStripeCheckout = async (): Promise<void> => {
-    // Check if Stripe is configured
-    if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-      setErrorMessage("Stripe payment is not configured. Please contact support.");
-      return;
-    }
-
     // Validate address only for shipping option
     if (shippingOption === "shipping") {
       if (!shippingAddress.name || !shippingAddress.addressLine1 || !shippingAddress.city) {
@@ -162,12 +172,16 @@ const CheckoutContent = () => {
         selectedRateId: selectedRate,
       });
       const { sessionId } = response.data;
-      const stripe = await stripePromise;
+      const stripe = await getStripeClient();
       if (!stripe) throw new Error("Stripe failed to load. Please check configuration.");
       const { error } = await stripe.redirectToCheckout({ sessionId });
       if (error) throw error;
     } catch (error: unknown) {
-      if (error instanceof Error) {
+      if (axios.isAxiosError(error)) {
+        const apiError = error.response?.data?.error;
+        setErrorMessage(typeof apiError === "string" ? apiError : (error.message || "Stripe checkout failed."));
+        console.error(error.message);
+      } else if (error instanceof Error) {
         setErrorMessage(error.message || "Stripe checkout failed.");
         console.error(error.message);
       } else {

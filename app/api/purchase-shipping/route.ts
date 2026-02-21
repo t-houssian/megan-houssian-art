@@ -3,9 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 // Dynamic import for EasyPost
 async function initializeEasyPost(): Promise<unknown | null> {
   try {
-    if (process.env.EASYPOST_API_KEY && process.env.EASYPOST_API_KEY !== 'EZAK_your_test_api_key_here') {
+    const easyPostApiKey = process.env.EASYPOST_API_KEY?.trim();
+    if (
+      easyPostApiKey &&
+      easyPostApiKey !== 'EZAK_your_test_api_key_here' &&
+      easyPostApiKey !== 'EZTK_your_test_api_key_here'
+    ) {
       const EasyPost = (await import('@easypost/api')).default;
-      return new EasyPost(process.env.EASYPOST_API_KEY);
+      return new EasyPost(easyPostApiKey);
     }
     return null;
   } catch (error) {

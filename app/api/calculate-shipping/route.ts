@@ -48,20 +48,49 @@ interface EasyPostAPI {
   };
 }
 
+type EasyPostFromAddress = ShipmentData['from_address'];
+
 // Dynamic import for EasyPost to handle potential import issues
 let easypost: EasyPostAPI | null = null;
 
 async function initializeEasyPost(): Promise<EasyPostAPI | null> {
   try {
-    if (process.env.EASYPOST_API_KEY && process.env.EASYPOST_API_KEY !== 'EZAK_your_test_api_key_here') {
+    const easyPostApiKey = process.env.EASYPOST_API_KEY?.trim();
+    if (
+      easyPostApiKey &&
+      easyPostApiKey !== 'EZAK_your_test_api_key_here' &&
+      easyPostApiKey !== 'EZTK_your_test_api_key_here'
+    ) {
       const EasyPost = (await import('@easypost/api')).default;
-      return new EasyPost(process.env.EASYPOST_API_KEY);
+      return new EasyPost(easyPostApiKey);
     }
     return null;
   } catch (error) {
     console.error('EasyPost initialization error:', error);
     return null;
   }
+}
+
+function getEasyPostFromAddress(): EasyPostFromAddress | null {
+  const street1 = process.env.EASYPOST_FROM_STREET1?.trim();
+  const city = process.env.EASYPOST_FROM_CITY?.trim();
+  const state = process.env.EASYPOST_FROM_STATE?.trim();
+  const zip = process.env.EASYPOST_FROM_ZIP?.trim();
+  const country = process.env.EASYPOST_FROM_COUNTRY?.trim() || 'US';
+  const name = process.env.EASYPOST_FROM_NAME?.trim() || 'Megan Houssian Art';
+
+  if (!street1 || !city || !state || !zip) {
+    return null;
+  }
+
+  return {
+    name,
+    street1,
+    city,
+    state,
+    zip,
+    country,
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -86,6 +115,12 @@ export async function POST(request: NextRequest) {
       return calculateFallbackShipping(shippingAddress, packageDetails);
     }
 
+    const fromAddress = getEasyPostFromAddress();
+    if (!fromAddress) {
+      console.log('EasyPost from address is not configured, using fallback shipping calculation');
+      return calculateFallbackShipping(shippingAddress, packageDetails);
+    }
+
     try {
       // Create shipment to get rates from EasyPost
       const shipment = await easypost.Shipment.create({
@@ -98,14 +133,7 @@ export async function POST(request: NextRequest) {
           zip: shippingAddress.postalCode,
           country: shippingAddress.country,
         },
-        from_address: {
-          name: "Megan Houssian Art",
-          street1: "Your Gallery Address", // TODO: Replace with actual address
-          city: "Marble Falls",
-          state: "TX",
-          zip: "78654",
-          country: "US",
-        },
+        from_address: fromAddress,
         parcel: {
           length: packageDetails?.dimensions?.length || 12,
           width: packageDetails?.dimensions?.width || 9,
@@ -160,43 +188,77 @@ interface ShippingAddress {
 }
 
 interface PackageDetails {
-  weight: number;
+  weight?: number;
   dimensions: {
-    length: number;
-    width: number;
-    height: number;
+    length?: number;
+    width?: number;
+    height?: number;
   };
 }
 
-// Fallback shipping calculation (your original logic)
-function calculateFallbackShipping(shippingAddress: ShippingAddress, packageDetails: PackageDetails) {
-  let shippingCost = 0; // in cents
+function parsePositiveNumber(value: unknown, fallback: number): number {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    return value;
+  }
+  return fallback;
+}
 
-  // Simple shipping calculation based on country
-  switch (shippingAddress.country.toUpperCase()) {
+function normalizePackageDetails(packageDetails?: PackageDetails) {
+  return {
+    weight: parsePositiveNumber(packageDetails?.weight, 16), // ounces
+    dimensions: {
+      length: parsePositiveNumber(packageDetails?.dimensions?.length, 12),
+      width: parsePositiveNumber(packageDetails?.dimensions?.width, 9),
+      height: parsePositiveNumber(packageDetails?.dimensions?.height, 2),
+    },
+  };
+}
+
+function calculateDomesticFallbackShippingCost(packageDetails: ReturnType<typeof normalizePackageDetails>): number {
+  const { weight, dimensions } = packageDetails;
+  const sortedDimensions = [dimensions.length, dimensions.width, dimensions.height].sort((a, b) => b - a);
+  const longestSide = sortedDimensions[0];
+  const secondLongestSide = sortedDimensions[1];
+  const footprint = longestSide * secondLongestSide;
+
+  // Tiered artwork shipping pricing. 48x36 resolves to $200.
+  let shippingCost = 3500;
+  if (longestSide >= 48 || footprint >= 1700) {
+    shippingCost = 20000;
+  } else if (longestSide >= 40 || footprint >= 1200) {
+    shippingCost = 14500;
+  } else if (longestSide >= 30 || footprint >= 700) {
+    shippingCost = 9000;
+  } else if (longestSide >= 20 || footprint >= 350) {
+    shippingCost = 6000;
+  }
+
+  // Weight is in ounces; only surcharge above 10 lbs.
+  const overweightPounds = Math.max(0, weight - 160) / 16;
+  shippingCost += Math.ceil(overweightPounds * 500); // $5/lb over 10 lbs
+
+  return shippingCost;
+}
+
+// Fallback shipping calculation
+function calculateFallbackShipping(shippingAddress: ShippingAddress, packageDetails?: PackageDetails) {
+  const normalizedPackage = normalizePackageDetails(packageDetails);
+  const country = shippingAddress.country.toUpperCase();
+  const domesticCost = calculateDomesticFallbackShippingCost(normalizedPackage);
+  let shippingCost = domesticCost;
+
+  switch (country) {
     case 'US':
     case 'UNITED STATES':
-      // Domestic shipping - $10
-      shippingCost = 1000;
+      shippingCost = domesticCost;
       break;
     case 'CA':
     case 'CANADA':
-      // Canada shipping - $15
-      shippingCost = 1500;
+      shippingCost = Math.round(domesticCost * 1.35) + 2500;
       break;
     default:
-      // International shipping - $25
-      shippingCost = 2500;
+      shippingCost = Math.round(domesticCost * 2.1) + 4000;
       break;
-  }
-
-  // Add weight-based calculation if package details are provided
-  if (packageDetails && packageDetails.weight) {
-    const weight = packageDetails.weight;
-    if (weight > 5) {
-      // Add $5 for every pound over 5 lbs
-      shippingCost += Math.ceil((weight - 5) * 500);
-    }
   }
 
   return NextResponse.json({ 
@@ -205,7 +267,7 @@ function calculateFallbackShipping(shippingAddress: ShippingAddress, packageDeta
       service: 'Standard Shipping',
       carrier: 'USPS',
       rate: shippingCost,
-      delivery_days: shippingAddress.country.toUpperCase() === 'US' ? 5 : 14,
+      delivery_days: country === 'US' || country === 'UNITED STATES' ? 5 : 14,
       delivery_date: null,
     }],
     shipmentId: null,

@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.text();
     const signature = request.headers.get('stripe-signature')!;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
 
     let event: Stripe.Event;
 
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
         if (shippingOption === 'shipping' && shipmentId && rateId) {
           try {
             console.log('Purchasing shipping label for order:', session.id);
-            const labelResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/purchase-shipping`, {
+            const labelResponse = await fetch(`${baseUrl}/api/purchase-shipping`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
