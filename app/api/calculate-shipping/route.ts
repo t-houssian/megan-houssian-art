@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         rates: [{
           id: 'shipping-and-handling',
-          service: 'Shipping & Handling',
+          service: 'Shipping',
           carrier: 'Estimated',
           rate: shippingAndHandlingRate,
           delivery_days: 14,
@@ -315,7 +315,7 @@ function calculateFallbackShipping(
   return NextResponse.json({ 
     rates: [{
       id: 'shipping-and-handling',
-      service: 'Shipping & Handling',
+      service: 'Shipping',
       carrier: 'Estimated',
       rate: totalShippingAndHandling,
       delivery_days: 14,

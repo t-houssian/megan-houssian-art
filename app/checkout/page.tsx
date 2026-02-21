@@ -157,7 +157,7 @@ const CheckoutContent = () => {
         return;
       }
       if (shippingCost <= 0) {
-        setErrorMessage("Please calculate shipping & handling before checkout.");
+        setErrorMessage("Please calculate shipping before checkout.");
         return;
       }
     }
@@ -374,9 +374,9 @@ const CheckoutContent = () => {
                         Calculating Shipping...
                       </>
                     ) : !shippingAddress.addressLine1 || !shippingAddress.city || !shippingAddress.country ? (
-                      "Complete Address to Calculate Shipping & Handling"
+                      "Complete Address to Calculate Shipping"
                     ) : (
-                      "Calculate Shipping & Handling"
+                      "Calculate Shipping"
                     )}
                   </span>
                   {!isCalculating && shippingAddress.addressLine1 && shippingAddress.city && shippingAddress.country && (
@@ -401,11 +401,11 @@ const CheckoutContent = () => {
                   </div>
                 )}
 
-                {/* Shipping & Handling Summary */}
+                {/* Shipping Summary */}
                 {shippingRates.length > 0 && (
                   <div className="mt-6 bg-olive/5 rounded-lg p-4 border border-tan/30">
                     <div className="flex justify-between items-center mb-2">
-                      <span className={`${lora.className} font-medium text-brown`}>Shipping & Handling</span>
+                      <span className={`${lora.className} font-medium text-brown`}>Shipping</span>
                       <span className={`${lora.className} font-medium text-brown`}>
                         ${(shippingCost / 100).toFixed(2)}
                       </span>
@@ -550,8 +550,8 @@ const CheckoutContent = () => {
                                 throw new Error("Please fill in all required shipping fields.");
                               }
                               if (shippingCost <= 0) {
-                                setErrorMessage("Please calculate shipping & handling before checkout.");
-                                throw new Error("Please calculate shipping & handling before checkout.");
+                                setErrorMessage("Please calculate shipping before checkout.");
+                                throw new Error("Please calculate shipping before checkout.");
                               }
                             }
                             const orderId = await createPayPalOrder();
@@ -588,7 +588,7 @@ const CheckoutContent = () => {
                 
                 {shippingOption === "shipping" ? (
                   <div className="flex justify-between items-center py-3 border-b border-tan/30">
-                    <span className={`${lora.className} text-warm-gray`}>Shipping & Handling</span>
+                    <span className={`${lora.className} text-warm-gray`}>Shipping</span>
                     <span className={`${lora.className} font-medium text-brown`}>${(shippingCost / 100).toFixed(2)}</span>
                   </div>
                 ) : (
