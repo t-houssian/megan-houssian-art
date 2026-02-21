@@ -104,6 +104,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const artworkPackage = normalizePackageDetails(packageDetails);
+    const boxedPackage = applyPackagingBuffer(artworkPackage, 2);
+    const handlingFee = calculateHandlingFeeCents(artworkPackage);
+
     // Initialize EasyPost if not already done
     if (!easypost) {
       easypost = await initializeEasyPost();
@@ -112,13 +116,13 @@ export async function POST(request: NextRequest) {
     // If EasyPost is not configured, fall back to simple calculation
     if (!easypost) {
       console.log('EasyPost not configured, using fallback shipping calculation');
-      return calculateFallbackShipping(shippingAddress, packageDetails);
+      return calculateFallbackShipping(shippingAddress, artworkPackage, handlingFee);
     }
 
     const fromAddress = getEasyPostFromAddress();
     if (!fromAddress) {
       console.log('EasyPost from address is not configured, using fallback shipping calculation');
-      return calculateFallbackShipping(shippingAddress, packageDetails);
+      return calculateFallbackShipping(shippingAddress, artworkPackage, handlingFee);
     }
 
     try {
@@ -135,10 +139,10 @@ export async function POST(request: NextRequest) {
         },
         from_address: fromAddress,
         parcel: {
-          length: packageDetails?.dimensions?.length || 12,
-          width: packageDetails?.dimensions?.width || 9,
-          height: packageDetails?.dimensions?.height || 2,
-          weight: packageDetails?.weight || 16, // ounces
+          length: boxedPackage.dimensions.length,
+          width: boxedPackage.dimensions.width,
+          height: boxedPackage.dimensions.height,
+          weight: boxedPackage.weight, // ounces
         },
       });
 
@@ -156,16 +160,31 @@ export async function POST(request: NextRequest) {
       // Sort rates by price (cheapest first)
       rates.sort((a: { rate: number }, b: { rate: number }) => a.rate - b.rate);
 
+      const cheapestRate = rates[0];
+      if (!cheapestRate) {
+        console.log('No EasyPost rates returned, using fallback shipping calculation');
+        return calculateFallbackShipping(shippingAddress, artworkPackage, handlingFee);
+      }
+
+      const shippingAndHandlingRate = cheapestRate.rate + handlingFee;
+
       return NextResponse.json({ 
-        rates,
-        shipmentId: shipment.id, // Store this for label purchase
+        rates: [{
+          id: 'shipping-and-handling',
+          service: 'Shipping & Handling',
+          carrier: 'Estimated',
+          rate: shippingAndHandlingRate,
+          delivery_days: 14,
+          delivery_date: null,
+        }],
+        shipmentId: null,
         success: true,
       });
 
     } catch (easyPostError) {
       console.error('EasyPost API error:', easyPostError);
       // Fall back to simple calculation if EasyPost fails
-      return calculateFallbackShipping(shippingAddress, packageDetails);
+      return calculateFallbackShipping(shippingAddress, artworkPackage, handlingFee);
     }
 
   } catch (error) {
@@ -214,6 +233,32 @@ function normalizePackageDetails(packageDetails?: PackageDetails) {
   };
 }
 
+function applyPackagingBuffer(packageDetails: ReturnType<typeof normalizePackageDetails>, bufferInches: number) {
+  return {
+    ...packageDetails,
+    dimensions: {
+      length: packageDetails.dimensions.length + bufferInches,
+      width: packageDetails.dimensions.width + bufferInches,
+      height: packageDetails.dimensions.height + bufferInches,
+    },
+  };
+}
+
+function calculateHandlingFeeCents(packageDetails: ReturnType<typeof normalizePackageDetails>): number {
+  const sortedDimensions = [
+    packageDetails.dimensions.length,
+    packageDetails.dimensions.width,
+    packageDetails.dimensions.height,
+  ].sort((a, b) => b - a);
+  const longestSide = sortedDimensions[0];
+  const secondLongestSide = sortedDimensions[1];
+
+  if (longestSide >= 48 || secondLongestSide >= 36) return 4000;
+  if (longestSide >= 36 || secondLongestSide >= 24) return 3000;
+  if (longestSide >= 24 || secondLongestSide >= 18) return 2000;
+  return 1000;
+}
+
 function calculateDomesticFallbackShippingCost(packageDetails: ReturnType<typeof normalizePackageDetails>): number {
   const { weight, dimensions } = packageDetails;
   const sortedDimensions = [dimensions.length, dimensions.width, dimensions.height].sort((a, b) => b - a);
@@ -241,10 +286,14 @@ function calculateDomesticFallbackShippingCost(packageDetails: ReturnType<typeof
 }
 
 // Fallback shipping calculation
-function calculateFallbackShipping(shippingAddress: ShippingAddress, packageDetails?: PackageDetails) {
-  const normalizedPackage = normalizePackageDetails(packageDetails);
+function calculateFallbackShipping(
+  shippingAddress: ShippingAddress,
+  packageDetails: ReturnType<typeof normalizePackageDetails>,
+  handlingFee: number
+) {
+  const boxedPackage = applyPackagingBuffer(packageDetails, 2);
   const country = shippingAddress.country.toUpperCase();
-  const domesticCost = calculateDomesticFallbackShippingCost(normalizedPackage);
+  const domesticCost = calculateDomesticFallbackShippingCost(boxedPackage);
   let shippingCost = domesticCost;
 
   switch (country) {
@@ -261,13 +310,15 @@ function calculateFallbackShipping(shippingAddress: ShippingAddress, packageDeta
       break;
   }
 
+  const totalShippingAndHandling = shippingCost + handlingFee;
+
   return NextResponse.json({ 
     rates: [{
-      id: 'fallback-standard',
-      service: 'Standard Shipping',
-      carrier: 'USPS',
-      rate: shippingCost,
-      delivery_days: country === 'US' || country === 'UNITED STATES' ? 5 : 14,
+      id: 'shipping-and-handling',
+      service: 'Shipping & Handling',
+      carrier: 'Estimated',
+      rate: totalShippingAndHandling,
+      delivery_days: 14,
       delivery_date: null,
     }],
     shipmentId: null,

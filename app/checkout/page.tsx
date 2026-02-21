@@ -85,8 +85,6 @@ const CheckoutContent = () => {
     country: "",
   });
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
-  const [selectedRate, setSelectedRate] = useState<string>('');
-  const [shipmentId, setShipmentId] = useState<string>('');
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<"stripe" | "paypal">("stripe");
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
@@ -100,7 +98,6 @@ const CheckoutContent = () => {
     try {
       const response: AxiosResponse<{ 
         rates: ShippingRate[]; 
-        shipmentId: string; 
         success: boolean; 
         fallback?: boolean;
       }> = await axios.post(
@@ -119,17 +116,14 @@ const CheckoutContent = () => {
         }
       );
       
-      const { rates, shipmentId: newShipmentId } = response.data;
-      setShippingRates(rates);
-      setShipmentId(newShipmentId || '');
-      
-      // Auto-select cheapest rate
+      const { rates } = response.data;
       if (rates.length > 0) {
-        const cheapestRate = rates.reduce((prev, curr) => 
-          prev.rate < curr.rate ? prev : curr
-        );
-        setSelectedRate(cheapestRate.id);
-        setShippingCost(cheapestRate.rate);
+        setShippingRates([rates[0]]);
+        setShippingCost(rates[0].rate);
+      } else {
+        setShippingRates([]);
+        setShippingCost(0);
+        setErrorMessage("No shipping estimate is available for this address.");
       }
       
     } catch (error: unknown) {
@@ -148,12 +142,22 @@ const CheckoutContent = () => {
   // Total price in cents
   const totalPrice = shippingOption === "pickup" ? BASE_PRICE : BASE_PRICE + shippingCost;
 
+  const handleShippingAddressChange = (address: ShippingAddress) => {
+    setShippingAddress(address);
+    setShippingRates([]);
+    setShippingCost(0);
+  };
+
   // Handler for Stripe checkout: call your API route that creates a Stripe Checkout session.
   const handleStripeCheckout = async (): Promise<void> => {
     // Validate address only for shipping option
     if (shippingOption === "shipping") {
       if (!shippingAddress.name || !shippingAddress.addressLine1 || !shippingAddress.city) {
         setErrorMessage("Please fill in all required shipping fields.");
+        return;
+      }
+      if (shippingCost <= 0) {
+        setErrorMessage("Please calculate shipping & handling before checkout.");
         return;
       }
     }
@@ -167,9 +171,6 @@ const CheckoutContent = () => {
         shippingAddress: shippingOption === "pickup" ? null : shippingAddress,
         billingAddress: null, // Let Stripe collect billing info
         shippingOption: shippingOption,
-        // Add EasyPost data for automatic label purchasing
-        shipmentId: shipmentId,
-        selectedRateId: selectedRate,
       });
       const { sessionId } = response.data;
       const stripe = await getStripeClient();
@@ -207,9 +208,6 @@ const CheckoutContent = () => {
         shippingAddress: shippingOption === "pickup" ? null : shippingAddress,
         billingAddress: null, // Let PayPal collect billing info
         shippingOption: shippingOption,
-        // Add EasyPost data for automatic label purchasing
-        shipmentId: shipmentId,
-        selectedRateId: selectedRate,
       });
       
       console.log('PayPal order response:', response.data);
@@ -295,6 +293,7 @@ const CheckoutContent = () => {
                         checked={shippingOption === "shipping"}
                         onChange={() => {
                           setShippingOption("shipping");
+                          setShippingRates([]);
                           setShippingCost(0);
                         }}
                         className="mt-1 h-5 w-5 text-olive focus:ring-olive border-tan"
@@ -323,6 +322,7 @@ const CheckoutContent = () => {
                         checked={shippingOption === "pickup"}
                         onChange={() => {
                           setShippingOption("pickup");
+                          setShippingRates([]);
                           setShippingCost(0);
                         }}
                         className="mt-1 h-5 w-5 text-olive focus:ring-olive border-tan"
@@ -351,7 +351,7 @@ const CheckoutContent = () => {
                 
                 <FreeAddressValidator
                   currentAddress={shippingAddress}
-                  onAddressChange={setShippingAddress}
+                  onAddressChange={handleShippingAddressChange}
                   className="block w-full rounded-lg border border-tan/50 bg-white/90 px-4 py-3 text-brown placeholder-warm-gray/60 focus:border-olive focus:ring-2 focus:ring-olive/20 transition-all duration-200"
                 />
                 
@@ -374,9 +374,9 @@ const CheckoutContent = () => {
                         Calculating Shipping...
                       </>
                     ) : !shippingAddress.addressLine1 || !shippingAddress.city || !shippingAddress.country ? (
-                      "Complete Address to Calculate Shipping"
+                      "Complete Address to Calculate Shipping & Handling"
                     ) : (
-                      "Calculate Shipping Costs"
+                      "Calculate Shipping & Handling"
                     )}
                   </span>
                   {!isCalculating && shippingAddress.addressLine1 && shippingAddress.city && shippingAddress.country && (
@@ -401,40 +401,18 @@ const CheckoutContent = () => {
                   </div>
                 )}
 
-                {/* Shipping Rate Selection */}
+                {/* Shipping & Handling Summary */}
                 {shippingRates.length > 0 && (
-                  <div className="mt-6 space-y-3">
-                    <h4 className={`${lora.className} font-medium text-brown`}>Select Shipping Option:</h4>
-                    {shippingRates.map((rate) => (
-                      <label key={rate.id} className="flex items-center space-x-3 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="shippingRate"
-                          value={rate.id}
-                          checked={selectedRate === rate.id}
-                          onChange={() => {
-                            setSelectedRate(rate.id);
-                            setShippingCost(rate.rate);
-                          }}
-                          className="h-4 w-4 text-olive focus:ring-olive"
-                        />
-                        <div className="flex-1 flex justify-between items-center bg-olive/5 rounded-lg p-3 border border-tan/30 hover:border-olive/50 transition-colors">
-                          <div>
-                            <span className="text-brown font-medium">
-                              {rate.carrier} {rate.service}
-                            </span>
-                            {rate.delivery_days && (
-                              <div className="text-sm text-warm-gray">
-                                Estimated delivery: {rate.delivery_days} business days
-                              </div>
-                            )}
-                          </div>
-                          <span className="font-medium text-brown">
-                            ${(rate.rate / 100).toFixed(2)}
-                          </span>
-                        </div>
-                      </label>
-                    ))}
+                  <div className="mt-6 bg-olive/5 rounded-lg p-4 border border-tan/30">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className={`${lora.className} font-medium text-brown`}>Shipping & Handling</span>
+                      <span className={`${lora.className} font-medium text-brown`}>
+                        ${(shippingCost / 100).toFixed(2)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-warm-gray">
+                      Please allow about 2 weeks to package and ship your artwork.
+                    </p>
                   </div>
                 )}
               </div>
@@ -571,6 +549,10 @@ const CheckoutContent = () => {
                                 setErrorMessage("Please fill in all required shipping fields.");
                                 throw new Error("Please fill in all required shipping fields.");
                               }
+                              if (shippingCost <= 0) {
+                                setErrorMessage("Please calculate shipping & handling before checkout.");
+                                throw new Error("Please calculate shipping & handling before checkout.");
+                              }
                             }
                             const orderId = await createPayPalOrder();
                             return orderId;
@@ -606,7 +588,7 @@ const CheckoutContent = () => {
                 
                 {shippingOption === "shipping" ? (
                   <div className="flex justify-between items-center py-3 border-b border-tan/30">
-                    <span className={`${lora.className} text-warm-gray`}>Shipping</span>
+                    <span className={`${lora.className} text-warm-gray`}>Shipping & Handling</span>
                     <span className={`${lora.className} font-medium text-brown`}>${(shippingCost / 100).toFixed(2)}</span>
                   </div>
                 ) : (
