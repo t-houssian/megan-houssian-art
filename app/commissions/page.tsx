@@ -391,7 +391,7 @@ export default function CommissionsPage() {
             <h3 className={`${lora.className} text-brown font-semibold mb-3`}>A few notes before we begin:</h3>
             <ul className={`${lora.className} list-disc list-outside pl-6 space-y-2 text-sm text-warm-gray leading-relaxed marker:text-olive/80`}> 
               <li>Commission spots are limited, so be sure to reserve early.</li>
-              <li>Upload an inspiration photo that reflects the landscape you’re envisioning. Please keep the focus on nature; no buildings, animals, or people.</li>
+              <li>Upload an inspiration photo that reflects what you&apos;re envisioning.</li>
               <li>Images should be your own original photos, clear and well lit.</li>
               <li>I can possibly combine multiple photos if they fit naturally together.</li>
               <li>Still deciding? I&apos;m happy to help you choose the strongest reference.</li>
