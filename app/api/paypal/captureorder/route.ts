@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { sendOrderConfirmationEmail } from '../../../../lib/order-confirmation-email';
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,6 +67,37 @@ export async function POST(request: NextRequest) {
       // - Update your database
       // - Fulfill the order
       console.log('PayPal payment captured successfully:', captureData.id);
+
+      try {
+        const purchaseUnit = captureData.purchase_units?.[0];
+        const shippingInfo = purchaseUnit?.shipping;
+
+        await sendOrderConfirmationEmail({
+          customerEmail: captureData.payer?.email_address,
+          customerName: [captureData.payer?.name?.given_name, captureData.payer?.name?.surname]
+            .filter(Boolean)
+            .join(' ')
+            .trim(),
+          paymentMethod: 'paypal',
+          orderId: captureData.id || orderId,
+          product: purchaseUnit?.description || 'Artwork Purchase',
+          amountDollars: purchaseUnit?.amount?.value,
+          shippingOption: shippingInfo ? 'shipping' : 'pickup',
+          shippingAddress: shippingInfo
+            ? {
+                line1: shippingInfo.address?.address_line_1,
+                line2: shippingInfo.address?.address_line_2,
+                city: shippingInfo.address?.admin_area_2,
+                state: shippingInfo.address?.admin_area_1,
+                postalCode: shippingInfo.address?.postal_code,
+                country: shippingInfo.address?.country_code,
+              }
+            : null,
+        });
+        console.log('PayPal confirmation email sent');
+      } catch (emailError) {
+        console.error('Failed to send PayPal confirmation email:', emailError);
+      }
       
       // TODO: For PayPal shipping label purchasing, you'll need to:
       // 1. Store shipment_id and rate_id in a temporary storage (Redis, database, etc.) when creating the order

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { sendOrderConfirmationEmail } from '../../../../lib/order-confirmation-email';
 
 // Initialize Stripe only when the secret key is available
 const getStripe = () => {
@@ -53,6 +54,28 @@ export async function POST(request: NextRequest) {
         console.log('Payment successful:', session.id);
         console.log('Customer email:', session.customer_details?.email);
         console.log('Amount paid:', session.amount_total);
+
+        try {
+          await sendOrderConfirmationEmail({
+            customerEmail: session.customer_details?.email || session.customer_email,
+            customerName: session.customer_details?.name,
+            paymentMethod: 'stripe',
+            orderId: session.id,
+            product: session.metadata?.product || 'Artwork Purchase',
+            amountCents: session.amount_total,
+            shippingOption: session.metadata?.shipping_option,
+            shippingAddress: {
+              line1: session.metadata?.shipping_address,
+              city: session.metadata?.shipping_city,
+              state: session.metadata?.shipping_state,
+              postalCode: session.metadata?.shipping_postal_code,
+              country: session.metadata?.shipping_country,
+            },
+          });
+          console.log('Stripe confirmation email sent');
+        } catch (emailError) {
+          console.error('Failed to send Stripe confirmation email:', emailError);
+        }
         
         // Here you can also:
         // - Send confirmation email to customer
