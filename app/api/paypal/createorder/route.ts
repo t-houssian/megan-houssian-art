@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const isValidEmail = (value: unknown): value is string =>
+  typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+
 export async function POST(request: NextRequest) {
   try {
-    const { amount, shippingAddress, shippingOption } = await request.json();
+    const { amount, shippingAddress, shippingOption, checkoutEmail } = await request.json();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
+    const normalizedCheckoutEmail = isValidEmail(checkoutEmail) ? checkoutEmail.trim().toLowerCase() : null;
 
     // PayPal API configuration
     const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
@@ -16,6 +20,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'PayPal configuration missing' },
         { status: 500 }
+      );
+    }
+
+    if (!normalizedCheckoutEmail) {
+      return NextResponse.json(
+        { error: 'Valid checkout email is required' },
+        { status: 400 }
       );
     }
 
@@ -57,6 +68,7 @@ export async function POST(request: NextRequest) {
             currency_code: 'USD',
             value: amount, // amount in dollars
           },
+          custom_id: `checkout_email:${normalizedCheckoutEmail}`,
           description: `Artwork purchase from Megan Houssian Art${shippingOption === 'pickup' ? ' - Local Pickup in Marble Falls, TX' : ''}`,
           ...(shippingOption === 'shipping' && shippingAddress ? {
             shipping: {

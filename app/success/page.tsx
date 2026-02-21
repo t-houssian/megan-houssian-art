@@ -7,7 +7,7 @@ export default function SuccessPage() {
       <h1 className={`${cormorant.className} text-4xl font-bold text-brown mb-4`}>Payment Successful!</h1>
       <p className={`${lora.className} text-brown mb-8 text-center max-w-2xl`}>
         Thank you for your purchase! 🎨 Your payment has been processed successfully. 
-        You will receive a confirmation email shortly with your order details and shipping information.
+        Please check the email address you entered at checkout for your confirmation, order details, and shipping information.
         I truly appreciate your support of my art! 🌟
       </p>
       <div className="flex flex-col sm:flex-row gap-4">

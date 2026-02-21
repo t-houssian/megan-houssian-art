@@ -66,9 +66,12 @@ type CheckoutDraft = {
   basePriceDollars: number;
   returnTo: string;
   shippingOption: "shipping" | "pickup";
+  checkoutEmail: string;
   shippingAddress: ShippingAddress;
   shippingCost: number;
 };
+
+const isValidEmail = (value: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 const CheckoutContent = () => {
   const router = useRouter();
@@ -106,6 +109,7 @@ const CheckoutContent = () => {
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>(defaultShippingAddress);
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
   const [shippingCost, setShippingCost] = useState<number>(0);
+  const [checkoutEmail, setCheckoutEmail] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<"stripe" | "paypal">("stripe");
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -143,6 +147,7 @@ const CheckoutContent = () => {
       parsedDraft.basePriceDollars === basePriceDollars
     ) {
       setShippingOption(parsedDraft.shippingOption);
+      setCheckoutEmail(parsedDraft.checkoutEmail || "");
       setShippingAddress({ ...defaultShippingAddress, ...parsedDraft.shippingAddress });
       if (parsedDraft.shippingCost > 0) {
         setShippingCost(parsedDraft.shippingCost);
@@ -176,6 +181,7 @@ const CheckoutContent = () => {
       basePriceDollars,
       returnTo: returnToPath,
       shippingOption,
+      checkoutEmail,
       shippingAddress,
       shippingCost,
     };
@@ -188,6 +194,7 @@ const CheckoutContent = () => {
     basePriceDollars,
     returnToPath,
     shippingOption,
+    checkoutEmail,
     shippingAddress,
     shippingCost,
   ]);
@@ -252,6 +259,11 @@ const CheckoutContent = () => {
   // Handler for Stripe checkout: call your API route that creates a Stripe Checkout session.
   const handleStripeCheckout = async (): Promise<void> => {
     // Validate address only for shipping option
+    if (!isValidEmail(checkoutEmail)) {
+      setErrorMessage("Please enter a valid email address.");
+      return;
+    }
+
     if (shippingOption === "shipping") {
       if (!shippingAddress.name || !shippingAddress.addressLine1 || !shippingAddress.city) {
         setErrorMessage("Please fill in all required shipping fields.");
@@ -269,6 +281,7 @@ const CheckoutContent = () => {
       const response = await axios.post("/api/create-stripe-checkout-session", {
         amount: totalPrice,
         product: product,
+        checkoutEmail: checkoutEmail.trim(),
         shippingAddress: shippingOption === "pickup" ? null : shippingAddress,
         billingAddress: null, // Let Stripe collect billing info
         shippingOption: shippingOption,
@@ -307,6 +320,7 @@ const CheckoutContent = () => {
       
       const response = await axios.post("/api/paypal/createorder", {
         amount: (totalPrice / 100).toFixed(2), // converting cents to dollars
+        checkoutEmail: checkoutEmail.trim(),
         shippingAddress: shippingOption === "pickup" ? null : shippingAddress,
         billingAddress: null, // Let PayPal collect billing info
         shippingOption: shippingOption,
@@ -558,6 +572,25 @@ const CheckoutContent = () => {
               <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown flex items-center`}>
                 Payment Method
               </h2>
+
+              <div className="mb-6">
+                <label htmlFor="checkout-email" className={`${lora.className} block text-brown font-medium mb-2`}>
+                  Email for Confirmation
+                </label>
+                <input
+                  id="checkout-email"
+                  type="email"
+                  value={checkoutEmail}
+                  onChange={(event) => setCheckoutEmail(event.target.value)}
+                  placeholder="you@example.com"
+                  className="block w-full rounded-lg border border-tan/50 bg-white/90 px-4 py-3 text-brown placeholder-warm-gray/60 focus:border-olive focus:ring-2 focus:ring-olive/20 transition-all duration-200"
+                  required
+                />
+                <p className="mt-2 text-sm text-warm-gray">
+                  We&apos;ll send your receipt and shipping updates to this email.
+                </p>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                 <label className="group cursor-pointer">
                   <div className={`border-2 rounded-xl p-6 transition-all duration-300 ${
@@ -646,6 +679,10 @@ const CheckoutContent = () => {
                         style={{ layout: "vertical", color: "gold", shape: "rect", label: "paypal", height: 55 }}
                         createOrder={async (): Promise<string> => {
                           try {
+                            if (!isValidEmail(checkoutEmail)) {
+                              setErrorMessage("Please enter a valid email address.");
+                              throw new Error("Please enter a valid email address.");
+                            }
                             if (shippingOption === "shipping") {
                               if (!shippingAddress.name || !shippingAddress.addressLine1 || !shippingAddress.city) {
                                 setErrorMessage("Please fill in all required shipping fields.");

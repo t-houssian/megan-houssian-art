@@ -18,6 +18,9 @@ const getSafeReturnPath = (value: unknown): string | null => {
   return value;
 };
 
+const isValidEmail = (value: unknown): value is string =>
+  typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+
 export async function POST(request: NextRequest) {
   try {
     // Check if Stripe is configured
@@ -28,14 +31,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { amount, shippingAddress, product, shippingOption, returnTo } = await request.json();
+    const { amount, shippingAddress, product, shippingOption, returnTo, checkoutEmail } = await request.json();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
     const safeReturnPath = getSafeReturnPath(returnTo);
+    const normalizedCheckoutEmail = isValidEmail(checkoutEmail) ? checkoutEmail.trim() : null;
 
     // Validate required fields
     if (!amount || amount <= 0) {
       return NextResponse.json(
         { error: 'Invalid amount' },
+        { status: 400 }
+      );
+    }
+
+    if (!normalizedCheckoutEmail) {
+      return NextResponse.json(
+        { error: 'Valid checkout email is required' },
         { status: 400 }
       );
     }
@@ -60,12 +71,14 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
+      customer_email: normalizedCheckoutEmail,
       success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: safeReturnPath ? `${baseUrl}${safeReturnPath}` : `${baseUrl}/checkout`,
       // Always collect billing address
       billing_address_collection: 'required',
       metadata: {
         product: product || 'artwork',
+        checkout_email: normalizedCheckoutEmail,
         shipping_option: shippingOption || 'shipping',
         ...(shippingOption === 'shipping' && shippingAddress ? {
           shipping_name: shippingAddress.name,

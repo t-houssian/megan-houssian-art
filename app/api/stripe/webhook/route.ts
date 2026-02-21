@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
         try {
           await sendOrderConfirmationEmail({
-            customerEmail: session.customer_details?.email || session.customer_email,
+            customerEmail: session.customer_details?.email || session.customer_email || session.metadata?.checkout_email,
             customerName: session.customer_details?.name,
             paymentMethod: 'stripe',
             orderId: session.id,

@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendOrderConfirmationEmail } from '../../../../lib/order-confirmation-email';
 
+const parseCheckoutEmailFromCustomId = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null;
+  const prefix = 'checkout_email:';
+  if (!value.startsWith(prefix)) return null;
+  const email = value.slice(prefix.length).trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
+};
+
 export async function POST(request: NextRequest) {
   try {
     const { orderId } = await request.json();
@@ -71,9 +79,10 @@ export async function POST(request: NextRequest) {
       try {
         const purchaseUnit = captureData.purchase_units?.[0];
         const shippingInfo = purchaseUnit?.shipping;
+        const checkoutEmailFallback = parseCheckoutEmailFromCustomId(purchaseUnit?.custom_id);
 
         await sendOrderConfirmationEmail({
-          customerEmail: captureData.payer?.email_address,
+          customerEmail: captureData.payer?.email_address || checkoutEmailFallback,
           customerName: [captureData.payer?.name?.given_name, captureData.payer?.name?.surname]
             .filter(Boolean)
             .join(' ')
