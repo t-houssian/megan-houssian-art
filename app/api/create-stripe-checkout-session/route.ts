@@ -12,6 +12,12 @@ const getStripe = () => {
   });
 };
 
+const getSafeReturnPath = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null;
+  if (!value.startsWith('/') || value.startsWith('//')) return null;
+  return value;
+};
+
 export async function POST(request: NextRequest) {
   try {
     // Check if Stripe is configured
@@ -22,8 +28,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { amount, shippingAddress, product, shippingOption } = await request.json();
+    const { amount, shippingAddress, product, shippingOption, returnTo } = await request.json();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
+    const safeReturnPath = getSafeReturnPath(returnTo);
 
     // Validate required fields
     if (!amount || amount <= 0) {
@@ -54,7 +61,7 @@ export async function POST(request: NextRequest) {
       ],
       mode: 'payment',
       success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/checkout`,
+      cancel_url: safeReturnPath ? `${baseUrl}${safeReturnPath}` : `${baseUrl}/checkout`,
       // Always collect billing address
       billing_address_collection: 'required',
       metadata: {

@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { lora } from "../fonts";
 
 type PurchaseSectionProps = {
@@ -18,12 +18,14 @@ type PurchaseSectionProps = {
 
 export default function PurchaseSection({ title, basePrice, shipping }: PurchaseSectionProps) {
   const router = useRouter();
+  const pathname = usePathname();
 
   const handlePurchase = () => {
     // Build the checkout URL with product details and shipping information
     const params = new URLSearchParams({
       product: title,
       price: basePrice.toString(),
+      returnTo: pathname,
     });
 
     // Add shipping parameters if available, with fallback defaults

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import React, { useState, Suspense, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import axios, { AxiosResponse } from "axios";
@@ -49,10 +49,38 @@ type ShippingRate = {
   delivery_date?: string;
 };
 
+const CHECKOUT_DRAFT_KEY = "mha-checkout-draft-v1";
+
+const defaultShippingAddress: ShippingAddress = {
+  name: "",
+  addressLine1: "",
+  addressLine2: "",
+  city: "",
+  state: "",
+  postalCode: "",
+  country: "",
+};
+
+type CheckoutDraft = {
+  product: string;
+  basePriceDollars: number;
+  returnTo: string;
+  shippingOption: "shipping" | "pickup";
+  shippingAddress: ShippingAddress;
+  shippingCost: number;
+};
+
 const CheckoutContent = () => {
+  const router = useRouter();
   // Read product details from URL query parameters
   const searchParams = useSearchParams();
   const product = searchParams.get("product") || "";
+  const returnToFromQuery = searchParams.get("returnTo");
+  const normalizedReturnToFromQuery =
+    returnToFromQuery && returnToFromQuery.startsWith("/") && !returnToFromQuery.startsWith("//")
+      ? returnToFromQuery
+      : "";
+  const priceParam = searchParams.get("price");
   const basePriceDollars = searchParams.get("price")
     ? parseFloat(searchParams.get("price")!)
     : 20;
@@ -75,21 +103,94 @@ const CheckoutContent = () => {
 
   // Local state
   const [shippingOption, setShippingOption] = useState<"shipping" | "pickup">("shipping");
-  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
-    name: "",
-    addressLine1: "",
-    addressLine2: "",
-    city: "",
-    state: "",
-    postalCode: "",
-    country: "",
-  });
+  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>(defaultShippingAddress);
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<"stripe" | "paypal">("stripe");
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [returnToPath, setReturnToPath] = useState<string>(normalizedReturnToFromQuery);
+  const [isDraftInitialized, setIsDraftInitialized] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || isDraftInitialized) return;
+
+    let parsedDraft: CheckoutDraft | null = null;
+
+    try {
+      const raw = window.sessionStorage.getItem(CHECKOUT_DRAFT_KEY);
+      if (raw) parsedDraft = JSON.parse(raw) as CheckoutDraft;
+    } catch {
+      parsedDraft = null;
+    }
+
+    const resolvedReturnTo = normalizedReturnToFromQuery || parsedDraft?.returnTo || "";
+    if (resolvedReturnTo) setReturnToPath(resolvedReturnTo);
+
+    const hasCheckoutParams = Boolean(product && priceParam);
+
+    // If user returns to bare /checkout (e.g., from browser back), send them to the artwork page.
+    if (!hasCheckoutParams && resolvedReturnTo) {
+      router.replace(resolvedReturnTo);
+      return;
+    }
+
+    // Restore shipping info if it's the same artwork/price.
+    if (
+      parsedDraft &&
+      parsedDraft.product === product &&
+      parsedDraft.basePriceDollars === basePriceDollars
+    ) {
+      setShippingOption(parsedDraft.shippingOption);
+      setShippingAddress({ ...defaultShippingAddress, ...parsedDraft.shippingAddress });
+      if (parsedDraft.shippingCost > 0) {
+        setShippingCost(parsedDraft.shippingCost);
+        setShippingRates([
+          {
+            id: "restored-shipping",
+            service: "Shipping",
+            carrier: "Estimated",
+            rate: parsedDraft.shippingCost,
+          },
+        ]);
+      }
+    }
+
+    setIsDraftInitialized(true);
+  }, [
+    isDraftInitialized,
+    normalizedReturnToFromQuery,
+    product,
+    priceParam,
+    basePriceDollars,
+    router,
+  ]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !isDraftInitialized) return;
+    if (!product || !priceParam) return;
+
+    const draft: CheckoutDraft = {
+      product,
+      basePriceDollars,
+      returnTo: returnToPath,
+      shippingOption,
+      shippingAddress,
+      shippingCost,
+    };
+
+    window.sessionStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify(draft));
+  }, [
+    isDraftInitialized,
+    product,
+    priceParam,
+    basePriceDollars,
+    returnToPath,
+    shippingOption,
+    shippingAddress,
+    shippingCost,
+  ]);
 
   // Calculate shipping by calling your shipping API endpoint (e.g. using EasyPost)
   const calculateShipping = async (): Promise<void> => {
@@ -171,6 +272,7 @@ const CheckoutContent = () => {
         shippingAddress: shippingOption === "pickup" ? null : shippingAddress,
         billingAddress: null, // Let Stripe collect billing info
         shippingOption: shippingOption,
+        returnTo: returnToPath || null,
       });
       const { sessionId } = response.data;
       const stripe = await getStripeClient();
