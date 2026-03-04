@@ -5,6 +5,8 @@ import Image from "next/image";
 import LumaPrintPurchase from "../../components/LumaPrintPurchase";
 import Link from "next/link";
 import { cormorant, lora } from "../../fonts";
+import { notFound } from "next/navigation";
+import { fetchOriginalsPageSettings } from "../../../lib/originals-page-settings";
 
 const builder = ImageUrlBuilder(sanityClient);
 function urlFor(source: { asset: { _ref: string } }) {
@@ -40,15 +42,16 @@ interface PageProps {
 }
 
 export default async function PrintDetailPage({ params }: PageProps) {
+  const settings = await fetchOriginalsPageSettings();
+  if (!settings.showPrints) {
+    notFound();
+  }
+
   const { slug } = await params;
   const printItem = await fetchPrintBySlug(slug);
 
   if (!printItem) {
-    return (
-      <div className="max-w-7xl mx-auto py-16 px-4">
-  <h1 className={`text-2xl font-medium text-[var(--text-brown)] ${cormorant.className}`}>Print Not Found</h1>
-      </div>
-    );
+    notFound();
   }
 
   return (

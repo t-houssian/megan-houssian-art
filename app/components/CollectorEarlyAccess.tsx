@@ -11,7 +11,23 @@ type SubscribeResponse = {
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function CollectorEarlyAccess() {
+type CollectorEarlyAccessProps = {
+  sectionId?: string;
+  heading?: string;
+  subhead?: string;
+  buttonLabel?: string;
+  finePrint?: string;
+  className?: string;
+};
+
+export default function CollectorEarlyAccess({
+  sectionId = "collector-early-access",
+  heading = "Collector Early Access",
+  subhead = "Join my Collector List and I'll email you a private preview link 24 hours before new originals go live.",
+  buttonLabel = "Get early access",
+  finePrint = "By signing up, you'll receive emails about new paintings and releases. Unsubscribe anytime.",
+  className = "",
+}: CollectorEarlyAccessProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
@@ -22,10 +38,10 @@ export default function CollectorEarlyAccess() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    if (window.location.hash === "#collector-early-access") {
+    if (window.location.hash === `#${sectionId}`) {
       setIsOpen(true);
     }
-  }, []);
+  }, [sectionId]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -79,12 +95,12 @@ export default function CollectorEarlyAccess() {
   };
 
   return (
-    <section id="collector-early-access" className="py-16 px-4 bg-accent-cream text-center border-y border-tan">
+    <section id={sectionId} className={`py-16 px-4 bg-accent-cream text-center border-y border-tan ${className}`.trim()}>
       <h2 className={`${cormorant.className} text-3xl md:text-4xl font-medium text-brown mb-4`}>
-        Collector Early Access
+        {heading}
       </h2>
       <p className={`${lora.className} text-brown mb-8 max-w-2xl font-light mx-auto`}>
-        Join my Collector List and I&apos;ll email you a private preview link 24 hours before new originals go live.
+        {subhead}
       </p>
 
       {!isOpen ? (
@@ -93,7 +109,7 @@ export default function CollectorEarlyAccess() {
           onClick={() => setIsOpen(true)}
           className={`inline-block bg-gradient-to-r from-btn-brown to-btn-brown-hover text-paper px-8 py-3 rounded-full font-medium shadow-vintage hover:shadow-vintage-lg transition-all duration-500 hover:-translate-y-0.5 border border-paper/20 relative overflow-hidden group ${lora.className}`}
         >
-          <span className="relative z-10">Get early access</span>
+          <span className="relative z-10">{buttonLabel}</span>
           <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-paper to-transparent opacity-0 group-hover:opacity-10 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700" />
         </button>
       ) : (
@@ -135,7 +151,7 @@ export default function CollectorEarlyAccess() {
                 disabled={isSubmitting}
                 className={`inline-block bg-gradient-to-r from-btn-brown to-btn-brown-hover text-paper px-6 py-2.5 rounded-full font-medium shadow-vintage hover:shadow-vintage-lg transition-all duration-500 hover:-translate-y-0.5 border border-paper/20 relative overflow-hidden group disabled:opacity-70 disabled:cursor-not-allowed ${lora.className}`}
               >
-                <span className="relative z-10">{isSubmitting ? "Submitting..." : "Get early access"}</span>
+                <span className="relative z-10">{isSubmitting ? "Submitting..." : buttonLabel}</span>
               </button>
               <button
                 type="button"
@@ -153,7 +169,7 @@ export default function CollectorEarlyAccess() {
       )}
 
       <p className={`${lora.className} text-warm-gray/90 text-sm mt-6 max-w-2xl mx-auto`}>
-        By signing up, you&apos;ll receive emails about new paintings and releases. Unsubscribe anytime.
+        {finePrint}
       </p>
     </section>
   );

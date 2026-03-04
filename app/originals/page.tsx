@@ -1,127 +1,88 @@
-import { sanityClient } from '../../lib/sanity';
-import ImageUrlBuilder from '@sanity/image-url';
 import Link from 'next/link';
-import Image from 'next/image';
 import { cormorant, lora } from '../fonts';
-import { formatRoundedDollars } from '../../lib/money';
+import { fetchOriginalsPageSettings } from '../../lib/originals-page-settings';
 
-export const revalidate = 0;
+export const revalidate = 60;
 
-const builder = ImageUrlBuilder(sanityClient);
-function urlFor(source: { asset: { _ref: string } }) {
-  return builder.image(source);
-}
-
-type OriginalArtwork = {
-  _id: string;
+type SectionCardProps = {
   title: string;
-  slug: { current: string };
-  mainImage?: { asset: { _ref: string } };
-  price?: number;
-  sold?: boolean;
+  description: string;
+  showEarlyAccessButton?: boolean;
 };
 
-async function fetchOriginals(): Promise<OriginalArtwork[]> {
-  const query = `
-    *[_type == "original" && defined(slug.current)]{
-      _id,
-      title,
-      "slug": slug,
-      mainImage,
-      price,
-      sold
-    } | order(_createdAt desc)
-  `;
-  return sanityClient.fetch(query);
+function SectionCard({ title, description, showEarlyAccessButton = false }: SectionCardProps) {
+  return (
+    <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-7 shadow-vintage h-full">
+      <h2 className={`${cormorant.className} text-2xl text-brown mb-3`}>
+        {title}
+      </h2>
+      <p className={`${lora.className} text-warm-gray leading-relaxed mb-5`}>
+        {description}
+      </p>
+      <p className={`${lora.className} text-sm font-medium text-olive mb-4`}>
+        Coming soon
+      </p>
+      {showEarlyAccessButton && (
+        <Link
+          href="/#collector-early-access"
+          className={`inline-block bg-gradient-to-r from-btn-brown to-btn-brown-hover text-paper px-6 py-2.5 rounded-full font-medium shadow-vintage hover:shadow-vintage-lg transition-all duration-500 hover:-translate-y-0.5 border border-paper/20 relative overflow-hidden group ${lora.className}`}
+        >
+          <span className="relative z-10">Get early access</span>
+          <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-paper to-transparent opacity-0 group-hover:opacity-10 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700" />
+        </Link>
+      )}
+    </div>
+  );
 }
 
 export default async function OriginalsPage() {
-  const originals = await fetchOriginals();
+  const settings = await fetchOriginalsPageSettings();
 
   return (
     <section className="min-h-screen bg-gradient-to-br from-ivory via-paper to-accent-cream">
       <div className="max-w-7xl mx-auto py-16 px-6">
-        {/* Elegant Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-12">
           <h1 className={`${cormorant.className} text-4xl md:text-5xl font-light mb-6 text-brown tracking-wide`}>
-            Originals
+            {settings.pageTitle}
           </h1>
-          <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-olive to-transparent mx-auto mb-8"></div>
+          <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-olive to-transparent mx-auto mb-6"></div>
           <p className={`${lora.className} text-lg text-warm-gray max-w-3xl mx-auto leading-relaxed`}>
-            Each piece is a unique, one-of-a-kind creation. Discover the perfect artwork to grace your space and become part of your personal story.
+            {settings.pageIntro}
           </p>
         </div>
 
-        {/* Gallery Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {originals.map((art) => (
-            <Link key={art._id} href={`/originals/${encodeURIComponent(art.slug.current)}`}>
-              <div className="group cursor-pointer">
-                <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl overflow-hidden shadow-vintage hover:shadow-vintage-lg transition-all duration-500 transform hover:-translate-y-2">
-                  {art.mainImage?.asset && (
-                    <div
-                      className="relative w-full overflow-hidden bg-gradient-to-br from-paper via-white to-paper flex items-center justify-center aspect-[4/5]"
-                    >
-                      <Image
-                        src={urlFor(art.mainImage).width(1200).fit('max').quality(85).url()}
-                        alt={art.title}
-                        fill
-                        className="transition-transform duration-700 group-hover:scale-105 object-contain"
-                        sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, 90vw"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
-                      {art.sold && (
-                        <div className="absolute top-4 left-4 bg-tan/90 text-brown px-3 py-1 rounded-full text-sm font-medium shadow-vintage border border-tan/70 backdrop-blur-sm">
-                          sold
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  <div className="p-6">
-                    <h2 className={`${cormorant.className} text-2xl font-medium mb-3 text-brown group-hover:text-olive transition-colors duration-300`}>
-                      {art.title}
-                    </h2>
-                    
-                    <div className="flex items-center justify-between">
-                      <p className={`${lora.className} text-lg font-medium text-warm-gray`}>
-                        {formatRoundedDollars(art.price || 0)}
-                      </p>
-                      
-                      {!art.sold && (
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <span className="text-olive text-sm font-medium">View Details →</span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {art.sold && (
-                      <div className="mt-2">
-                        <span className="inline-block bg-tan/30 text-brown px-2 py-0.5 rounded-md text-xs font-medium">
-                          sold
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
+        <div className="text-center mb-10">
+          <h2 className={`${cormorant.className} text-3xl md:text-4xl text-brown mb-4`}>
+            {settings.availableOriginalsAnnouncement}
+          </h2>
+          <p className={`${lora.className} text-warm-gray max-w-3xl mx-auto leading-relaxed`}>
+            {settings.availableOriginalsDescription}
+          </p>
         </div>
 
-        {/* Footer Message */}
-        <div className="text-center mt-16">
-          <div className="bg-white/60 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 max-w-2xl mx-auto">
-            <p className={`${lora.className} text-warm-gray leading-relaxed mb-4`}>
-              Can&apos;t find exactly what you&apos;re looking for? We&apos;d love to create something unique just for you.
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-7 shadow-vintage h-full">
+            <h2 className={`${cormorant.className} text-2xl text-brown mb-3`}>
+              {settings.availableOriginalsLabel}
+            </h2>
+            <p className={`${lora.className} text-warm-gray leading-relaxed mb-5`}>
+              {settings.availableOriginalsCardDescription}
             </p>
-            <Link href="/commissions">
-              <button className={`bg-gradient-to-r from-btn-brown to-btn-brown-hover text-paper px-8 py-4 rounded-lg hover:from-btn-brown-hover hover:to-brown transition-all duration-500 font-serif text-lg shadow-vintage hover:shadow-vintage-lg transform hover:-translate-y-1 border border-opacity-20 border-paper relative overflow-hidden group ${lora.className}`}>
-                <span className="relative z-10">Commission a Custom Piece</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-paper to-transparent opacity-0 group-hover:opacity-10 transform -skew-x-12 group-hover:translate-x-full transition-all duration-700"></div>
-              </button>
-            </Link>
+            <p className={`${lora.className} text-sm font-medium text-olive mb-4`}>
+              Coming soon
+            </p>
           </div>
+
+          <SectionCard
+            title={settings.collectionsLabel}
+            description={settings.collectionsDescription}
+            showEarlyAccessButton
+          />
+
+          <SectionCard
+            title={settings.printsLabel}
+            description={settings.printsDescription}
+          />
         </div>
       </div>
     </section>
