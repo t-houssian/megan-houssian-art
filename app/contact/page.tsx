@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { cormorant, lora } from '../fonts';
 
 export default function ContactPage() {
@@ -53,6 +54,12 @@ export default function ContactPage() {
             >
               meganhoussianart@gmail.com
             </a>
+          </p>
+          <p className={`${lora.className} text-sm text-warm-gray mt-3`}>
+            Want first access to new originals and studio updates?{" "}
+            <Link href="/#collector-early-access" className="underline text-olive hover:text-brown transition-colors duration-200 font-medium">
+              Join my Collector List.
+            </Link>
           </p>
         </div>
       

@@ -104,8 +104,7 @@ export default async function OriginalDetailPage({ params }: { params: Promise<{
               ) : (
                 <PurchaseSection 
                   title={artwork.title} 
-                  basePrice={artwork.price || 0} 
-                  shipping={artwork.shipping}
+                  basePrice={artwork.price || 0}
                 />
               )}
             </div>
@@ -144,7 +143,7 @@ export default async function OriginalDetailPage({ params }: { params: Promise<{
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span className="font-medium text-brown">Fully insured</span>
+                  <span className="font-medium text-brown">Free shipping included</span>
                 </div>
               </div>
             </div>

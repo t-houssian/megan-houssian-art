@@ -2,52 +2,38 @@
 import React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { lora } from "../fonts";
+import { formatRoundedDollars, roundUpToNearestTenDollars } from "../../lib/money";
 
 type PurchaseSectionProps = {
   title: string;
   basePrice: number;
-  shipping?: {
-    weight?: number;
-    dimensions?: {
-      length?: number;
-      width?: number;
-      height?: number;
-    };
-  };
 };
 
-export default function PurchaseSection({ title, basePrice, shipping }: PurchaseSectionProps) {
+export default function PurchaseSection({ title, basePrice }: PurchaseSectionProps) {
   const router = useRouter();
   const pathname = usePathname();
 
   const handlePurchase = () => {
-    // Build the checkout URL with product details and shipping information
+    const roundedBasePrice = roundUpToNearestTenDollars(basePrice);
+
+    // Build the checkout URL with product details
     const params = new URLSearchParams({
       product: title,
-      price: basePrice.toString(),
+      price: roundedBasePrice.toString(),
       returnTo: pathname,
     });
-
-    // Add shipping parameters if available, with fallback defaults
-    if (shipping?.weight) {
-      params.append('weight', shipping.weight.toString());
-    }
-    if (shipping?.dimensions?.length) {
-      params.append('length', shipping.dimensions.length.toString());
-    }
-    if (shipping?.dimensions?.width) {
-      params.append('width', shipping.dimensions.width.toString());
-    }
-    if (shipping?.dimensions?.height) {
-      params.append('height', shipping.dimensions.height.toString());
-    }
 
     router.push(`/checkout?${params.toString()}`);
   };
 
   return (
     <div>
-      <p className={`${lora.className} text-brown mb-6 text-lg font-light tracking-wide`}>Price: ${basePrice.toLocaleString()}</p>
+      <p className={`${lora.className} text-brown mb-6 text-lg font-light tracking-wide`}>
+        Price: {formatRoundedDollars(basePrice)}
+      </p>
+      <p className={`${lora.className} text-olive mb-6 text-sm tracking-wide`}>
+        Free shipping included
+      </p>
       <button
         onClick={handlePurchase}
         className={`bg-gradient-to-r from-btn-brown to-btn-brown-hover text-paper px-8 py-4 rounded-lg hover:from-btn-brown-hover hover:to-brown transition-all duration-500 font-serif text-lg shadow-vintage hover:shadow-vintage-lg transform hover:-translate-y-1 border border-opacity-20 border-paper relative overflow-hidden group ${lora.className}`}

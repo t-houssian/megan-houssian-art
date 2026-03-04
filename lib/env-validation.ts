@@ -56,14 +56,32 @@ export function validateEasyPostConfig() {
   };
 }
 
+export function validateKitConfig() {
+  const required = {
+    KIT_API_KEY: process.env.KIT_API_KEY,
+  };
+
+  const missing = Object.entries(required)
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+
+  return {
+    isValid: missing.length === 0,
+    missing,
+    config: required,
+  };
+}
+
 // Log configuration status (for development)
 if (process.env.NODE_ENV === 'development') {
   const stripe = validateStripeConfig();
   const paypal = validatePayPalConfig();
   const easypost = validateEasyPostConfig();
+  const kit = validateKitConfig();
   
   console.log('💳 Payment Configuration Status:');
   console.log(`  Stripe: ${stripe.isValid ? '✅ Configured' : '❌ Missing: ' + stripe.missing.join(', ')}`);
   console.log(`  PayPal: ${paypal.isValid ? '✅ Configured' : '❌ Missing: ' + paypal.missing.join(', ')}`);
   console.log(`  EasyPost: ${easypost.isValid ? '✅ Configured' : '❌ Missing: ' + easypost.missing.join(', ')}`);
+  console.log(`  Kit: ${kit.isValid ? '✅ Configured' : '❌ Missing: ' + kit.missing.join(', ')}`);
 }

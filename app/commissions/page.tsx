@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent, FormEvent, KeyboardEvent } from "react";
 import { cormorant, lora } from "../fonts";
 import { useRouter } from "next/navigation";
+import { formatRoundedDollars, roundUpToNearestTenDollars } from "../../lib/money";
 
 interface CanvasItem {
   id: number;
@@ -122,14 +123,11 @@ export default function CommissionsPage() {
     return area * pricePerSqInch * item.quantity;
   };
 
-  // Helper to get effective price per item using our rounding rule:
-  // - If the raw price is under $100:
-  //     * If it's under $50, return $50.
-  //     * Otherwise, round up to the next multiple of $25.
-  // - If $100 or more, use the raw price.
+  // Helper to get effective price per item and round up to the next $10 bucket.
   const getEffectivePrice = (raw: number): number => {
     if (raw <= 0) return 0;
-    return raw < 250 ? 250 : raw;
+    const basePrice = raw < 250 ? 250 : raw;
+    return roundUpToNearestTenDollars(basePrice);
   };
 
   // Calculate overall effective total by summing each item's effective price
@@ -137,7 +135,7 @@ export default function CommissionsPage() {
     (sum, item) => sum + getEffectivePrice(calculateItemPrice(item)),
     0
   );
-  const upfrontCost = effectiveTotal * 0.2;
+  const upfrontCost = roundUpToNearestTenDollars(effectiveTotal * 0.2);
 
   // Handlers
   const handleCanvasOptionChange = (id: number, value: string) => {
@@ -393,10 +391,9 @@ export default function CommissionsPage() {
               <li>Commission spots are limited, so be sure to reserve early.</li>
               <li>Upload an inspiration photo that reflects what you&apos;re envisioning.</li>
               <li>Images should be your own original photos, clear and well lit.</li>
-              <li>I can possibly combine multiple photos if they fit naturally together.</li>
               <li>Still deciding? I&apos;m happy to help you choose the strongest reference.</li>
               <li>Include any notes about specific colors or palettes you&apos;d like to complement your space.</li>
-              <li>Pricing is based on size, and a 20% upfront, non-recoverable deposit secures your spot and covers materials.</li>
+              <li>Pricing is based on size, and a 20% upfront, non-recoverable investment secures your spot and covers materials.</li>
             </ul>
           </div>
           <p className={`${lora.className} text-brown/80 leading-relaxed`}>
@@ -652,7 +649,7 @@ export default function CommissionsPage() {
                 {/* Updated per-item total using the effective pricing */}
                 <div className="mt-4 p-4 bg-olive/10 rounded-lg">
                   <p className={`${lora.className} font-semibold text-brown`}>
-                    Estimated Total: ${getEffectivePrice(calculateItemPrice(item)).toFixed(2)}
+                    Estimated Total: {formatRoundedDollars(getEffectivePrice(calculateItemPrice(item)))}
                   </p>
                 </div>
 
@@ -688,11 +685,13 @@ export default function CommissionsPage() {
           <div className="space-y-4 mb-6">
             <div className="flex justify-between items-center py-3 border-b border-tan/30">
               <span className={`${lora.className} text-warm-gray`}>Total Commission Cost</span>
-              <span className={`${cormorant.className} text-2xl font-bold text-brown`}>${effectiveTotal.toFixed(2)}</span>
+              <span className={`${cormorant.className} text-2xl font-bold text-brown`}>
+                {formatRoundedDollars(effectiveTotal)}
+              </span>
             </div>
             <div className="flex justify-between items-center py-3 border-b border-tan/30">
-              <span className={`${lora.className} text-warm-gray`}>Upfront Deposit (20%)</span>
-              <span className={`${lora.className} font-semibold text-olive`}>${upfrontCost.toFixed(2)}</span>
+              <span className={`${lora.className} text-warm-gray`}>Upfront (20%)</span>
+              <span className={`${lora.className} font-semibold text-olive`}>{formatRoundedDollars(upfrontCost)}</span>
             </div>
           </div>
           

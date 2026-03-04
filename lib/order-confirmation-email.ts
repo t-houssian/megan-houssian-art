@@ -1,5 +1,7 @@
 import FormData from 'form-data';
 import Mailgun from 'mailgun.js';
+import { getEmailLinks, renderBrandEmail, renderDetailTable } from './email-template';
+import { formatRoundedCents, formatRoundedDollars } from './money';
 
 const MEGAN_EMAIL = 'meganhoussianart@gmail.com';
 
@@ -32,17 +34,17 @@ const getFrom = (domain: string) =>
 
 const formatAmount = (input: OrderConfirmationEmailInput): string => {
   if (typeof input.amountCents === 'number' && Number.isFinite(input.amountCents)) {
-    return `$${(input.amountCents / 100).toFixed(2)} USD`;
+    return `${formatRoundedCents(input.amountCents)} USD`;
   }
 
   if (typeof input.amountDollars === 'number' && Number.isFinite(input.amountDollars)) {
-    return `$${input.amountDollars.toFixed(2)} USD`;
+    return `${formatRoundedDollars(input.amountDollars)} USD`;
   }
 
   if (typeof input.amountDollars === 'string' && input.amountDollars.trim()) {
     const parsed = Number(input.amountDollars);
     if (Number.isFinite(parsed)) {
-      return `$${parsed.toFixed(2)} USD`;
+      return `${formatRoundedDollars(parsed)} USD`;
     }
   }
 
@@ -63,17 +65,17 @@ const formatAddressText = (shippingAddress: OrderConfirmationEmailInput['shippin
   return `${shippingAddress.line1}${line2}\n${locality}${country ? `\n${country}` : ''}`;
 };
 
-const formatAddressHtml = (shippingAddress: OrderConfirmationEmailInput['shippingAddress']) => {
+const formatAddressSingleLine = (shippingAddress: OrderConfirmationEmailInput['shippingAddress']) => {
   if (!shippingAddress?.line1) return 'N/A';
 
-  const lines = [
+  return [
     shippingAddress.line1,
     shippingAddress.line2,
     [shippingAddress.city, shippingAddress.state, shippingAddress.postalCode].filter(Boolean).join(', '),
     shippingAddress.country,
-  ].filter(Boolean) as string[];
-
-  return lines.join('<br/>');
+  ]
+    .filter(Boolean)
+    .join(' | ');
 };
 
 export async function sendOrderConfirmationEmail(input: OrderConfirmationEmailInput) {
@@ -87,6 +89,7 @@ export async function sendOrderConfirmationEmail(input: OrderConfirmationEmailIn
   const shippingMethod = formatShippingMethod(input.shippingOption);
   const customerName = input.customerName?.trim() || 'Collector';
   const product = input.product || 'Artwork Purchase';
+  const links = getEmailLinks();
   const to = [input.customerEmail, MEGAN_EMAIL]
     .filter((email): email is string => Boolean(email && email.trim()))
     .map((email) => email.trim().toLowerCase())
@@ -98,8 +101,8 @@ export async function sendOrderConfirmationEmail(input: OrderConfirmationEmailIn
 
   const shippingAddressText =
     input.shippingOption === 'pickup' ? 'N/A (Gallery Pickup)' : formatAddressText(input.shippingAddress);
-  const shippingAddressHtml =
-    input.shippingOption === 'pickup' ? 'N/A (Gallery Pickup)' : formatAddressHtml(input.shippingAddress);
+  const shippingAddressSingleLine =
+    input.shippingOption === 'pickup' ? 'N/A (Gallery Pickup)' : formatAddressSingleLine(input.shippingAddress);
 
   const text = `Hello ${customerName},
 
@@ -117,25 +120,49 @@ ${shippingAddressText}
 If you have any questions, please email Megan at ${MEGAN_EMAIL}.
 We will send your shipping confirmation and tracking codes when we ship out your piece.
 
-Thank you for supporting Megan's work.
+Shop and updates:
+- Website: ${links.homeUrl}
+- Originals: ${links.originalsUrl}
+- Print Shop: ${links.printsUrl}
+- Contact: ${links.contactUrl}
+${links.pinterestUrl ? `- Pinterest: ${links.pinterestUrl}\n` : ''}${links.facebookUrl ? `- Facebook: ${links.facebookUrl}\n` : ''}${
+    links.instagramUrl ? `- Instagram: ${links.instagramUrl}\n` : ''
+  }
+
+Thank you for supporting my work.
 `;
 
-  const html = `
-<p>Hello ${customerName},</p>
-<p>Thank you for your purchase from Megan Houssian Art.</p>
-<h3>Order Details</h3>
-<ul>
-  <li><strong>Order ID:</strong> ${input.orderId}</li>
-  <li><strong>Artwork:</strong> ${product}</li>
-  <li><strong>Payment Method:</strong> ${input.paymentMethod.toUpperCase()}</li>
-  <li><strong>Total Paid:</strong> ${amount}</li>
-  <li><strong>Delivery Method:</strong> ${shippingMethod}</li>
-  <li><strong>Shipping Address:</strong><br/>${shippingAddressHtml}</li>
-</ul>
-<p>If you have any questions, please email Megan at <a href="mailto:${MEGAN_EMAIL}">${MEGAN_EMAIL}</a>.</p>
-<p>We will send your shipping confirmation and tracking codes when we ship out your piece.</p>
-<p>Thank you for supporting Megan's work.</p>
-`;
+  const detailsHtml = renderDetailTable([
+    { label: 'Order ID', value: input.orderId },
+    { label: 'Artwork', value: product },
+    { label: 'Payment Method', value: input.paymentMethod.toUpperCase() },
+    { label: 'Total Paid', value: amount },
+    { label: 'Delivery Method', value: shippingMethod },
+    { label: 'Shipping Address', value: shippingAddressSingleLine },
+  ]);
+
+  const bodyHtml = `
+<h2 style="margin:4px 0 12px;font-size:21px;line-height:1.3;color:#3f3126;font-weight:500;">Order Details</h2>
+${detailsHtml}
+<p style="margin:18px 0 0;font-size:15px;line-height:1.7;color:#4a3a2d;">
+If you have any questions, please email Megan at <a href="mailto:${MEGAN_EMAIL}" style="color:#6b4f3a;text-decoration:underline;">${MEGAN_EMAIL}</a>.
+</p>
+<p style="margin:10px 0 0;font-size:15px;line-height:1.7;color:#4a3a2d;">
+We will send your shipping confirmation and tracking details when your artwork is on the way.
+</p>`;
+
+  const html = renderBrandEmail({
+    preheader: `Order ${input.orderId} confirmed`,
+    title: 'Order Confirmation',
+    greeting: `Hello ${customerName},`,
+    intro: 'Thank you for your purchase from Megan Houssian Art.',
+    bodyHtml,
+    cta: {
+      label: 'View Originals',
+      href: links.originalsUrl,
+    },
+    outro: "Thank you for supporting my work.",
+  });
 
   const mg = mailgun.client({
     username: 'api',

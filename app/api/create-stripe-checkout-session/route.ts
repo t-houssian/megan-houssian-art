@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { roundUpCentsToNearestTenDollars } from '../../../lib/money';
 
 // Initialize Stripe only when the secret key is available
 const getStripe = () => {
@@ -35,9 +36,11 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
     const safeReturnPath = getSafeReturnPath(returnTo);
     const normalizedCheckoutEmail = isValidEmail(checkoutEmail) ? checkoutEmail.trim() : null;
+    const rawAmount = typeof amount === 'number' ? amount : Number(amount);
+    const roundedAmount = roundUpCentsToNearestTenDollars(rawAmount);
 
     // Validate required fields
-    if (!amount || amount <= 0) {
+    if (!roundedAmount || roundedAmount <= 0) {
       return NextResponse.json(
         { error: 'Invalid amount' },
         { status: 400 }
@@ -65,7 +68,7 @@ export async function POST(request: NextRequest) {
               name: product || 'Artwork Purchase',
               description: `Original artwork by Megan Houssian${shippingOption === 'pickup' ? ' - Local Pickup in Marble Falls, TX' : ''}`,
             },
-            unit_amount: amount, // amount in cents
+            unit_amount: roundedAmount, // amount in cents, rounded to nearest $10
           },
           quantity: 1,
         },

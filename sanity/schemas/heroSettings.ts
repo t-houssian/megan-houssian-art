@@ -7,7 +7,7 @@ export default defineType({
   fields: [
     defineField({
       name: 'backgroundImage',
-      title: 'Background Image',
+      title: 'Main Page Hero Image',
       type: 'image',
       options: { hotspot: true },
       fields: [
@@ -19,6 +19,20 @@ export default defineType({
         })
       ],
       validation: (rule) => rule.required()
+    }),
+    defineField({
+      name: 'aboutPageImage',
+      title: 'About Page Image',
+      type: 'image',
+      options: { hotspot: true },
+      fields: [
+        defineField({
+          name: 'alt',
+          title: 'Alternative text',
+          type: 'string',
+          description: 'Describe the image for accessibility and SEO.'
+        })
+      ]
     }),
     defineField({
       name: 'stylePreset',

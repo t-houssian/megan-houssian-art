@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { roundUpToNearestTenDollars } from '../../../../lib/money';
 
 const isValidEmail = (value: unknown): value is string =>
   typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
@@ -8,6 +9,8 @@ export async function POST(request: NextRequest) {
     const { amount, shippingAddress, shippingOption, checkoutEmail } = await request.json();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
     const normalizedCheckoutEmail = isValidEmail(checkoutEmail) ? checkoutEmail.trim().toLowerCase() : null;
+    const parsedAmount = typeof amount === 'number' ? amount : Number(amount);
+    const roundedAmount = roundUpToNearestTenDollars(parsedAmount);
 
     // PayPal API configuration
     const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
@@ -26,6 +29,13 @@ export async function POST(request: NextRequest) {
     if (!normalizedCheckoutEmail) {
       return NextResponse.json(
         { error: 'Valid checkout email is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!roundedAmount || roundedAmount <= 0) {
+      return NextResponse.json(
+        { error: 'Invalid amount' },
         { status: 400 }
       );
     }
@@ -66,7 +76,7 @@ export async function POST(request: NextRequest) {
         {
           amount: {
             currency_code: 'USD',
-            value: amount, // amount in dollars
+            value: roundedAmount.toString(), // amount in dollars, rounded to nearest $10
           },
           custom_id: `checkout_email:${normalizedCheckoutEmail}`,
           description: `Artwork purchase from Megan Houssian Art${shippingOption === 'pickup' ? ' - Local Pickup in Marble Falls, TX' : ''}`,

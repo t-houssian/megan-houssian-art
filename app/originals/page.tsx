@@ -3,6 +3,7 @@ import ImageUrlBuilder from '@sanity/image-url';
 import Link from 'next/link';
 import Image from 'next/image';
 import { cormorant, lora } from '../fonts';
+import { formatRoundedDollars } from '../../lib/money';
 
 export const revalidate = 0;
 
@@ -84,7 +85,7 @@ export default async function OriginalsPage() {
                     
                     <div className="flex items-center justify-between">
                       <p className={`${lora.className} text-lg font-medium text-warm-gray`}>
-                        ${art.price?.toLocaleString() || 0}
+                        {formatRoundedDollars(art.price || 0)}
                       </p>
                       
                       {!art.sold && (

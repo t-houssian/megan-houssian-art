@@ -7,6 +7,7 @@ import ImageUrlBuilder from '@sanity/image-url';
 import Link from 'next/link';
 import Image from 'next/image';
 import { cormorant, lora } from '../fonts';
+import { formatRoundedDollars } from '../../lib/money';
 
 const builder = ImageUrlBuilder(sanityClient);
 function urlFor(source: { asset: { _ref: string } }) {
@@ -114,10 +115,10 @@ export default function PrintsPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className={`${lora.className} text-sm text-warm-gray mb-1`}>
-                          Multiple print options available
+                          Multiple print options available · Free shipping
                         </p>
                         <p className={`${lora.className} text-lg font-medium text-brown`}>
-                          Starting at $15
+                          Starting at {formatRoundedDollars(15)}
                         </p>
                       </div>
                       

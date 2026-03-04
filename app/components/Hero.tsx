@@ -193,7 +193,7 @@ type HeroCustomProperties = CSSProperties & Record<
   string
 >;
 
-const heroQuery = `*[_type == "heroSettings"][0]{
+const heroQuery = `*[_type == "heroSettings"] | order(_updatedAt desc)[0]{
   backgroundImage{
     asset,
     alt

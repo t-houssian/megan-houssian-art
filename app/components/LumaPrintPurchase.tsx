@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { lora, cormorant } from "../fonts";
+import { formatRoundedDollars } from "../../lib/money";
 
 type PrintOption = {
   name: string;
@@ -451,7 +452,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                         <option value="" disabled>Select a size...</option>
                         {printOptions[selectedProduct]?.sizes.map((size) => (
                           <option key={size.value} value={size.value}>
-                            {size.name} - ${size.price.toFixed(2)}
+                            {size.name} - {formatRoundedDollars(size.price)}
                           </option>
                         ))}
                       </select>
@@ -477,7 +478,9 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                           </div>
                           <div className="text-right">
                             <span className={`${cormorant.className} text-3xl font-medium text-btn-brown block`}>
-                              ${printOptions[selectedProduct]?.sizes.find(s => s.value === selectedSize)?.price.toFixed(2)}
+                              {formatRoundedDollars(
+                                printOptions[selectedProduct]?.sizes.find((s) => s.value === selectedSize)?.price || 0
+                              )}
                             </span>
                             <span className={`${lora.className} text-warm-gray text-sm`}>
                               + Free Shipping
@@ -591,7 +594,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
               title="Order Summary & Checkout"
               isOpen={openSections.summary}
               onToggle={() => toggleSection('summary')}
-              badge={`$${getSelectedPrice().toFixed(2)}`}
+              badge={formatRoundedDollars(getSelectedPrice())}
             >
               <div className="pt-6">
                 {/* Error Message */}
@@ -622,7 +625,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                     </div>
                     <div className="text-right">
                       <p className={`${cormorant.className} text-3xl font-medium text-btn-brown mb-1`}>
-                        ${getSelectedPrice().toFixed(2)}
+                        {formatRoundedDollars(getSelectedPrice())}
                       </p>
                       <p className={`${lora.className} text-sm text-warm-gray`}>
                         Free shipping included
@@ -645,7 +648,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                           Processing Order...
                         </>
                       ) : (
-                        `Order Print - $${getSelectedPrice().toFixed(2)}`
+                        `Order Print - ${formatRoundedDollars(getSelectedPrice())}`
                       )}
                     </span>
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-paper to-transparent opacity-0 group-hover:opacity-10 transform -skew-x-12 group-hover:translate-x-full transition-all duration-700"></div>

@@ -9,6 +9,7 @@ A professional art gallery and e-commerce platform built with Next.js, featuring
 - **📍 Smart Address Validation** - Professional checkout experience (100% free!)
 - **📱 Mobile Responsive** - Perfect experience on all devices
 - **🔧 Content Management** - Powered by Sanity CMS
+- **📧 Collector Email List** - Kit-powered signup form for early access updates
 - **🚀 Production Ready** - Enterprise-level checkout system
 
 ## 🚀 Quick Start
@@ -45,6 +46,17 @@ NEXT_PUBLIC_PAYPAL_CLIENT_ID=your_paypal_client_id
 # Sanity CMS
 NEXT_PUBLIC_SANITY_PROJECT_ID=your_project_id
 NEXT_PUBLIC_SANITY_DATASET=production
+
+# Kit Email List
+KIT_API_KEY=your_kit_api_key_here
+# Optional: route signups to one specific Kit form
+KIT_FORM_ID=1234567
+# Optional: social links included in transactional email footer
+EMAIL_SOCIAL_INSTAGRAM_URL=https://instagram.com/your_handle
+EMAIL_SOCIAL_PINTEREST_URL=https://pin.it/1Scq2kp48
+EMAIL_SOCIAL_FACEBOOK_URL=https://www.facebook.com/marketplace/profile/61550348800548/?ref=permalink&mibextid=6ojiHh
+# Use your production domain here so email CTA links point to your live site
+NEXT_PUBLIC_BASE_URL=https://your-domain.com
 ```
 
 4. **Run development server**
@@ -72,6 +84,13 @@ Open [http://localhost:3000](http://localhost:3000) to see the website.
 - **Sanity CMS** - Manage artwork, collections, and content
 - **Image Optimization** - Next.js image optimization
 - **SEO Friendly** - Optimized for search engines
+
+### Email Capture
+- **Collector Early Access Section** - Homepage signup section for first name + email
+- **Kit API Integration** - Server-side subscription endpoint at `/api/kit/subscribe`
+- **Branded Transactional Templates** - Polished Mailgun templates with site + social links
+- **Welcome Email** - Sends a post-signup thank-you email through Mailgun
+- **Cross-page Links** - About and Contact pages link directly to the signup section
 
 ## 📚 Documentation
 
