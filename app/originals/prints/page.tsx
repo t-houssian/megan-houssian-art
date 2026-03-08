@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { cormorant, lora } from '../../fonts';
-import OriginalsSubNav from '../../components/OriginalsSubNav';
 
 export const revalidate = 60;
 
@@ -11,11 +10,6 @@ export default function OriginalsPrintsPage() {
         <h1 className={`${cormorant.className} text-4xl md:text-5xl font-light mb-6 text-brown tracking-wide`}>
           Prints
         </h1>
-        <OriginalsSubNav
-          active="prints"
-          showCollections
-          showPrints
-        />
         <p className={`${lora.className} text-lg text-warm-gray max-w-2xl mx-auto leading-relaxed`}>
           Prints are currently hidden.{' '}
           <Link href="/#collector-early-access" className="underline text-olive hover:text-brown transition-colors">

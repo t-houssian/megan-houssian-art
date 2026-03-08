@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { cormorant, lora } from '../fonts';
 import { fetchOriginalsPageSettings } from '../../lib/originals-page-settings';
 import { urlFor } from '../../sanity/lib/image';
-import OriginalsSubNav from '../components/OriginalsSubNav';
 
 export const revalidate = 60;
 
@@ -21,11 +20,6 @@ export default async function OriginalsPage() {
           <h1 className={`${cormorant.className} text-4xl md:text-5xl font-light mb-6 text-brown tracking-wide`}>
             {settings.pageTitle}
           </h1>
-          <OriginalsSubNav
-            active="originals"
-            showCollections
-            showPrints
-          />
           <p className={`${lora.className} text-lg text-warm-gray max-w-3xl mx-auto leading-relaxed`}>
             new original collection coming soon.{' '}
             <Link href="/#collector-early-access" className="underline text-olive hover:text-brown transition-colors">
