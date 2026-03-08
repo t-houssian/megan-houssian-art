@@ -19,7 +19,7 @@ export default function AboutSection() {
         href="/about"
         className={`inline-block bg-gradient-to-r from-btn-brown to-btn-brown-hover text-paper px-8 py-3 rounded-full font-medium 
                    shadow-vintage hover:shadow-vintage-lg transition-all duration-500 hover:-translate-y-0.5 
-                   border border-paper/20 relative overflow-hidden group ${lora.className}`}
+                   border-2 border-black/80 relative overflow-hidden group ${lora.className}`}
       >
         About
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-paper to-transparent 

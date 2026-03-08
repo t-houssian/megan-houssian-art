@@ -107,7 +107,7 @@ export default function CollectorEarlyAccess({
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className={`inline-block bg-gradient-to-r from-btn-brown to-btn-brown-hover text-paper px-8 py-3 rounded-full font-medium shadow-vintage hover:shadow-vintage-lg transition-all duration-500 hover:-translate-y-0.5 border border-paper/20 relative overflow-hidden group ${lora.className}`}
+          className={`inline-block bg-gradient-to-r from-btn-brown to-btn-brown-hover text-paper px-8 py-3 rounded-full font-medium shadow-vintage hover:shadow-vintage-lg transition-all duration-500 hover:-translate-y-0.5 border-2 border-black/80 relative overflow-hidden group ${lora.className}`}
         >
           <span className="relative z-10">{buttonLabel}</span>
           <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-paper to-transparent opacity-0 group-hover:opacity-10 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700" />
@@ -149,7 +149,7 @@ export default function CollectorEarlyAccess({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`inline-block bg-gradient-to-r from-btn-brown to-btn-brown-hover text-paper px-6 py-2.5 rounded-full font-medium shadow-vintage hover:shadow-vintage-lg transition-all duration-500 hover:-translate-y-0.5 border border-paper/20 relative overflow-hidden group disabled:opacity-70 disabled:cursor-not-allowed ${lora.className}`}
+                className={`inline-block bg-gradient-to-r from-btn-brown to-btn-brown-hover text-paper px-6 py-2.5 rounded-full font-medium shadow-vintage hover:shadow-vintage-lg transition-all duration-500 hover:-translate-y-0.5 border-2 border-black/80 relative overflow-hidden group disabled:opacity-70 disabled:cursor-not-allowed ${lora.className}`}
               >
                 <span className="relative z-10">{isSubmitting ? "Submitting..." : buttonLabel}</span>
               </button>
