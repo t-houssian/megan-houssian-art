@@ -39,7 +39,9 @@ async function fetchPrints(): Promise<PrintProduct[]> {
 
 export default async function PrintsPage() {
   const settings = await fetchOriginalsPageSettings();
-  if (!settings.showPrints) {
+  const showPrints = false;
+
+  if (!showPrints || !settings.showPrints) {
     notFound();
   }
 

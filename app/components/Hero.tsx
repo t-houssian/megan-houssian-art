@@ -1,9 +1,7 @@
 // components/Hero.tsx
 import Image from 'next/image';
-import type { CSSProperties } from 'react';
 import { sanityClient } from '../../lib/sanity';
 import { urlFor } from '../../sanity/lib/image';
-import { cormorant, lora } from "../fonts";
 
 const HERO_COLOR_PRESETS = {
   classic: {
@@ -188,11 +186,6 @@ type HeroSettings = {
   stylePreset?: HeroStylePresetKey | null;
 };
 
-type HeroCustomProperties = CSSProperties & Record<
-  '--button-text-color' | '--button-border-color' | '--button-hover-bg-color' | '--button-hover-text-color',
-  string
->;
-
 const heroQuery = `*[_type == "heroSettings"] | order(_updatedAt desc)[0]{
   backgroundImage{
     asset,
@@ -200,9 +193,6 @@ const heroQuery = `*[_type == "heroSettings"] | order(_updatedAt desc)[0]{
   },
   stylePreset
 }`;
-
-const isHeroStylePresetKey = (value: unknown): value is HeroStylePresetKey =>
-  typeof value === 'string' && Object.prototype.hasOwnProperty.call(HERO_COLOR_PRESETS, value);
 
 async function fetchHeroSettings(): Promise<HeroSettings | null> {
   try {
@@ -227,25 +217,6 @@ export default async function Hero() {
 
   const heroAlt = heroSettings?.backgroundImage?.alt?.trim() || 'Hero Image';
 
-  const presetKey: HeroStylePresetKey = heroSettings?.stylePreset && isHeroStylePresetKey(heroSettings.stylePreset)
-    ? heroSettings.stylePreset
-    : 'classic';
-
-  const {
-    textColor,
-    buttonTextColor,
-    buttonBorderColor,
-    buttonHoverBackgroundColor,
-    buttonHoverTextColor,
-  } = HERO_COLOR_PRESETS[presetKey];
-
-  const buttonStyle: HeroCustomProperties = {
-    '--button-text-color': buttonTextColor,
-    '--button-border-color': buttonBorderColor,
-    '--button-hover-bg-color': buttonHoverBackgroundColor,
-    '--button-hover-text-color': buttonHoverTextColor,
-  };
-
   return (
     <section className="relative w-full h-[80vh] overflow-hidden">
       <Image
@@ -260,33 +231,6 @@ export default async function Hero() {
         priority
       />
       <div className="absolute inset-0 bg-hero-overlay/40"></div>
-      <div className="relative z-10 flex items-center justify-center h-full">
-        <div className="text-center max-w-3xl px-4">
-          <h1
-            className={`${cormorant.className} text-5xl sm:text-7xl font-bold mb-6`}
-            style={{ color: textColor }}
-          >
-            Megan Houssian Art
-          </h1>
-          <p
-            className={`${cormorant.className} text-lg sm:text-2xl italic tracking-wide mb-8 opacity-80`}
-            style={{ color: textColor }}
-          >
-            Brushstrokes of sky and field, bringing the calm of nature indoors
-          </p>
-          <a
-            href="#gallery"
-            className={`inline-block border-2 bg-transparent px-8 py-3 rounded-full font-semibold
-                       transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105
-                       text-[color:var(--button-text-color)] border-[color:var(--button-border-color)]
-                       hover:bg-[color:var(--button-hover-bg-color)] hover:text-[color:var(--button-hover-text-color)]
-                       hover:border-[color:var(--button-hover-bg-color)] ${lora.className}`}
-            style={buttonStyle}
-          >
-            Explore Gallery
-          </a>
-        </div>
-      </div>
     </section>
   );
 }

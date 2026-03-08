@@ -1,5 +1,12 @@
 import { sanityClient } from './sanity';
 
+type SanityImageWithAlt = {
+  asset?: {
+    _ref: string;
+  };
+  alt?: string;
+};
+
 export type OriginalsPageSettings = {
   pageTitle: string;
   pageIntro: string;
@@ -7,6 +14,7 @@ export type OriginalsPageSettings = {
   availableOriginalsAnnouncement: string;
   availableOriginalsDescription: string;
   availableOriginalsCardDescription: string;
+  comingSoonImage?: SanityImageWithAlt;
   showCollections: boolean;
   collectionsLabel: string;
   collectionsDescription: string;
@@ -14,6 +22,7 @@ export type OriginalsPageSettings = {
   printsLabel: string;
   printsDescription: string;
   earlyAccessHeading: string;
+  homeCollectorSubhead: string;
   earlyAccessSubhead: string;
   earlyAccessButtonLabel: string;
   earlyAccessFinePrint: string;
@@ -28,6 +37,7 @@ const DEFAULT_ORIGINALS_PAGE_SETTINGS: OriginalsPageSettings = {
     'Join the Collector List below to get early access before this collection is released.',
   availableOriginalsCardDescription:
     'Original works are released in curated drops. New pieces will appear here when they become available.',
+  comingSoonImage: undefined,
   showCollections: false,
   collectionsLabel: 'Collections',
   collectionsDescription: 'Curated series and seasonal releases.',
@@ -35,8 +45,10 @@ const DEFAULT_ORIGINALS_PAGE_SETTINGS: OriginalsPageSettings = {
   printsLabel: 'Prints',
   printsDescription: 'Museum-quality prints of select works.',
   earlyAccessHeading: 'Collector Early Access',
+  homeCollectorSubhead:
+    "Join my Collector List and I'll email you a private early access link 24 hours before new originals go live.",
   earlyAccessSubhead:
-    "Join my Collector List and I'll email you a private preview link 24 hours before new originals go live.",
+    "Join my Collector List and I'll email you a private early access link 24 hours before new originals go live.",
   earlyAccessButtonLabel: 'Get early access',
   earlyAccessFinePrint:
     "By signing up, you'll receive emails about new paintings and releases. Unsubscribe anytime.",
@@ -51,6 +63,10 @@ const originalsPageSettingsQuery = `*[_type == "originalsPageSettings"][0]{
   availableOriginalsAnnouncement,
   availableOriginalsDescription,
   availableOriginalsCardDescription,
+  comingSoonImage{
+    asset,
+    alt
+  },
   showCollections,
   collectionsLabel,
   collectionsDescription,
@@ -58,6 +74,7 @@ const originalsPageSettingsQuery = `*[_type == "originalsPageSettings"][0]{
   printsLabel,
   printsDescription,
   earlyAccessHeading,
+  homeCollectorSubhead,
   earlyAccessSubhead,
   earlyAccessButtonLabel,
   earlyAccessFinePrint
@@ -93,6 +110,7 @@ export async function fetchOriginalsPageSettings(): Promise<OriginalsPageSetting
         settings?.availableOriginalsCardDescription,
         DEFAULT_ORIGINALS_PAGE_SETTINGS.availableOriginalsCardDescription
       ),
+      comingSoonImage: settings?.comingSoonImage,
       showCollections:
         typeof settings?.showCollections === 'boolean'
           ? settings.showCollections
@@ -117,6 +135,10 @@ export async function fetchOriginalsPageSettings(): Promise<OriginalsPageSetting
       earlyAccessHeading: normalizeString(
         settings?.earlyAccessHeading,
         DEFAULT_ORIGINALS_PAGE_SETTINGS.earlyAccessHeading
+      ),
+      homeCollectorSubhead: normalizeString(
+        settings?.homeCollectorSubhead,
+        DEFAULT_ORIGINALS_PAGE_SETTINGS.homeCollectorSubhead
       ),
       earlyAccessSubhead: normalizeString(
         settings?.earlyAccessSubhead,

@@ -8,7 +8,7 @@ export default function AboutSection() {
         Megan Houssian
       </h2>
       <p className={`${lora.className} text-olive text-sm md:text-base tracking-wide mb-4 italic`}>
-        Austin, Texas, Fine Artist
+        Marble Falls, Texas.
       </p>
       <p className={`${lora.className} text-brown/80 max-w-2xl mx-auto mb-6 leading-relaxed`}>
         Megan Houssian is a Texas-based artist known for peaceful, atmospheric landscapes rooted in

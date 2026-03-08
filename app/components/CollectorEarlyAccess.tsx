@@ -23,7 +23,7 @@ type CollectorEarlyAccessProps = {
 export default function CollectorEarlyAccess({
   sectionId = "collector-early-access",
   heading = "Collector Early Access",
-  subhead = "Join my Collector List and I'll email you a private preview link 24 hours before new originals go live.",
+  subhead = "Join my Collector List and I'll email you a private early access link 24 hours before new originals go live.",
   buttonLabel = "Get early access",
   finePrint = "By signing up, you'll receive emails about new paintings and releases. Unsubscribe anytime.",
   className = "",

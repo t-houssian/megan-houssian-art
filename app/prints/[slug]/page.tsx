@@ -43,7 +43,9 @@ interface PageProps {
 
 export default async function PrintDetailPage({ params }: PageProps) {
   const settings = await fetchOriginalsPageSettings();
-  if (!settings.showPrints) {
+  const showPrints = false;
+
+  if (!showPrints || !settings.showPrints) {
     notFound();
   }
 

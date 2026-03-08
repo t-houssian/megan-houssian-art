@@ -63,7 +63,7 @@ export default async function AboutPage() {
               Motherhood brought it all back in the best way. It inspired me to protect my time, get really honest about what I wanted, and build a life that makes room for creating. My faith in Jesus Christ is also a guiding light in my daily life.
             </p>
             <p className={`${lora.className} text-brown leading-relaxed mb-6 text-lg`}>
-              During my daughter&apos;s nap time, you&apos;ll find me painting distant blue hills, wildflowers, and open skies. Or, on days that aren&apos;t 100 degrees (Texas summers are brutal), you&apos;ll find me &quot;cooking&quot; outside with my daughter, where we make leaf and dirt soup topped with wildflowers.
+              During my daughter&apos;s nap time, you&apos;ll find me painting distant blue hills, wildflowers, and open skies. Or, on days that aren&apos;t 100 degrees (Texas summers are brutal), you&apos;ll find me &quot;cooking&quot; outside with my daughter, where we make leaf and dirt soup topped with flowers we find in our yard.
             </p>
             <p className={`${lora.className} text-brown leading-relaxed mb-6 text-lg`}>
               Whether you are drawn to the reverent landscapes, atmospheric skies, or the story of a happy mom who has found meaning in creation, welcome. If you&apos;d like first access to new work, studio updates, and shop restocks,{" "}

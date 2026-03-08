@@ -48,6 +48,21 @@ export default defineType({
       initialValue: 'Original works are released in curated drops. New pieces will appear here when they become available.',
     }),
     defineField({
+      name: 'comingSoonImage',
+      title: 'Originals Coming Soon Image',
+      type: 'image',
+      options: { hotspot: true },
+      description: 'Image displayed on the Originals page while the next collection is not yet live.',
+      fields: [
+        defineField({
+          name: 'alt',
+          title: 'Alt Text',
+          type: 'string',
+          initialValue: 'Upcoming original collection preview',
+        }),
+      ],
+    }),
+    defineField({
       name: 'showCollections',
       title: 'Show Collections Option',
       type: 'boolean',
@@ -99,11 +114,20 @@ export default defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
+      name: 'homeCollectorSubhead',
+      title: 'Homepage Collector Subhead',
+      type: 'text',
+      rows: 3,
+      description: 'The sentence shown in the collector signup section on the homepage.',
+      initialValue: "Join my Collector List and I'll email you a private early access link 24 hours before new originals go live.",
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
       name: 'earlyAccessSubhead',
       title: 'Early Access Subhead',
       type: 'text',
       rows: 3,
-      initialValue: "Join my Collector List and I'll email you a private preview link 24 hours before new originals go live.",
+      initialValue: "Join my Collector List and I'll email you a private early access link 24 hours before new originals go live.",
       validation: (rule) => rule.required(),
     }),
     defineField({
