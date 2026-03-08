@@ -10,9 +10,12 @@ export default function NavBar() {
   const [isDesktopOriginalsOpen, setIsDesktopOriginalsOpen] = useState(false);
   const [isMobileOriginalsOpen, setIsMobileOriginalsOpen] = useState(false);
 
+  // Temporary toggle: set to `true` when you're ready to restore the Originals submenu.
+  const enableOriginalsSubmenu = false;
+
   const originalsLinks = [
     { label: 'Originals', href: '/originals' },
-    { label: 'Prints', href: '/prints' },
+    // { label: 'Prints', href: '/prints' },
     // { label: 'Collections', href: '/originals/collections' },
   ];
 
@@ -76,52 +79,65 @@ export default function NavBar() {
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[var(--link-olive)] transition-all duration-300 group-hover:w-full"></span>
             </Link>
           </li>
-          <li className="relative">
-            <button
-              type="button"
-              onClick={() => setIsDesktopOriginalsOpen((prev) => !prev)}
-              aria-expanded={isDesktopOriginalsOpen}
-              aria-haspopup="menu"
-              className={`relative group inline-flex h-10 items-center gap-0.5 border transition-colors duration-300 ${
-                isDesktopOriginalsOpen
-                  ? '-mx-2 rounded-t-md border-[color:rgba(212,196,168,0.45)] border-b-[var(--bg-paper)] bg-[var(--bg-paper)] px-3 text-[var(--text-brown)] z-40'
-                  : 'border-transparent px-1 hover:text-[var(--link-olive)]'
-              }`}
-            >
-              Originals
-              <svg
-                className={`h-4 w-4 transition-transform duration-200 ${isDesktopOriginalsOpen ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
-              <span
-                className={`absolute bottom-0 left-0 h-0.5 bg-[var(--link-olive)] transition-all duration-300 ${
-                  isDesktopOriginalsOpen ? 'w-full' : 'w-0 group-hover:w-full'
+          {enableOriginalsSubmenu ? (
+            <li className="relative">
+              <button
+                type="button"
+                onClick={() => setIsDesktopOriginalsOpen((prev) => !prev)}
+                aria-expanded={isDesktopOriginalsOpen}
+                aria-haspopup="menu"
+                className={`relative group inline-flex h-10 items-center gap-0.5 border transition-colors duration-300 ${
+                  isDesktopOriginalsOpen
+                    ? '-mx-2 rounded-t-md border-[color:rgba(212,196,168,0.45)] border-b-[var(--bg-paper)] bg-[var(--bg-paper)] px-3 text-[var(--text-brown)] z-40'
+                    : 'border-transparent px-1 hover:text-[var(--link-olive)]'
                 }`}
-              ></span>
-            </button>
-            <div
-              className={`absolute left-1/2 top-full z-30 w-56 -translate-x-1/2 origin-top overflow-hidden rounded-b-md border border-t-0 border-[color:rgba(212,196,168,0.45)] bg-[var(--bg-paper)] shadow-md transition-all duration-150 ${
-                isDesktopOriginalsOpen
-                  ? 'visible translate-y-0 opacity-100'
-                  : 'invisible -translate-y-1 opacity-0 pointer-events-none'
-              }`}
-            >
-              {originalsLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setIsDesktopOriginalsOpen(false)}
-                  className="block px-4 py-2.5 text-sm text-[var(--text-brown)] hover:bg-[rgba(107,91,71,0.08)] hover:text-[var(--link-olive)] transition-colors duration-200"
+              >
+                Originals
+                <svg
+                  className={`h-4 w-4 transition-transform duration-200 ${isDesktopOriginalsOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </li>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+                <span
+                  className={`absolute bottom-0 left-0 h-0.5 bg-[var(--link-olive)] transition-all duration-300 ${
+                    isDesktopOriginalsOpen ? 'w-full' : 'w-0 group-hover:w-full'
+                  }`}
+                ></span>
+              </button>
+              <div
+                className={`absolute left-1/2 top-full z-30 w-56 -translate-x-1/2 origin-top overflow-hidden rounded-b-md border border-t-0 border-[color:rgba(212,196,168,0.45)] bg-[var(--bg-paper)] shadow-md transition-all duration-150 ${
+                  isDesktopOriginalsOpen
+                    ? 'visible translate-y-0 opacity-100'
+                    : 'invisible -translate-y-1 opacity-0 pointer-events-none'
+                }`}
+              >
+                {originalsLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setIsDesktopOriginalsOpen(false)}
+                    className="block px-4 py-2.5 text-sm text-[var(--text-brown)] hover:bg-[rgba(107,91,71,0.08)] hover:text-[var(--link-olive)] transition-colors duration-200"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </li>
+          ) : (
+            <li>
+              <Link
+                href="/originals"
+                onClick={() => setIsDesktopOriginalsOpen(false)}
+                className="relative group inline-flex h-10 items-center px-1 hover:text-[var(--link-olive)] transition-colors duration-300"
+              >
+                Originals
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[var(--link-olive)] transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+            </li>
+          )}
           {/* <li>
             <Link href="/prints" className="relative group py-2 px-1 hover:text-olive transition-colors duration-300">
               Prints
@@ -172,39 +188,51 @@ export default function NavBar() {
                 Gallery
               </Link>
             </li>
-            <li>
-              <button
-                type="button"
-                onClick={() => setIsMobileOriginalsOpen((prev) => !prev)}
-                className="w-full text-left flex items-center justify-between py-3 px-4 rounded-lg hover:bg-[rgba(107,91,71,0.08)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
-                aria-expanded={isMobileOriginalsOpen}
-              >
-                Originals
-                <svg
-                  className={`h-4 w-4 transition-transform duration-200 ${isMobileOriginalsOpen ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            {enableOriginalsSubmenu ? (
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileOriginalsOpen((prev) => !prev)}
+                  className="w-full text-left flex items-center justify-between py-3 px-4 rounded-lg hover:bg-[rgba(107,91,71,0.08)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
+                  aria-expanded={isMobileOriginalsOpen}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {isMobileOriginalsOpen && (
-                <ul className="mt-1 ml-4 space-y-1 rounded-md border border-[color:rgba(212,196,168,0.35)] bg-[var(--bg-paper)] p-2">
-                  {originalsLinks.map((link) => (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        onClick={closeMenus}
-                        className="block rounded-md py-2 px-3 text-sm hover:bg-[rgba(107,91,71,0.08)] hover:text-[var(--link-olive)] transition-colors duration-200"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
+                  Originals
+                  <svg
+                    className={`h-4 w-4 transition-transform duration-200 ${isMobileOriginalsOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {isMobileOriginalsOpen && (
+                  <ul className="mt-1 ml-4 space-y-1 rounded-md border border-[color:rgba(212,196,168,0.35)] bg-[var(--bg-paper)] p-2">
+                    {originalsLinks.map((link) => (
+                      <li key={link.href}>
+                        <Link
+                          href={link.href}
+                          onClick={closeMenus}
+                          className="block rounded-md py-2 px-3 text-sm hover:bg-[rgba(107,91,71,0.08)] hover:text-[var(--link-olive)] transition-colors duration-200"
+                        >
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ) : (
+              <li>
+                <Link
+                  href="/originals"
+                  onClick={closeMenus}
+                  className="block py-3 px-4 rounded-lg hover:bg-[rgba(107,91,71,0.08)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
+                >
+                  Originals
+                </Link>
+              </li>
+            )}
             {/* <li>
               <Link 
                 href="/prints" 
