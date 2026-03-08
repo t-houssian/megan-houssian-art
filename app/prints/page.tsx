@@ -1,11 +1,9 @@
-import { notFound } from 'next/navigation';
 import { sanityClient } from '../../lib/sanity';
 import ImageUrlBuilder from '@sanity/image-url';
 import Link from 'next/link';
 import Image from 'next/image';
 import { cormorant, lora } from '../fonts';
 import { formatRoundedDollars } from '../../lib/money';
-import { fetchOriginalsPageSettings } from '../../lib/originals-page-settings';
 
 export const revalidate = 60;
 
@@ -38,13 +36,6 @@ async function fetchPrints(): Promise<PrintProduct[]> {
 }
 
 export default async function PrintsPage() {
-  const settings = await fetchOriginalsPageSettings();
-  const showPrints = false;
-
-  if (!showPrints || !settings.showPrints) {
-    notFound();
-  }
-
   const prints = await fetchPrints();
 
   return (

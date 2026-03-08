@@ -6,7 +6,6 @@ import LumaPrintPurchase from "../../components/LumaPrintPurchase";
 import Link from "next/link";
 import { cormorant, lora } from "../../fonts";
 import { notFound } from "next/navigation";
-import { fetchOriginalsPageSettings } from "../../../lib/originals-page-settings";
 
 const builder = ImageUrlBuilder(sanityClient);
 function urlFor(source: { asset: { _ref: string } }) {
@@ -42,13 +41,6 @@ interface PageProps {
 }
 
 export default async function PrintDetailPage({ params }: PageProps) {
-  const settings = await fetchOriginalsPageSettings();
-  const showPrints = false;
-
-  if (!showPrints || !settings.showPrints) {
-    notFound();
-  }
-
   const { slug } = await params;
   const printItem = await fetchPrintBySlug(slug);
 

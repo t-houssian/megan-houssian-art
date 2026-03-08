@@ -12,7 +12,7 @@ export default function NavBar() {
 
   const originalsLinks = [
     { label: 'Originals', href: '/originals' },
-    { label: 'Prints', href: '/originals/prints' },
+    { label: 'Prints', href: '/prints' },
     // { label: 'Collections', href: '/originals/collections' },
   ];
 
