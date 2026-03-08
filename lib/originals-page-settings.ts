@@ -56,7 +56,7 @@ const DEFAULT_ORIGINALS_PAGE_SETTINGS: OriginalsPageSettings = {
 
 type PartialOriginalsPageSettings = Partial<OriginalsPageSettings> | null;
 
-const originalsPageSettingsQuery = `*[_type == "originalsPageSettings"][0]{
+const originalsPageSettingsProjection = `{
   pageTitle,
   pageIntro,
   availableOriginalsLabel,
@@ -80,16 +80,31 @@ const originalsPageSettingsQuery = `*[_type == "originalsPageSettings"][0]{
   earlyAccessFinePrint
 }`;
 
+const originalsPageSettingsSingletonQuery = `*[
+  _type == "originalsPageSettings" &&
+  _id in ["originalsPageSettings", "drafts.originalsPageSettings"]
+][0]${originalsPageSettingsProjection}`;
+
+const originalsPageSettingsFallbackQuery = `*[_type == "originalsPageSettings"] | order(_updatedAt desc)[0]${originalsPageSettingsProjection}`;
+
 const normalizeString = (value: unknown, fallback: string) =>
   typeof value === 'string' && value.trim().length > 0 ? value.trim() : fallback;
 
 export async function fetchOriginalsPageSettings(): Promise<OriginalsPageSettings> {
   try {
-    const settings = await sanityClient.fetch<PartialOriginalsPageSettings>(
-      originalsPageSettingsQuery,
+    const singletonSettings = await sanityClient.fetch<PartialOriginalsPageSettings>(
+      originalsPageSettingsSingletonQuery,
       {},
       { next: { revalidate: 60 } }
     );
+
+    const settings =
+      singletonSettings ??
+      (await sanityClient.fetch<PartialOriginalsPageSettings>(
+        originalsPageSettingsFallbackQuery,
+        {},
+        { next: { revalidate: 60 } }
+      ));
 
     return {
       pageTitle: normalizeString(settings?.pageTitle, DEFAULT_ORIGINALS_PAGE_SETTINGS.pageTitle),

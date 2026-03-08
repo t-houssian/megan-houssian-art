@@ -186,7 +186,7 @@ type HeroSettings = {
   stylePreset?: HeroStylePresetKey | null;
 };
 
-const heroQuery = `*[_type == "heroSettings"] | order(_updatedAt desc)[0]{
+const heroProjection = `{
   backgroundImage{
     asset,
     alt
@@ -194,9 +194,26 @@ const heroQuery = `*[_type == "heroSettings"] | order(_updatedAt desc)[0]{
   stylePreset
 }`;
 
+const heroSingletonQuery = `*[
+  _type == "heroSettings" &&
+  _id in ["heroSettings", "drafts.heroSettings"]
+][0]${heroProjection}`;
+
+const heroFallbackQuery = `*[_type == "heroSettings"] | order(_updatedAt desc)[0]${heroProjection}`;
+
 async function fetchHeroSettings(): Promise<HeroSettings | null> {
   try {
-    return await sanityClient.fetch<HeroSettings | null>(heroQuery, {}, { next: { revalidate: 60 } });
+    const singletonSettings = await sanityClient.fetch<HeroSettings | null>(
+      heroSingletonQuery,
+      {},
+      { next: { revalidate: 60 } }
+    );
+
+    if (singletonSettings) {
+      return singletonSettings;
+    }
+
+    return await sanityClient.fetch<HeroSettings | null>(heroFallbackQuery, {}, { next: { revalidate: 60 } });
   } catch (error) {
     console.error('Failed to load hero settings from Sanity', error);
     return null;

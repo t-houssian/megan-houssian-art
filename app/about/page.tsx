@@ -19,16 +19,33 @@ type AboutImageSettings = {
   };
 };
 
-const aboutImageQuery = `*[_type == "heroSettings"] | order(_updatedAt desc)[0]{
+const aboutImageProjection = `{
   aboutPageImage{
     asset,
     alt
   }
 }`;
 
+const aboutImageSingletonQuery = `*[
+  _type == "heroSettings" &&
+  _id in ["heroSettings", "drafts.heroSettings"]
+][0]${aboutImageProjection}`;
+
+const aboutImageFallbackQuery = `*[_type == "heroSettings"] | order(_updatedAt desc)[0]${aboutImageProjection}`;
+
 async function fetchAboutImageSettings(): Promise<AboutImageSettings | null> {
   try {
-    return await sanityClient.fetch<AboutImageSettings | null>(aboutImageQuery, {}, { next: { revalidate: 60 } });
+    const singletonSettings = await sanityClient.fetch<AboutImageSettings | null>(
+      aboutImageSingletonQuery,
+      {},
+      { next: { revalidate: 60 } }
+    );
+
+    if (singletonSettings) {
+      return singletonSettings;
+    }
+
+    return await sanityClient.fetch<AboutImageSettings | null>(aboutImageFallbackQuery, {}, { next: { revalidate: 60 } });
   } catch (error) {
     console.error('Failed to load about page image from Sanity', error);
     return null;
