@@ -6,7 +6,8 @@
         "dev": "sanity start",
         "build": "sanity build",
         "deploy": "sanity deploy",
-        "migrate:collections-to-gallery": "sanity exec ./migrations/rename-collection-to-gallery.mjs --with-user-token"
+        "migrate:collections-to-gallery": "sanity exec ./migrations/rename-collection-to-gallery.mjs --with-user-token",
+        "migrate:page-settings-rich-text": "sanity exec ./migrations/migrate-page-settings-rich-text.js --with-user-token"
     },
     "dependencies": {
         "@sanity/cli": "^3.84.0",
