@@ -60,7 +60,7 @@ export default function NavBar() {
             <Link
               href="/#gallery"
               onClick={() => setIsDesktopOriginalsOpen(false)}
-              className="relative group py-2 px-1 hover:text-[var(--link-olive)] transition-colors duration-300"
+              className="relative group inline-flex h-10 items-center px-1 hover:text-[var(--link-olive)] transition-colors duration-300"
             >
               Gallery
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[var(--link-olive)] transition-all duration-300 group-hover:w-full"></span>
@@ -70,7 +70,7 @@ export default function NavBar() {
             <Link
               href="/about"
               onClick={() => setIsDesktopOriginalsOpen(false)}
-              className="relative group py-2 px-1 hover:text-[var(--link-olive)] transition-colors duration-300"
+              className="relative group inline-flex h-10 items-center px-1 hover:text-[var(--link-olive)] transition-colors duration-300"
             >
               About
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[var(--link-olive)] transition-all duration-300 group-hover:w-full"></span>
@@ -82,7 +82,7 @@ export default function NavBar() {
               onClick={() => setIsDesktopOriginalsOpen((prev) => !prev)}
               aria-expanded={isDesktopOriginalsOpen}
               aria-haspopup="menu"
-              className={`relative group inline-flex items-center gap-0.5 border py-2 transition-colors duration-300 ${
+              className={`relative group inline-flex h-10 items-center gap-0.5 border transition-colors duration-300 ${
                 isDesktopOriginalsOpen
                   ? '-mx-2 rounded-t-md border-[color:rgba(212,196,168,0.45)] border-b-[var(--bg-paper)] bg-[var(--bg-paper)] px-3 text-[var(--text-brown)] z-40'
                   : 'border-transparent px-1 hover:text-[var(--link-olive)]'
@@ -132,7 +132,7 @@ export default function NavBar() {
             <Link
               href="/commissions"
               onClick={() => setIsDesktopOriginalsOpen(false)}
-              className="relative group py-2 px-1 hover:text-[var(--link-olive)] transition-colors duration-300"
+              className="relative group inline-flex h-10 items-center px-1 hover:text-[var(--link-olive)] transition-colors duration-300"
             >
               Commissions
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[var(--link-olive)] transition-all duration-300 group-hover:w-full"></span>
@@ -142,7 +142,7 @@ export default function NavBar() {
             <Link
               href="/contact"
               onClick={() => setIsDesktopOriginalsOpen(false)}
-              className="relative group py-2 px-1 hover:text-[var(--link-olive)] transition-colors duration-300"
+              className="relative group inline-flex h-10 items-center px-1 hover:text-[var(--link-olive)] transition-colors duration-300"
             >
               Contact
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[var(--link-olive)] transition-all duration-300 group-hover:w-full"></span>
