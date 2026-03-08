@@ -1,13 +1,13 @@
 import type {StructureResolver} from 'sanity/structure'
 
-const singletonTypes = new Set(['heroSettings', 'originalsPageSettings'])
+const singletonTypes = new Set(['heroSettings', 'aboutPageSettings', 'originalsPageSettings'])
 
 export const structure: StructureResolver = (S) =>
   S.list()
     .title('Content')
     .items([
       S.listItem()
-        .title('Hero + About Photos')
+        .title('Hero Settings')
         .id('heroSettings')
         .child(
           S.document()
@@ -21,6 +21,14 @@ export const structure: StructureResolver = (S) =>
           S.document()
             .schemaType('originalsPageSettings')
             .documentId('originalsPageSettings')
+        ),
+      S.listItem()
+        .title('About Page Settings')
+        .id('aboutPageSettings')
+        .child(
+          S.document()
+            .schemaType('aboutPageSettings')
+            .documentId('aboutPageSettings')
         ),
       S.divider(),
       ...S.documentTypeListItems().filter((listItem) => {

@@ -21,11 +21,11 @@ export default async function OriginalsPage() {
             {settings.pageTitle}
           </h1>
           <p className={`${lora.className} text-xl md:text-2xl text-warm-gray max-w-3xl mx-auto leading-relaxed`}>
-            A new collection is coming soon! Join my{' '}
+            {settings.comingSoonTextBeforeLink}{' '}
             <Link href="/#collector-early-access" className="underline text-olive hover:text-brown transition-colors">
-              collector list
+              {settings.comingSoonLinkText}
             </Link>{' '}
-            for updates and first access to new originals.
+            {settings.comingSoonTextAfterLink}
           </p>
         </div>
 

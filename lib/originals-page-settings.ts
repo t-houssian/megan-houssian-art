@@ -15,6 +15,9 @@ export type OriginalsPageSettings = {
   availableOriginalsDescription: string;
   availableOriginalsCardDescription: string;
   comingSoonImage?: SanityImageWithAlt;
+  comingSoonTextBeforeLink: string;
+  comingSoonLinkText: string;
+  comingSoonTextAfterLink: string;
   showCollections: boolean;
   collectionsLabel: string;
   collectionsDescription: string;
@@ -38,6 +41,9 @@ const DEFAULT_ORIGINALS_PAGE_SETTINGS: OriginalsPageSettings = {
   availableOriginalsCardDescription:
     'Original works are released in curated drops. New pieces will appear here when they become available.',
   comingSoonImage: undefined,
+  comingSoonTextBeforeLink: 'A new collection is coming soon! Join my',
+  comingSoonLinkText: 'collector list',
+  comingSoonTextAfterLink: 'for updates and first access to new originals.',
   showCollections: false,
   collectionsLabel: 'Collections',
   collectionsDescription: 'Curated series and seasonal releases.',
@@ -67,6 +73,9 @@ const originalsPageSettingsProjection = `{
     asset,
     alt
   },
+  comingSoonTextBeforeLink,
+  comingSoonLinkText,
+  comingSoonTextAfterLink,
   showCollections,
   collectionsLabel,
   collectionsDescription,
@@ -126,6 +135,18 @@ export async function fetchOriginalsPageSettings(): Promise<OriginalsPageSetting
         DEFAULT_ORIGINALS_PAGE_SETTINGS.availableOriginalsCardDescription
       ),
       comingSoonImage: settings?.comingSoonImage,
+      comingSoonTextBeforeLink: normalizeString(
+        settings?.comingSoonTextBeforeLink,
+        DEFAULT_ORIGINALS_PAGE_SETTINGS.comingSoonTextBeforeLink
+      ),
+      comingSoonLinkText: normalizeString(
+        settings?.comingSoonLinkText,
+        DEFAULT_ORIGINALS_PAGE_SETTINGS.comingSoonLinkText
+      ),
+      comingSoonTextAfterLink: normalizeString(
+        settings?.comingSoonTextAfterLink,
+        DEFAULT_ORIGINALS_PAGE_SETTINGS.comingSoonTextAfterLink
+      ),
       showCollections:
         typeof settings?.showCollections === 'boolean'
           ? settings.showCollections
