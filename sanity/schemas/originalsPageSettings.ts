@@ -1,4 +1,20 @@
-import { defineField, defineType } from 'sanity';
+import { defineArrayMember, defineField, defineType } from 'sanity';
+
+const isAllowedLinkValue = (value: unknown) => {
+  if (typeof value !== 'string') {
+    return false;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  return (
+    normalized.startsWith('/') ||
+    normalized.startsWith('#') ||
+    normalized.startsWith('http://') ||
+    normalized.startsWith('https://') ||
+    normalized.startsWith('mailto:') ||
+    normalized.startsWith('tel:')
+  );
+};
 
 export default defineType({
   name: 'originalsPageSettings',
@@ -63,27 +79,51 @@ export default defineType({
       ],
     }),
     defineField({
-      name: 'comingSoonTextBeforeLink',
-      title: 'Coming Soon Text (Before Link)',
-      type: 'text',
-      rows: 3,
-      initialValue: 'A new collection is coming soon! Join my',
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'comingSoonLinkText',
-      title: 'Coming Soon Link Text',
-      type: 'string',
-      initialValue: 'collector list',
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'comingSoonTextAfterLink',
-      title: 'Coming Soon Text (After Link)',
-      type: 'text',
-      rows: 3,
-      initialValue: 'for updates and first access to new originals.',
-      validation: (rule) => rule.required(),
+      name: 'comingSoonContent',
+      title: 'Coming Soon Content',
+      type: 'array',
+      description:
+        'Edit the Originals page message in one field. Press Enter for new paragraphs and highlight text to add links.',
+      of: [
+        defineArrayMember({
+          type: 'block',
+          marks: {
+            annotations: [
+              defineArrayMember({
+                name: 'link',
+                title: 'Link',
+                type: 'object',
+                fields: [
+                  defineField({
+                    name: 'href',
+                    title: 'URL',
+                    type: 'string',
+                    validation: (rule) =>
+                      rule.required().custom((value) =>
+                        isAllowedLinkValue(value)
+                          ? true
+                          : 'Use /path, #anchor, http(s)://, mailto:, or tel:'
+                      ),
+                  }),
+                ],
+              }),
+            ],
+          },
+        }),
+      ],
+      initialValue: [
+        {
+          _type: 'block',
+          style: 'normal',
+          children: [
+            { _type: 'span', text: 'A new collection is coming soon! Join my ' },
+            { _type: 'span', text: 'collector list', marks: ['collector-link'] },
+            { _type: 'span', text: ' for updates and first access to new originals.' },
+          ],
+          markDefs: [{ _key: 'collector-link', _type: 'link', href: '/#collector-early-access' }],
+        },
+      ],
+      validation: (rule) => rule.required().min(1),
     }),
     defineField({
       name: 'showCollections',

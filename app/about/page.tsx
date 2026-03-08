@@ -1,9 +1,9 @@
 // app/about/page.tsx
 import Image from 'next/image';
-import Link from 'next/link';
 import { urlFor } from '../../sanity/lib/image';
 import { cormorant, lora } from "../fonts";
 import { fetchAboutPageSettings } from '../../lib/about-page-settings';
+import SanityRichText from '../components/SanityRichText';
 
 export const metadata = {
   title: 'About - Megan Houssian Art',
@@ -25,28 +25,10 @@ export default async function AboutPage() {
             <h1 className={`${cormorant.className} text-4xl md:text-5xl font-light text-brown mb-6`}>
               {settings.pageTitle}
             </h1>
-            <p className={`${lora.className} text-brown leading-relaxed mb-6 text-lg`}>
-              {settings.introParagraph}
-            </p>
-            <p className={`${lora.className} text-brown leading-relaxed mb-6 text-lg`}>
-              {settings.instrumentsParagraph}
-            </p>
-            <p className={`${lora.className} text-brown leading-relaxed mb-6 text-lg`}>
-              {settings.collegeParagraph}
-            </p>
-            <p className={`${lora.className} text-brown leading-relaxed mb-6 text-lg`}>
-              {settings.motherhoodParagraph}
-            </p>
-            <p className={`${lora.className} text-brown leading-relaxed mb-6 text-lg`}>
-              {settings.napTimeParagraph}
-            </p>
-            <p className={`${lora.className} text-brown leading-relaxed mb-6 text-lg`}>
-              {settings.closingPrefix}{' '}
-              <Link href={settings.closingLinkHref} className="underline text-olive hover:text-brown transition-colors">
-                {settings.closingLinkText}
-              </Link>{" "}
-              {settings.closingSuffix}
-            </p>
+            <SanityRichText
+              value={settings.content}
+              paragraphClassName={`${lora.className} text-brown leading-relaxed text-lg`}
+            />
           </div>
           <div className="flex justify-center md:justify-end">
             <div className="group relative w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">

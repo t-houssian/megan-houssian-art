@@ -1,10 +1,22 @@
 import { sanityClient } from './sanity';
+import {
+  createLinkedParagraphBlock,
+  normalizeBlocks,
+  normalizeNonEmptyString,
+  type SanityRichTextBlock,
+} from './sanity-rich-text';
 
 type SanityImageWithAlt = {
   asset?: {
     _ref: string;
   };
   alt?: string;
+};
+
+type LegacyOriginalsPageSettingsFields = {
+  comingSoonTextBeforeLink?: unknown;
+  comingSoonLinkText?: unknown;
+  comingSoonTextAfterLink?: unknown;
 };
 
 export type OriginalsPageSettings = {
@@ -15,9 +27,7 @@ export type OriginalsPageSettings = {
   availableOriginalsDescription: string;
   availableOriginalsCardDescription: string;
   comingSoonImage?: SanityImageWithAlt;
-  comingSoonTextBeforeLink: string;
-  comingSoonLinkText: string;
-  comingSoonTextAfterLink: string;
+  comingSoonContent: SanityRichTextBlock[];
   showCollections: boolean;
   collectionsLabel: string;
   collectionsDescription: string;
@@ -41,9 +51,14 @@ const DEFAULT_ORIGINALS_PAGE_SETTINGS: OriginalsPageSettings = {
   availableOriginalsCardDescription:
     'Original works are released in curated drops. New pieces will appear here when they become available.',
   comingSoonImage: undefined,
-  comingSoonTextBeforeLink: 'A new collection is coming soon! Join my',
-  comingSoonLinkText: 'collector list',
-  comingSoonTextAfterLink: 'for updates and first access to new originals.',
+  comingSoonContent: [
+    createLinkedParagraphBlock({
+      beforeLink: 'A new collection is coming soon! Join my ',
+      linkText: 'collector list',
+      linkHref: '/#collector-early-access',
+      afterLink: ' for updates and first access to new originals.',
+    }),
+  ],
   showCollections: false,
   collectionsLabel: 'Collections',
   collectionsDescription: 'Curated series and seasonal releases.',
@@ -60,7 +75,9 @@ const DEFAULT_ORIGINALS_PAGE_SETTINGS: OriginalsPageSettings = {
     "By signing up, you'll receive emails about new paintings and releases. Unsubscribe anytime.",
 };
 
-type PartialOriginalsPageSettings = Partial<OriginalsPageSettings> | null;
+type PartialOriginalsPageSettings =
+  | (Partial<OriginalsPageSettings> & LegacyOriginalsPageSettingsFields)
+  | null;
 
 const originalsPageSettingsProjection = `{
   pageTitle,
@@ -73,6 +90,7 @@ const originalsPageSettingsProjection = `{
     asset,
     alt
   },
+  comingSoonContent,
   comingSoonTextBeforeLink,
   comingSoonLinkText,
   comingSoonTextAfterLink,
@@ -96,8 +114,25 @@ const originalsPageSettingsSingletonQuery = `*[
 
 const originalsPageSettingsFallbackQuery = `*[_type == "originalsPageSettings"] | order(_updatedAt desc)[0]${originalsPageSettingsProjection}`;
 
-const normalizeString = (value: unknown, fallback: string) =>
-  typeof value === 'string' && value.trim().length > 0 ? value.trim() : fallback;
+const buildLegacyComingSoonContent = (
+  settings: LegacyOriginalsPageSettingsFields | null
+): SanityRichTextBlock[] => {
+  const beforeLink = normalizeNonEmptyString(settings?.comingSoonTextBeforeLink, 'A new collection is coming soon! Join my ');
+  const linkText = normalizeNonEmptyString(settings?.comingSoonLinkText, 'collector list');
+  const afterLink = normalizeNonEmptyString(
+    settings?.comingSoonTextAfterLink,
+    ' for updates and first access to new originals.'
+  );
+
+  return [
+    createLinkedParagraphBlock({
+      beforeLink,
+      linkText,
+      linkHref: '/#collector-early-access',
+      afterLink,
+    }),
+  ];
+};
 
 export async function fetchOriginalsPageSettings(): Promise<OriginalsPageSettings> {
   try {
@@ -116,46 +151,35 @@ export async function fetchOriginalsPageSettings(): Promise<OriginalsPageSetting
       ));
 
     return {
-      pageTitle: normalizeString(settings?.pageTitle, DEFAULT_ORIGINALS_PAGE_SETTINGS.pageTitle),
-      pageIntro: normalizeString(settings?.pageIntro, DEFAULT_ORIGINALS_PAGE_SETTINGS.pageIntro),
-      availableOriginalsLabel: normalizeString(
+      pageTitle: normalizeNonEmptyString(settings?.pageTitle, DEFAULT_ORIGINALS_PAGE_SETTINGS.pageTitle),
+      pageIntro: normalizeNonEmptyString(settings?.pageIntro, DEFAULT_ORIGINALS_PAGE_SETTINGS.pageIntro),
+      availableOriginalsLabel: normalizeNonEmptyString(
         settings?.availableOriginalsLabel,
         DEFAULT_ORIGINALS_PAGE_SETTINGS.availableOriginalsLabel
       ),
-      availableOriginalsAnnouncement: normalizeString(
+      availableOriginalsAnnouncement: normalizeNonEmptyString(
         settings?.availableOriginalsAnnouncement,
         DEFAULT_ORIGINALS_PAGE_SETTINGS.availableOriginalsAnnouncement
       ),
-      availableOriginalsDescription: normalizeString(
+      availableOriginalsDescription: normalizeNonEmptyString(
         settings?.availableOriginalsDescription,
         DEFAULT_ORIGINALS_PAGE_SETTINGS.availableOriginalsDescription
       ),
-      availableOriginalsCardDescription: normalizeString(
+      availableOriginalsCardDescription: normalizeNonEmptyString(
         settings?.availableOriginalsCardDescription,
         DEFAULT_ORIGINALS_PAGE_SETTINGS.availableOriginalsCardDescription
       ),
       comingSoonImage: settings?.comingSoonImage,
-      comingSoonTextBeforeLink: normalizeString(
-        settings?.comingSoonTextBeforeLink,
-        DEFAULT_ORIGINALS_PAGE_SETTINGS.comingSoonTextBeforeLink
-      ),
-      comingSoonLinkText: normalizeString(
-        settings?.comingSoonLinkText,
-        DEFAULT_ORIGINALS_PAGE_SETTINGS.comingSoonLinkText
-      ),
-      comingSoonTextAfterLink: normalizeString(
-        settings?.comingSoonTextAfterLink,
-        DEFAULT_ORIGINALS_PAGE_SETTINGS.comingSoonTextAfterLink
-      ),
+      comingSoonContent: normalizeBlocks(settings?.comingSoonContent, buildLegacyComingSoonContent(settings)),
       showCollections:
         typeof settings?.showCollections === 'boolean'
           ? settings.showCollections
           : DEFAULT_ORIGINALS_PAGE_SETTINGS.showCollections,
-      collectionsLabel: normalizeString(
+      collectionsLabel: normalizeNonEmptyString(
         settings?.collectionsLabel,
         DEFAULT_ORIGINALS_PAGE_SETTINGS.collectionsLabel
       ),
-      collectionsDescription: normalizeString(
+      collectionsDescription: normalizeNonEmptyString(
         settings?.collectionsDescription,
         DEFAULT_ORIGINALS_PAGE_SETTINGS.collectionsDescription
       ),
@@ -163,28 +187,28 @@ export async function fetchOriginalsPageSettings(): Promise<OriginalsPageSetting
         typeof settings?.showPrints === 'boolean'
           ? settings.showPrints
           : DEFAULT_ORIGINALS_PAGE_SETTINGS.showPrints,
-      printsLabel: normalizeString(settings?.printsLabel, DEFAULT_ORIGINALS_PAGE_SETTINGS.printsLabel),
-      printsDescription: normalizeString(
+      printsLabel: normalizeNonEmptyString(settings?.printsLabel, DEFAULT_ORIGINALS_PAGE_SETTINGS.printsLabel),
+      printsDescription: normalizeNonEmptyString(
         settings?.printsDescription,
         DEFAULT_ORIGINALS_PAGE_SETTINGS.printsDescription
       ),
-      earlyAccessHeading: normalizeString(
+      earlyAccessHeading: normalizeNonEmptyString(
         settings?.earlyAccessHeading,
         DEFAULT_ORIGINALS_PAGE_SETTINGS.earlyAccessHeading
       ),
-      homeCollectorSubhead: normalizeString(
+      homeCollectorSubhead: normalizeNonEmptyString(
         settings?.homeCollectorSubhead,
         DEFAULT_ORIGINALS_PAGE_SETTINGS.homeCollectorSubhead
       ),
-      earlyAccessSubhead: normalizeString(
+      earlyAccessSubhead: normalizeNonEmptyString(
         settings?.earlyAccessSubhead,
         DEFAULT_ORIGINALS_PAGE_SETTINGS.earlyAccessSubhead
       ),
-      earlyAccessButtonLabel: normalizeString(
+      earlyAccessButtonLabel: normalizeNonEmptyString(
         settings?.earlyAccessButtonLabel,
         DEFAULT_ORIGINALS_PAGE_SETTINGS.earlyAccessButtonLabel
       ),
-      earlyAccessFinePrint: normalizeString(
+      earlyAccessFinePrint: normalizeNonEmptyString(
         settings?.earlyAccessFinePrint,
         DEFAULT_ORIGINALS_PAGE_SETTINGS.earlyAccessFinePrint
       ),

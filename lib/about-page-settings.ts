@@ -1,4 +1,11 @@
 import { sanityClient } from './sanity';
+import {
+  createLinkedParagraphBlock,
+  createParagraphBlock,
+  normalizeBlocks,
+  normalizeNonEmptyString,
+  type SanityRichTextBlock,
+} from './sanity-rich-text';
 
 type SanityImageWithAlt = {
   asset?: {
@@ -7,40 +14,54 @@ type SanityImageWithAlt = {
   alt?: string;
 };
 
+type LegacyAboutPageSettingsFields = {
+  introParagraph?: unknown;
+  instrumentsParagraph?: unknown;
+  collegeParagraph?: unknown;
+  motherhoodParagraph?: unknown;
+  napTimeParagraph?: unknown;
+  closingPrefix?: unknown;
+  closingLinkText?: unknown;
+  closingLinkHref?: unknown;
+  closingSuffix?: unknown;
+};
+
 export type AboutPageSettings = {
   pageTitle: string;
   aboutPageImage?: SanityImageWithAlt;
-  introParagraph: string;
-  instrumentsParagraph: string;
-  collegeParagraph: string;
-  motherhoodParagraph: string;
-  napTimeParagraph: string;
-  closingPrefix: string;
-  closingLinkText: string;
-  closingLinkHref: string;
-  closingSuffix: string;
+  content: SanityRichTextBlock[];
 };
+
+const DEFAULT_ABOUT_CONTENT: SanityRichTextBlock[] = [
+  createParagraphBlock("Hi, I'm Megan! I'm a Texas Hill Country landscape painter, wife, and mama."),
+  createParagraphBlock(
+    "I've loved creating all my life, and not just art. I learned to play three different instruments, and I've been making crepes for family breakfasts since I was eight."
+  ),
+  createParagraphBlock(
+    'Fun fact: I actually started college as an art major... but I switched out on the very first day of class. I instinctively knew that turning art into an assignment would steal the joy from it.'
+  ),
+  createParagraphBlock(
+    'Motherhood brought it all back in the best way. It inspired me to protect my time, get really honest about what I wanted, and build a life that makes room for creating. My faith in Jesus Christ is also a guiding light in my daily life.'
+  ),
+  createParagraphBlock(
+    `During my daughter's nap time, you'll find me painting distant blue hills, wildflowers, and open skies. Or, on days that aren't 100 degrees (Texas summers are brutal), you'll find me "cooking" outside with my daughter, where we make leaf and dirt soup topped with flowers we find in our yard.`
+  ),
+  createLinkedParagraphBlock({
+    beforeLink:
+      "Whether you are drawn to the reverent landscapes, atmospheric skies, or the story of a happy mom who has found meaning in creation, welcome. If you'd like first access to new work, studio updates, and shop restocks, ",
+    linkText: 'join my email list here',
+    linkHref: '/#collector-early-access',
+    afterLink: ' so we can stay in touch.',
+  }),
+];
 
 const DEFAULT_ABOUT_PAGE_SETTINGS: AboutPageSettings = {
   pageTitle: 'About Megan',
   aboutPageImage: undefined,
-  introParagraph: "Hi, I'm Megan! I'm a Texas Hill Country landscape painter, wife, and mama.",
-  instrumentsParagraph:
-    "I've loved creating all my life, and not just art. I learned to play three different instruments, and I've been making crepes for family breakfasts since I was eight.",
-  collegeParagraph:
-    'Fun fact: I actually started college as an art major... but I switched out on the very first day of class. I instinctively knew that turning art into an assignment would steal the joy from it.',
-  motherhoodParagraph:
-    'Motherhood brought it all back in the best way. It inspired me to protect my time, get really honest about what I wanted, and build a life that makes room for creating. My faith in Jesus Christ is also a guiding light in my daily life.',
-  napTimeParagraph:
-    "During my daughter's nap time, you'll find me painting distant blue hills, wildflowers, and open skies. Or, on days that aren't 100 degrees (Texas summers are brutal), you'll find me \"cooking\" outside with my daughter, where we make leaf and dirt soup topped with flowers we find in our yard.",
-  closingPrefix:
-    "Whether you are drawn to the reverent landscapes, atmospheric skies, or the story of a happy mom who has found meaning in creation, welcome. If you'd like first access to new work, studio updates, and shop restocks,",
-  closingLinkText: 'join my email list here',
-  closingLinkHref: '/#collector-early-access',
-  closingSuffix: 'so we can stay in touch.',
+  content: DEFAULT_ABOUT_CONTENT,
 };
 
-type PartialAboutPageSettings = Partial<AboutPageSettings> | null;
+type PartialAboutPageSettings = (Partial<AboutPageSettings> & LegacyAboutPageSettingsFields) | null;
 
 const aboutPageSettingsProjection = `{
   pageTitle,
@@ -48,6 +69,7 @@ const aboutPageSettingsProjection = `{
     asset,
     alt
   },
+  content,
   introParagraph,
   instrumentsParagraph,
   collegeParagraph,
@@ -76,8 +98,49 @@ const legacyAboutImageQuery = `*[
   }
 }`;
 
-const normalizeString = (value: unknown, fallback: string) =>
-  typeof value === 'string' && value.trim().length > 0 ? value.trim() : fallback;
+const buildLegacyAboutContent = (settings: LegacyAboutPageSettingsFields | null): SanityRichTextBlock[] => {
+  const introParagraph = normalizeNonEmptyString(
+    settings?.introParagraph,
+    "Hi, I'm Megan! I'm a Texas Hill Country landscape painter, wife, and mama."
+  );
+  const instrumentsParagraph = normalizeNonEmptyString(
+    settings?.instrumentsParagraph,
+    "I've loved creating all my life, and not just art. I learned to play three different instruments, and I've been making crepes for family breakfasts since I was eight."
+  );
+  const collegeParagraph = normalizeNonEmptyString(
+    settings?.collegeParagraph,
+    'Fun fact: I actually started college as an art major... but I switched out on the very first day of class. I instinctively knew that turning art into an assignment would steal the joy from it.'
+  );
+  const motherhoodParagraph = normalizeNonEmptyString(
+    settings?.motherhoodParagraph,
+    'Motherhood brought it all back in the best way. It inspired me to protect my time, get really honest about what I wanted, and build a life that makes room for creating. My faith in Jesus Christ is also a guiding light in my daily life.'
+  );
+  const napTimeParagraph = normalizeNonEmptyString(
+    settings?.napTimeParagraph,
+    `During my daughter's nap time, you'll find me painting distant blue hills, wildflowers, and open skies. Or, on days that aren't 100 degrees (Texas summers are brutal), you'll find me "cooking" outside with my daughter, where we make leaf and dirt soup topped with flowers we find in our yard.`
+  );
+  const closingPrefix = normalizeNonEmptyString(
+    settings?.closingPrefix,
+    "Whether you are drawn to the reverent landscapes, atmospheric skies, or the story of a happy mom who has found meaning in creation, welcome. If you'd like first access to new work, studio updates, and shop restocks, "
+  );
+  const closingLinkText = normalizeNonEmptyString(settings?.closingLinkText, 'join my email list here');
+  const closingLinkHref = normalizeNonEmptyString(settings?.closingLinkHref, '/#collector-early-access');
+  const closingSuffix = normalizeNonEmptyString(settings?.closingSuffix, ' so we can stay in touch.');
+
+  return [
+    createParagraphBlock(introParagraph),
+    createParagraphBlock(instrumentsParagraph),
+    createParagraphBlock(collegeParagraph),
+    createParagraphBlock(motherhoodParagraph),
+    createParagraphBlock(napTimeParagraph),
+    createLinkedParagraphBlock({
+      beforeLink: closingPrefix,
+      linkText: closingLinkText,
+      linkHref: closingLinkHref,
+      afterLink: closingSuffix,
+    }),
+  ];
+};
 
 export async function fetchAboutPageSettings(): Promise<AboutPageSettings> {
   try {
@@ -102,23 +165,9 @@ export async function fetchAboutPageSettings(): Promise<AboutPageSettings> {
     );
 
     return {
-      pageTitle: normalizeString(settings?.pageTitle, DEFAULT_ABOUT_PAGE_SETTINGS.pageTitle),
+      pageTitle: normalizeNonEmptyString(settings?.pageTitle, DEFAULT_ABOUT_PAGE_SETTINGS.pageTitle),
       aboutPageImage: settings?.aboutPageImage ?? legacyImageSettings?.aboutPageImage,
-      introParagraph: normalizeString(settings?.introParagraph, DEFAULT_ABOUT_PAGE_SETTINGS.introParagraph),
-      instrumentsParagraph: normalizeString(
-        settings?.instrumentsParagraph,
-        DEFAULT_ABOUT_PAGE_SETTINGS.instrumentsParagraph
-      ),
-      collegeParagraph: normalizeString(settings?.collegeParagraph, DEFAULT_ABOUT_PAGE_SETTINGS.collegeParagraph),
-      motherhoodParagraph: normalizeString(
-        settings?.motherhoodParagraph,
-        DEFAULT_ABOUT_PAGE_SETTINGS.motherhoodParagraph
-      ),
-      napTimeParagraph: normalizeString(settings?.napTimeParagraph, DEFAULT_ABOUT_PAGE_SETTINGS.napTimeParagraph),
-      closingPrefix: normalizeString(settings?.closingPrefix, DEFAULT_ABOUT_PAGE_SETTINGS.closingPrefix),
-      closingLinkText: normalizeString(settings?.closingLinkText, DEFAULT_ABOUT_PAGE_SETTINGS.closingLinkText),
-      closingLinkHref: normalizeString(settings?.closingLinkHref, DEFAULT_ABOUT_PAGE_SETTINGS.closingLinkHref),
-      closingSuffix: normalizeString(settings?.closingSuffix, DEFAULT_ABOUT_PAGE_SETTINGS.closingSuffix),
+      content: normalizeBlocks(settings?.content, buildLegacyAboutContent(settings)),
     };
   } catch (error) {
     console.error('Failed to load about page settings from Sanity', error);

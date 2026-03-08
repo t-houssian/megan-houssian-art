@@ -1,8 +1,8 @@
 import Image from 'next/image';
-import Link from 'next/link';
 import { cormorant, lora } from '../fonts';
 import { fetchOriginalsPageSettings } from '../../lib/originals-page-settings';
 import { urlFor } from '../../sanity/lib/image';
+import SanityRichText from '../components/SanityRichText';
 
 export const revalidate = 60;
 
@@ -20,13 +20,11 @@ export default async function OriginalsPage() {
           <h1 className={`${cormorant.className} text-4xl md:text-5xl font-light mb-6 text-brown tracking-wide`}>
             {settings.pageTitle}
           </h1>
-          <p className={`${lora.className} text-xl md:text-2xl text-warm-gray max-w-3xl mx-auto leading-relaxed`}>
-            {settings.comingSoonTextBeforeLink}{' '}
-            <Link href="/#collector-early-access" className="underline text-olive hover:text-brown transition-colors">
-              {settings.comingSoonLinkText}
-            </Link>{' '}
-            {settings.comingSoonTextAfterLink}
-          </p>
+          <SanityRichText
+            value={settings.comingSoonContent}
+            className="max-w-3xl mx-auto"
+            paragraphClassName={`${lora.className} text-xl md:text-2xl text-warm-gray leading-relaxed`}
+          />
         </div>
 
         <div className="mx-auto max-w-3xl">
