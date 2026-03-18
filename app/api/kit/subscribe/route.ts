@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import FormData from "form-data";
 import Mailgun from "mailgun.js";
 import { getEmailLinks, renderBrandEmail } from "../../../../lib/email-template";
+import {
+  applyTemplate,
+  fetchEmailSettings,
+  renderHtmlBulletList,
+  renderHtmlParagraphs,
+  renderTextBulletList,
+  resolveHref,
+} from "../../../../lib/email-settings";
 
 const KIT_API_BASE_URL = "https://api.kit.com/v4";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -70,53 +78,62 @@ const sendCollectorWelcomeEmail = async (params: { email: string; firstName: str
 
   const collectorName = params.firstName.trim() || "Collector";
   const links = getEmailLinks();
-  const text = `Hi ${collectorName},
-
-Thanks for joining my Collector List.
-
-You are now on the list for:
-- Private preview links before new originals go live
-- New painting releases
-- Studio updates
-
-Explore:
-- Originals: ${links.originalsUrl}
-- Print Shop: ${links.printsUrl}
-- Contact: ${links.contactUrl}
-${links.pinterestUrl ? `- Pinterest: ${links.pinterestUrl}\n` : ''}${links.facebookUrl ? `- Facebook: ${links.facebookUrl}\n` : ''}${
-    links.instagramUrl ? `- Instagram: ${links.instagramUrl}\n` : ''
-  }
-
-Grateful you are here.
-Megan Houssian
-`;
+  const emailSettings = await fetchEmailSettings();
+  const welcomeSettings = emailSettings.collectorWelcome;
+  const templateValues = {
+    firstName: collectorName,
+  };
+  const highlights = welcomeSettings.highlights.map((item) => applyTemplate(item, templateValues));
+  const ctaHref = resolveHref(welcomeSettings.ctaHref, links.homeUrl, links.originalsUrl);
+  const text = [
+    applyTemplate(welcomeSettings.greetingTemplate, templateValues),
+    "",
+    applyTemplate(welcomeSettings.intro, templateValues),
+    "",
+    applyTemplate(welcomeSettings.highlightsIntro, templateValues),
+    renderTextBulletList(highlights),
+    "",
+    applyTemplate(welcomeSettings.body, templateValues),
+    "",
+    "Explore:",
+    `- Originals: ${links.originalsUrl}`,
+    `- Print Shop: ${links.printsUrl}`,
+    `- Contact: ${links.contactUrl}`,
+    links.pinterestUrl ? `- Pinterest: ${links.pinterestUrl}` : "",
+    links.facebookUrl ? `- Facebook: ${links.facebookUrl}` : "",
+    links.instagramUrl ? `- Instagram: ${links.instagramUrl}` : "",
+    "",
+    applyTemplate(welcomeSettings.outro, templateValues),
+  ]
+    .filter((line, index, all) => {
+      if (line) return true;
+      return index > 0 && all[index - 1] !== "";
+    })
+    .join("\n");
 
   const html = renderBrandEmail({
-    preheader: "Welcome to Megan's Collector List",
-    title: "Welcome to the Collector List",
-    greeting: `Hi ${collectorName},`,
-    intro: "Thanks for signing up.",
+    preheader: applyTemplate(welcomeSettings.preheader, templateValues),
+    title: applyTemplate(welcomeSettings.title, templateValues),
+    greeting: applyTemplate(welcomeSettings.greetingTemplate, templateValues),
+    intro: applyTemplate(welcomeSettings.intro, templateValues),
     bodyHtml: `
-<p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:#4a3a2d;">You are now on the list for:</p>
-<ul style="margin:0 0 0 18px;padding:0;color:#4a3a2d;">
-  <li style="margin:0 0 6px;">Private preview links before new originals go live</li>
-  <li style="margin:0 0 6px;">New painting releases</li>
-  <li style="margin:0 0 6px;">Studio updates</li>
-</ul>
-<p style="margin:16px 0 0;font-size:15px;line-height:1.7;color:#4a3a2d;">
-I am so grateful you are here and I cannot wait to share new work with you.
-</p>`,
+<p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:#4a3a2d;">${applyTemplate(
+      welcomeSettings.highlightsIntro,
+      templateValues
+    )}</p>
+${renderHtmlBulletList(highlights)}
+${renderHtmlParagraphs(applyTemplate(welcomeSettings.body, templateValues))}`,
     cta: {
-      label: "Browse Originals",
-      href: links.originalsUrl,
+      label: applyTemplate(welcomeSettings.ctaLabel, templateValues),
+      href: ctaHref,
     },
-    outro: "Thank you for supporting my work. - Megan",
+    outro: applyTemplate(welcomeSettings.outro, templateValues),
   });
 
   await mg.messages.create(domain, {
     from,
     to: [params.email],
-    subject: "You're on the Collector List",
+    subject: applyTemplate(welcomeSettings.subject, templateValues),
     text,
     html,
   });

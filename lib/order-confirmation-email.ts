@@ -1,9 +1,8 @@
 import FormData from 'form-data';
 import Mailgun from 'mailgun.js';
 import { getEmailLinks, renderBrandEmail, renderDetailTable } from './email-template';
+import { applyTemplate, fetchEmailSettings, renderHtmlParagraphs, resolveHref } from './email-settings';
 import { formatRoundedCents, formatRoundedDollars } from './money';
-
-const MEGAN_EMAIL = 'meganhoussianart@gmail.com';
 
 type OrderConfirmationEmailInput = {
   customerEmail?: string | null;
@@ -85,12 +84,26 @@ export async function sendOrderConfirmationEmail(input: OrderConfirmationEmailIn
 
   const domain = getDomain();
   const from = getFrom(domain);
+  const emailSettings = await fetchEmailSettings();
+  const orderSettings = emailSettings.orderConfirmation;
   const amount = formatAmount(input);
   const shippingMethod = formatShippingMethod(input.shippingOption);
   const customerName = input.customerName?.trim() || 'Collector';
   const product = input.product || 'Artwork Purchase';
   const links = getEmailLinks();
-  const to = [input.customerEmail, MEGAN_EMAIL]
+  const templateValues = {
+    customerName,
+    orderId: input.orderId,
+    product,
+    amount,
+    paymentMethod: input.paymentMethod.toUpperCase(),
+    shippingMethod,
+    supportEmail: emailSettings.supportEmail,
+  };
+  const to = [
+    input.customerEmail,
+    orderSettings.sendCopyToSupport ? emailSettings.supportEmail : null,
+  ]
     .filter((email): email is string => Boolean(email && email.trim()))
     .map((email) => email.trim().toLowerCase())
     .filter((email, index, all) => all.indexOf(email) === index);
@@ -103,34 +116,45 @@ export async function sendOrderConfirmationEmail(input: OrderConfirmationEmailIn
     input.shippingOption === 'pickup' ? 'N/A (Gallery Pickup)' : formatAddressText(input.shippingAddress);
   const shippingAddressSingleLine =
     input.shippingOption === 'pickup' ? 'N/A (Gallery Pickup)' : formatAddressSingleLine(input.shippingAddress);
+  const ctaHref = resolveHref(orderSettings.ctaHref, links.homeUrl, links.originalsUrl);
+  const supportMessageText = applyTemplate(orderSettings.supportMessage, templateValues);
+  const supportEmailAnchor = `<a href="mailto:${emailSettings.supportEmail}" style="color:#6b4f3a;text-decoration:underline;">${emailSettings.supportEmail}</a>`;
+  const supportMessageHtml = renderHtmlParagraphs(supportMessageText).replace(emailSettings.supportEmail, supportEmailAnchor);
+  const fulfillmentMessageText = applyTemplate(orderSettings.fulfillmentMessage, templateValues);
 
-  const text = `Hello ${customerName},
-
-Thank you for your purchase from Megan Houssian Art.
-
-Order Details
-- Order ID: ${input.orderId}
-- Artwork: ${product}
-- Payment Method: ${input.paymentMethod.toUpperCase()}
-- Total Paid: ${amount}
-- Delivery Method: ${shippingMethod}
-- Shipping Address:
-${shippingAddressText}
-
-If you have any questions, please email Megan at ${MEGAN_EMAIL}.
-We will send your shipping confirmation and tracking codes when we ship out your piece.
-
-Shop and updates:
-- Website: ${links.homeUrl}
-- Originals: ${links.originalsUrl}
-- Print Shop: ${links.printsUrl}
-- Contact: ${links.contactUrl}
-${links.pinterestUrl ? `- Pinterest: ${links.pinterestUrl}\n` : ''}${links.facebookUrl ? `- Facebook: ${links.facebookUrl}\n` : ''}${
-    links.instagramUrl ? `- Instagram: ${links.instagramUrl}\n` : ''
-  }
-
-Thank you for supporting my work.
-`;
+  const text = [
+    applyTemplate(orderSettings.greetingTemplate, templateValues),
+    '',
+    applyTemplate(orderSettings.intro, templateValues),
+    '',
+    applyTemplate(orderSettings.detailsHeading, templateValues),
+    `- Order ID: ${input.orderId}`,
+    `- Artwork: ${product}`,
+    `- Payment Method: ${input.paymentMethod.toUpperCase()}`,
+    `- Total Paid: ${amount}`,
+    `- Delivery Method: ${shippingMethod}`,
+    '- Shipping Address:',
+    shippingAddressText,
+    '',
+    supportMessageText,
+    fulfillmentMessageText,
+    '',
+    'Shop and updates:',
+    `- Website: ${links.homeUrl}`,
+    `- Originals: ${links.originalsUrl}`,
+    `- Print Shop: ${links.printsUrl}`,
+    `- Contact: ${links.contactUrl}`,
+    links.pinterestUrl ? `- Pinterest: ${links.pinterestUrl}` : '',
+    links.facebookUrl ? `- Facebook: ${links.facebookUrl}` : '',
+    links.instagramUrl ? `- Instagram: ${links.instagramUrl}` : '',
+    '',
+    applyTemplate(orderSettings.outro, templateValues),
+  ]
+    .filter((line, index, all) => {
+      if (line) return true;
+      return index > 0 && all[index - 1] !== '';
+    })
+    .join('\n');
 
   const detailsHtml = renderDetailTable([
     { label: 'Order ID', value: input.orderId },
@@ -142,26 +166,25 @@ Thank you for supporting my work.
   ]);
 
   const bodyHtml = `
-<h2 style="margin:4px 0 12px;font-size:21px;line-height:1.3;color:#3f3126;font-weight:500;">Order Details</h2>
+<h2 style="margin:4px 0 12px;font-size:21px;line-height:1.3;color:#3f3126;font-weight:500;">${applyTemplate(
+    orderSettings.detailsHeading,
+    templateValues
+  )}</h2>
 ${detailsHtml}
-<p style="margin:18px 0 0;font-size:15px;line-height:1.7;color:#4a3a2d;">
-If you have any questions, please email Megan at <a href="mailto:${MEGAN_EMAIL}" style="color:#6b4f3a;text-decoration:underline;">${MEGAN_EMAIL}</a>.
-</p>
-<p style="margin:10px 0 0;font-size:15px;line-height:1.7;color:#4a3a2d;">
-We will send your shipping confirmation and tracking details when your artwork is on the way.
-</p>`;
+${supportMessageHtml}
+${renderHtmlParagraphs(fulfillmentMessageText)}`;
 
   const html = renderBrandEmail({
-    preheader: `Order ${input.orderId} confirmed`,
-    title: 'Order Confirmation',
-    greeting: `Hello ${customerName},`,
-    intro: 'Thank you for your purchase from Megan Houssian Art.',
+    preheader: applyTemplate(orderSettings.preheaderTemplate, templateValues),
+    title: applyTemplate(orderSettings.title, templateValues),
+    greeting: applyTemplate(orderSettings.greetingTemplate, templateValues),
+    intro: applyTemplate(orderSettings.intro, templateValues),
     bodyHtml,
     cta: {
-      label: 'View Originals',
-      href: links.originalsUrl,
+      label: applyTemplate(orderSettings.ctaLabel, templateValues),
+      href: ctaHref,
     },
-    outro: "Thank you for supporting my work.",
+    outro: applyTemplate(orderSettings.outro, templateValues),
   });
 
   const mg = mailgun.client({
@@ -172,7 +195,7 @@ We will send your shipping confirmation and tracking details when your artwork i
   await mg.messages.create(domain, {
     from,
     to,
-    subject: `Order Confirmation - ${product}`,
+    subject: applyTemplate(orderSettings.subjectTemplate, templateValues),
     text,
     html,
   });

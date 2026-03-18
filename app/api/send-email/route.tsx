@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import FormData from 'form-data';
 import Mailgun from 'mailgun.js';
+import { applyTemplate, escapeHtml, fetchEmailSettings, renderHtmlParagraphs } from '../../../lib/email-settings';
 
 const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024;
 
@@ -20,10 +21,54 @@ const defaultFrom =
   process.env.MAILGUN_FROM_EMAIL ||
   `Excited User <mailgun@${domain}>`;
 
+type EmailRow = {
+  label: string;
+  value: string;
+  preformatted?: boolean;
+};
+
+const buildNotificationText = (heading: string, intro: string, rows: EmailRow[], footer: string) => {
+  const sections = [
+    `${heading}:`,
+    intro,
+    rows
+      .map((row) => `${row.label}: ${row.preformatted ? `\n${row.value}` : row.value}`)
+      .join('\n'),
+    footer,
+  ].filter((section) => section && section.trim().length > 0);
+
+  return sections.join('\n\n');
+};
+
+const buildNotificationHtml = (heading: string, intro: string, rows: EmailRow[], footer: string) => {
+  const introHtml = intro.trim() ? renderHtmlParagraphs(intro) : '';
+  const rowsHtml = rows
+    .map((row) => {
+      if (row.preformatted) {
+        return `<div><strong>${escapeHtml(row.label)}:</strong><pre style="margin:6px 0 0;padding:12px;background:#f7f2ea;border-radius:10px;white-space:pre-wrap;">${escapeHtml(
+          row.value
+        )}</pre></div>`;
+      }
+
+      const renderedValue = escapeHtml(row.value).replace(/\n/g, '<br/>');
+      return `<p><strong>${escapeHtml(row.label)}:</strong> ${renderedValue}</p>`;
+    })
+    .join('');
+  const footerHtml = footer.trim() ? renderHtmlParagraphs(footer) : '';
+
+  return `
+<h2>${escapeHtml(heading)}</h2>
+${introHtml}
+${rowsHtml}
+${footerHtml}
+          `;
+};
+
 export async function POST(request: Request) {
   try {
     const contentType = request.headers.get('content-type') || '';
     let messageData;
+    const emailSettings = await fetchEmailSettings();
 
     if (contentType.includes('multipart/form-data')) {
       const form = await request.formData();
@@ -67,35 +112,41 @@ export async function POST(request: Request) {
           .map((file) => `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`)
           .join(', ');
         const attachmentTotalMb = (attachmentsTotal / (1024 * 1024)).toFixed(2);
+        const templateValues = {
+          name,
+          email,
+          description,
+          effectiveTotal,
+          upfrontCost,
+        };
+        const subject = applyTemplate(emailSettings.commissionNotification.subjectTemplate, templateValues);
+        const heading = applyTemplate(emailSettings.commissionNotification.heading, templateValues);
+        const intro = applyTemplate(emailSettings.commissionNotification.intro, templateValues);
+        const footer = applyTemplate(emailSettings.commissionNotification.footer, templateValues);
+        const rows: EmailRow[] = [
+          { label: 'Name', value: name || 'N/A' },
+          { label: 'Email', value: email || 'N/A' },
+          { label: 'Description', value: description || 'No additional notes provided.' },
+          { label: 'Total', value: String(effectiveTotal) },
+          { label: 'Upfront Cost', value: String(upfrontCost) },
+          { label: 'Reference Images', value: attachmentSummary || 'None provided' },
+          {
+            label: 'Reference Images Total Size',
+            value: attachmentPayload.length ? `${attachmentTotalMb} MB` : '0 MB',
+          },
+          {
+            label: 'Canvas Items',
+            value: JSON.stringify(canvasItems, null, 2),
+            preformatted: true,
+          },
+        ];
 
         messageData = {
           from: defaultFrom,
-          to: [process.env.MAILGUN_TO_EMAIL || 'tylerhoussian@gmail.com'],
-          subject: 'New Commission Request',
-          text: `
-Commission Request:
-Name: ${name}
-Email: ${email}
-Description: ${description}
-Total: ${effectiveTotal}
-Upfront Cost: ${upfrontCost}
-Canvas Items: ${JSON.stringify(canvasItems, null, 2)}
-Reference Images: ${attachmentSummary || 'None provided'}
-Reference Images Total Size: ${attachmentPayload.length ? `${attachmentTotalMb} MB` : '0 MB'}
-          `,
-          html: `
-<h2>Commission Request</h2>
-<p><strong>Name:</strong> ${name}</p>
-<p><strong>Email:</strong> ${email}</p>
-<p><strong>Description:</strong> ${description || '<em>No additional notes provided.</em>'}</p>
-<p><strong>Total:</strong> ${effectiveTotal}</p>
-<p><strong>Upfront Cost:</strong> ${upfrontCost}</p>
-<p><strong>Reference Images:</strong> ${attachmentSummary || 'None provided'}</p>
-<p><strong>Reference Images Total Size:</strong> ${
-            attachmentPayload.length ? `${attachmentTotalMb} MB` : '0 MB'
-          }</p>
-<p><strong>Canvas Items:</strong><br/><pre>${JSON.stringify(canvasItems, null, 2)}</pre></p>
-          `,
+          to: emailSettings.commissionNotification.recipientEmails,
+          subject,
+          text: buildNotificationText(heading, intro, rows, footer),
+          html: buildNotificationHtml(heading, intro, rows, footer),
           attachment: attachmentPayload.length ? attachmentPayload : undefined,
         };
       } else {
@@ -105,25 +156,27 @@ Reference Images Total Size: ${attachmentPayload.length ? `${attachmentTotalMb} 
         const subject = String(form.get('subject') || 'No Subject');
         const message = String(form.get('message') || '');
         const fullName = `${firstName} ${lastName}`.trim();
+        const templateValues = {
+          name: fullName,
+          email,
+          subject,
+        };
+        const heading = applyTemplate(emailSettings.contactNotification.heading, templateValues);
+        const intro = applyTemplate(emailSettings.contactNotification.intro, templateValues);
+        const footer = applyTemplate(emailSettings.contactNotification.footer, templateValues);
+        const rows: EmailRow[] = [
+          { label: 'Name', value: fullName || 'N/A' },
+          { label: 'Email', value: email || 'N/A' },
+          { label: 'Subject', value: subject || 'No Subject' },
+          { label: 'Message', value: message || 'No message provided.' },
+        ];
 
         messageData = {
           from: defaultFrom,
-          to: [process.env.MAILGUN_TO_EMAIL || 'meganhoussianart@gmail.com'],
-          subject: `New Contact Request: ${subject}`,
-          text: `
-Contact Request:
-Name: ${fullName}
-Email: ${email}
-Subject: ${subject}
-Message: ${message}
-          `,
-          html: `
-<h2>Contact Request</h2>
-<p><strong>Name:</strong> ${fullName}</p>
-<p><strong>Email:</strong> ${email}</p>
-<p><strong>Subject:</strong> ${subject}</p>
-<p><strong>Message:</strong> ${message}</p>
-          `,
+          to: emailSettings.contactNotification.recipientEmails,
+          subject: applyTemplate(emailSettings.contactNotification.subjectTemplate, templateValues),
+          text: buildNotificationText(heading, intro, rows, footer),
+          html: buildNotificationHtml(heading, intro, rows, footer),
         };
       }
     } else {
@@ -131,50 +184,60 @@ Message: ${message}
 
       if ('canvasItems' in data) {
         const { name, email, description, canvasItems, effectiveTotal, upfrontCost } = data;
+        const templateValues = {
+          name,
+          email,
+          description,
+          effectiveTotal,
+          upfrontCost,
+        };
+        const heading = applyTemplate(emailSettings.commissionNotification.heading, templateValues);
+        const intro = applyTemplate(emailSettings.commissionNotification.intro, templateValues);
+        const footer = applyTemplate(emailSettings.commissionNotification.footer, templateValues);
+        const rows: EmailRow[] = [
+          { label: 'Name', value: String(name || 'N/A') },
+          { label: 'Email', value: String(email || 'N/A') },
+          { label: 'Description', value: String(description || 'No additional notes provided.') },
+          { label: 'Total', value: String(effectiveTotal ?? '') },
+          { label: 'Upfront Cost', value: String(upfrontCost ?? '') },
+          {
+            label: 'Canvas Items',
+            value: JSON.stringify(canvasItems, null, 2),
+            preformatted: true,
+          },
+        ];
+
         messageData = {
           from: defaultFrom,
-          to: [process.env.MAILGUN_TO_EMAIL || 'tylerhoussian@gmail.com'],
-          subject: 'New Commission Request',
-          text: `
-Commission Request:
-Name: ${name}
-Email: ${email}
-Description: ${description}
-Total: ${effectiveTotal}
-Upfront Cost: ${upfrontCost}
-Canvas Items: ${JSON.stringify(canvasItems, null, 2)}
-          `,
-          html: `
-<h2>Commission Request</h2>
-<p><strong>Name:</strong> ${name}</p>
-<p><strong>Email:</strong> ${email}</p>
-<p><strong>Description:</strong> ${description}</p>
-<p><strong>Total:</strong> ${effectiveTotal}</p>
-<p><strong>Upfront Cost:</strong> ${upfrontCost}</p>
-<p><strong>Canvas Items:</strong><br/><pre>${JSON.stringify(canvasItems, null, 2)}</pre></p>
-          `,
+          to: emailSettings.commissionNotification.recipientEmails,
+          subject: applyTemplate(emailSettings.commissionNotification.subjectTemplate, templateValues),
+          text: buildNotificationText(heading, intro, rows, footer),
+          html: buildNotificationHtml(heading, intro, rows, footer),
         };
       } else {
         const { firstName, lastName, email, subject, message } = data;
-        const fullName = `${firstName} ${lastName}`;
+        const fullName = `${firstName} ${lastName}`.trim();
+        const templateValues = {
+          name: fullName,
+          email,
+          subject,
+        };
+        const heading = applyTemplate(emailSettings.contactNotification.heading, templateValues);
+        const intro = applyTemplate(emailSettings.contactNotification.intro, templateValues);
+        const footer = applyTemplate(emailSettings.contactNotification.footer, templateValues);
+        const rows: EmailRow[] = [
+          { label: 'Name', value: fullName || 'N/A' },
+          { label: 'Email', value: String(email || 'N/A') },
+          { label: 'Subject', value: String(subject || 'No Subject') },
+          { label: 'Message', value: String(message || 'No message provided.') },
+        ];
+
         messageData = {
           from: defaultFrom,
-          to: [process.env.MAILGUN_TO_EMAIL || 'meganhoussianart@gmail.com'],
-          subject: `New Contact Request: ${subject}`,
-          text: `
-Contact Request:
-Name: ${fullName}
-Email: ${email}
-Subject: ${subject}
-Message: ${message}
-          `,
-          html: `
-<h2>Contact Request</h2>
-<p><strong>Name:</strong> ${fullName}</p>
-<p><strong>Email:</strong> ${email}</p>
-<p><strong>Subject:</strong> ${subject}</p>
-<p><strong>Message:</strong> ${message}</p>
-          `,
+          to: emailSettings.contactNotification.recipientEmails,
+          subject: applyTemplate(emailSettings.contactNotification.subjectTemplate, templateValues),
+          text: buildNotificationText(heading, intro, rows, footer),
+          html: buildNotificationHtml(heading, intro, rows, footer),
         };
       }
     }
