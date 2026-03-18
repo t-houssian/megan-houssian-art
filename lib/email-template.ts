@@ -11,6 +11,7 @@ type RenderBrandEmailInput = {
   bodyHtml: string;
   cta?: EmailCta;
   outro?: string;
+  hidePrintsLink?: boolean;
 };
 
 type DetailRow = {
@@ -208,8 +209,12 @@ export const renderBrandEmail = (input: RenderBrandEmailInput) => {
                         <a href="${escapeHtml(links.homeUrl)}" style="color:#6b4f3a;text-decoration:none;">Website</a>
                         &nbsp;|&nbsp;
                         <a href="${escapeHtml(links.originalsUrl)}" style="color:#6b4f3a;text-decoration:none;">Originals</a>
-                        &nbsp;|&nbsp;
-                        <a href="${escapeHtml(links.printsUrl)}" style="color:#6b4f3a;text-decoration:none;">Print Shop</a>
+                        ${
+                          input.hidePrintsLink
+                            ? ''
+                            : `&nbsp;|&nbsp;
+                        <a href="${escapeHtml(links.printsUrl)}" style="color:#6b4f3a;text-decoration:none;">Print Shop</a>`
+                        }
                         &nbsp;|&nbsp;
                         <a href="${escapeHtml(links.contactUrl)}" style="color:#6b4f3a;text-decoration:none;">Contact</a>
                       </p>

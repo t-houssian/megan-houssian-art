@@ -97,7 +97,7 @@ const sendCollectorWelcomeEmail = async (params: { email: string; firstName: str
     "",
     "Explore:",
     `- Originals: ${links.originalsUrl}`,
-    `- Print Shop: ${links.printsUrl}`,
+    // `- Print Shop: ${links.printsUrl}`,
     `- Contact: ${links.contactUrl}`,
     links.pinterestUrl ? `- Pinterest: ${links.pinterestUrl}` : "",
     links.facebookUrl ? `- Facebook: ${links.facebookUrl}` : "",
@@ -128,6 +128,7 @@ ${renderHtmlParagraphs(applyTemplate(welcomeSettings.body, templateValues))}`,
       href: ctaHref,
     },
     outro: applyTemplate(welcomeSettings.outro, templateValues),
+    hidePrintsLink: true,
   });
 
   await mg.messages.create(domain, {
