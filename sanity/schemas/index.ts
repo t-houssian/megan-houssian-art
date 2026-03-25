@@ -6,5 +6,6 @@ import heroSettings from './heroSettings'
 import aboutPageSettings from './aboutPageSettings'
 import originalsPageSettings from './originalsPageSettings'
 import emailSettings from './emailSettings'
+import siteSettings from './siteSettings'
 
-export default [ emailSettings, gallery, galleryOrder, heroSettings, aboutPageSettings, originalsPageSettings, original, print ]
+export default [ siteSettings, emailSettings, gallery, galleryOrder, heroSettings, aboutPageSettings, originalsPageSettings, original, print ]

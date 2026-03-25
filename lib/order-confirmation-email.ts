@@ -29,7 +29,7 @@ const getDomain = () =>
   process.env.MAILGUN_DOMAIN || 'sandboxa69135ee3d8a4b649d035d06cc9f7ac1.mailgun.org';
 
 const getFrom = (domain: string) =>
-  process.env.MAILGUN_FROM_EMAIL || `Megan Houssian Art <mailgun@${domain}>`;
+  process.env.MAILGUN_FROM_EMAIL || `Megan Houssian Art <welcome@${domain}>`;
 
 const formatAmount = (input: OrderConfirmationEmailInput): string => {
   if (typeof input.amountCents === 'number' && Number.isFinite(input.amountCents)) {
@@ -90,7 +90,7 @@ export async function sendOrderConfirmationEmail(input: OrderConfirmationEmailIn
   const shippingMethod = formatShippingMethod(input.shippingOption);
   const customerName = input.customerName?.trim() || 'Collector';
   const product = input.product || 'Artwork Purchase';
-  const links = getEmailLinks();
+  const links = getEmailLinks(emailSettings.brandTemplate);
   const templateValues = {
     customerName,
     orderId: input.orderId,
@@ -118,8 +118,11 @@ export async function sendOrderConfirmationEmail(input: OrderConfirmationEmailIn
     input.shippingOption === 'pickup' ? 'N/A (Gallery Pickup)' : formatAddressSingleLine(input.shippingAddress);
   const ctaHref = resolveHref(orderSettings.ctaHref, links.homeUrl, links.originalsUrl);
   const supportMessageText = applyTemplate(orderSettings.supportMessage, templateValues);
-  const supportEmailAnchor = `<a href="mailto:${emailSettings.supportEmail}" style="color:#6b4f3a;text-decoration:underline;">${emailSettings.supportEmail}</a>`;
-  const supportMessageHtml = renderHtmlParagraphs(supportMessageText).replace(emailSettings.supportEmail, supportEmailAnchor);
+  const supportEmailAnchor = `<a href="mailto:${emailSettings.supportEmail}" style="color:${emailSettings.brandTemplate.colors.linkColor};text-decoration:underline;">${emailSettings.supportEmail}</a>`;
+  const supportMessageHtml = renderHtmlParagraphs(
+    supportMessageText,
+    emailSettings.brandTemplate.colors.bodyTextColor
+  ).replace(emailSettings.supportEmail, supportEmailAnchor);
   const fulfillmentMessageText = applyTemplate(orderSettings.fulfillmentMessage, templateValues);
 
   const text = [
@@ -140,13 +143,8 @@ export async function sendOrderConfirmationEmail(input: OrderConfirmationEmailIn
     fulfillmentMessageText,
     '',
     'Shop and updates:',
-    `- Website: ${links.homeUrl}`,
-    `- Originals: ${links.originalsUrl}`,
-    `- Print Shop: ${links.printsUrl}`,
-    `- Contact: ${links.contactUrl}`,
-    links.pinterestUrl ? `- Pinterest: ${links.pinterestUrl}` : '',
-    links.facebookUrl ? `- Facebook: ${links.facebookUrl}` : '',
-    links.instagramUrl ? `- Instagram: ${links.instagramUrl}` : '',
+    ...links.footerLinks.map((link) => `- ${link.label}: ${link.href}`),
+    ...links.socialLinks.map((link) => `- ${link.label}: ${link.href}`),
     '',
     applyTemplate(orderSettings.outro, templateValues),
   ]
@@ -163,16 +161,16 @@ export async function sendOrderConfirmationEmail(input: OrderConfirmationEmailIn
     { label: 'Total Paid', value: amount },
     { label: 'Delivery Method', value: shippingMethod },
     { label: 'Shipping Address', value: shippingAddressSingleLine },
-  ]);
+  ], emailSettings.brandTemplate.colors);
 
   const bodyHtml = `
-<h2 style="margin:4px 0 12px;font-size:21px;line-height:1.3;color:#3f3126;font-weight:500;">${applyTemplate(
+<h2 style="margin:4px 0 12px;font-size:21px;line-height:1.3;color:${emailSettings.brandTemplate.colors.titleColor};font-weight:500;">${applyTemplate(
     orderSettings.detailsHeading,
     templateValues
   )}</h2>
 ${detailsHtml}
 ${supportMessageHtml}
-${renderHtmlParagraphs(fulfillmentMessageText)}`;
+${renderHtmlParagraphs(fulfillmentMessageText, emailSettings.brandTemplate.colors.bodyTextColor)}`;
 
   const html = renderBrandEmail({
     preheader: applyTemplate(orderSettings.preheaderTemplate, templateValues),
@@ -185,16 +183,19 @@ ${renderHtmlParagraphs(fulfillmentMessageText)}`;
       href: ctaHref,
     },
     outro: applyTemplate(orderSettings.outro, templateValues),
+    branding: emailSettings.brandTemplate,
   });
 
   const mg = mailgun.client({
     username: 'api',
     key: process.env.MAILGUN_API_KEY,
   });
+  const replyTo = process.env.MAILGUN_REPLY_TO_EMAIL?.trim() || emailSettings.supportEmail;
 
   await mg.messages.create(domain, {
     from,
     to,
+    'h:Reply-To': replyTo,
     subject: applyTemplate(orderSettings.subjectTemplate, templateValues),
     text,
     html,

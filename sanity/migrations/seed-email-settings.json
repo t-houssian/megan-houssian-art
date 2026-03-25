@@ -1,0 +1,72 @@
+{
+  "_id": "emailSettings",
+  "_type": "emailSettings",
+  "supportEmail": "meganhoussianart@gmail.com",
+  "brandImageAlt": "Megan Houssian Art featured artwork",
+  "brandTemplate": {
+    "brandName": "Megan Houssian Art",
+    "imageLinkHref": "/",
+    "footerLinks": [
+      { "_key": "website", "label": "Website", "href": "/" },
+      { "_key": "originals", "label": "Originals", "href": "/originals" },
+      { "_key": "prints", "label": "Print Shop", "href": "/prints" },
+      { "_key": "contact", "label": "Contact", "href": "/contact" }
+    ],
+    "socialLinks": [
+      { "_key": "pinterest", "platform": "pinterest", "label": "Pinterest", "href": "https://pin.it/1Scq2kp48" },
+      { "_key": "facebook", "platform": "facebook", "label": "Facebook", "href": "https://www.facebook.com/marketplace/profile/61550348800548/?ref=permalink&mibextid=6ojiHh" }
+    ],
+    "colors": {
+      "pageBackground": "#f7f2ea",
+      "cardBackground": "#fffdf8",
+      "borderColor": "#eadfce",
+      "headerGradientFrom": "#f4ebde",
+      "headerGradientTo": "#fbf7ef",
+      "footerBackground": "#faf5ec",
+      "titleColor": "#3f3126",
+      "bodyTextColor": "#4a3a2d",
+      "mutedTextColor": "#8b7765",
+      "linkColor": "#6b4f3a",
+      "buttonBackground": "#6b4f3a",
+      "buttonTextColor": "#fffaf2",
+      "detailTableBackground": "#fffdf8",
+      "detailTableLabelColor": "#5f4735"
+    }
+  },
+  "contactNotification": {
+    "recipientEmails": ["meganhoussianart@gmail.com"],
+    "subjectTemplate": "New Contact Request: {{subject}}",
+    "heading": "Contact Request",
+    "intro": "A new contact form submission came in from {{name}}.",
+    "footer": "Reply to {{email}} to continue the conversation."
+  },
+  "commissionNotification": {
+    "recipientEmails": ["tylerhoussian@gmail.com"],
+    "subjectTemplate": "New Commission Request from {{name}}",
+    "heading": "Commission Request",
+    "intro": "A new commission inquiry was submitted through the website.",
+    "footer": "Reply to {{email}} to follow up on this commission request."
+  },
+  "collectorWelcome": {
+    "subject": "You're on the Collector List",
+    "preheader": "Welcome, and thank you for joining my Collector Circle.",
+    "title": "Welcome to the Collector Circle",
+    "body": "Welcome, and thank you for joining my Collector Circle. I'm so happy to have you!\n\nThis is where I'll share new work, first looks at upcoming paintings, and notes from the studio along the way. You'll be the first to hear about new collections, available pieces, and the ongoing process behind my journey.\n\nI'm so glad you're here, and I look forward to sharing my work with you!",
+    "ctaLabel": "Browse Originals",
+    "ctaHref": "/originals"
+  },
+  "orderConfirmation": {
+    "sendCopyToSupport": true,
+    "subjectTemplate": "Order Confirmation - {{product}}",
+    "preheaderTemplate": "Order {{orderId}} confirmed",
+    "title": "Order Confirmation",
+    "greetingTemplate": "Hello {{customerName}},",
+    "intro": "Thank you for your purchase from Megan Houssian Art.",
+    "detailsHeading": "Order Details",
+    "supportMessage": "If you have any questions, please email Megan at {{supportEmail}}.",
+    "fulfillmentMessage": "We will send your shipping confirmation and tracking details when your artwork is on the way.",
+    "ctaLabel": "View Originals",
+    "ctaHref": "/originals",
+    "outro": "Thank you for supporting my work."
+  }
+}

@@ -5,9 +5,7 @@ import { getEmailLinks, renderBrandEmail } from "../../../../lib/email-template"
 import {
   applyTemplate,
   fetchEmailSettings,
-  renderHtmlBulletList,
   renderHtmlParagraphs,
-  renderTextBulletList,
   resolveHref,
 } from "../../../../lib/email-settings";
 
@@ -70,40 +68,29 @@ const sendCollectorWelcomeEmail = async (params: { email: string; firstName: str
   }
 
   const domain = process.env.MAILGUN_DOMAIN || MAILGUN_FALLBACK_DOMAIN;
-  const from = process.env.MAILGUN_FROM_EMAIL || `Megan Houssian Art <mailgun@${domain}>`;
+  const from = process.env.MAILGUN_FROM_EMAIL || `Megan Houssian Art <welcome@${domain}>`;
   const mg = mailgun.client({
     username: "api",
     key: mailgunApiKey,
   });
 
   const collectorName = params.firstName.trim() || "Collector";
-  const links = getEmailLinks();
   const emailSettings = await fetchEmailSettings();
+  const links = getEmailLinks(emailSettings.brandTemplate);
   const welcomeSettings = emailSettings.collectorWelcome;
   const templateValues = {
     firstName: collectorName,
   };
-  const highlights = welcomeSettings.highlights.map((item) => applyTemplate(item, templateValues));
+  const body = applyTemplate(welcomeSettings.body, templateValues).trim();
   const ctaHref = resolveHref(welcomeSettings.ctaHref, links.homeUrl, links.originalsUrl);
   const text = [
-    applyTemplate(welcomeSettings.greetingTemplate, templateValues),
-    "",
-    applyTemplate(welcomeSettings.intro, templateValues),
-    "",
-    applyTemplate(welcomeSettings.highlightsIntro, templateValues),
-    renderTextBulletList(highlights),
-    "",
-    applyTemplate(welcomeSettings.body, templateValues),
+    body,
     "",
     "Explore:",
-    `- Originals: ${links.originalsUrl}`,
-    // `- Print Shop: ${links.printsUrl}`,
-    `- Contact: ${links.contactUrl}`,
-    links.pinterestUrl ? `- Pinterest: ${links.pinterestUrl}` : "",
-    links.facebookUrl ? `- Facebook: ${links.facebookUrl}` : "",
-    links.instagramUrl ? `- Instagram: ${links.instagramUrl}` : "",
-    "",
-    applyTemplate(welcomeSettings.outro, templateValues),
+    ...links.footerLinks
+      .filter((link) => link.href !== links.printsUrl)
+      .map((link) => `- ${link.label}: ${link.href}`),
+    ...links.socialLinks.map((link) => `- ${link.label}: ${link.href}`),
   ]
     .filter((line, index, all) => {
       if (line) return true;
@@ -114,26 +101,19 @@ const sendCollectorWelcomeEmail = async (params: { email: string; firstName: str
   const html = renderBrandEmail({
     preheader: applyTemplate(welcomeSettings.preheader, templateValues),
     title: applyTemplate(welcomeSettings.title, templateValues),
-    greeting: applyTemplate(welcomeSettings.greetingTemplate, templateValues),
-    intro: applyTemplate(welcomeSettings.intro, templateValues),
-    bodyHtml: `
-<p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:#4a3a2d;">${applyTemplate(
-      welcomeSettings.highlightsIntro,
-      templateValues
-    )}</p>
-${renderHtmlBulletList(highlights)}
-${renderHtmlParagraphs(applyTemplate(welcomeSettings.body, templateValues))}`,
+    bodyHtml: body ? renderHtmlParagraphs(body, emailSettings.brandTemplate.colors.bodyTextColor) : '',
     cta: {
       label: applyTemplate(welcomeSettings.ctaLabel, templateValues),
       href: ctaHref,
     },
-    outro: applyTemplate(welcomeSettings.outro, templateValues),
     hidePrintsLink: true,
+    branding: emailSettings.brandTemplate,
   });
 
   await mg.messages.create(domain, {
     from,
     to: [params.email],
+    "h:Reply-To": process.env.MAILGUN_REPLY_TO_EMAIL?.trim() || emailSettings.supportEmail,
     subject: applyTemplate(welcomeSettings.subject, templateValues),
     text,
     html,

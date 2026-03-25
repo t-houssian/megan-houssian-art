@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import FormData from 'form-data';
 import Mailgun from 'mailgun.js';
+import { getEmailLinks, renderBrandEmail, renderDetailTable } from '../../../lib/email-template';
 import { applyTemplate, escapeHtml, fetchEmailSettings, renderHtmlParagraphs } from '../../../lib/email-settings';
 
 const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024;
@@ -19,7 +20,7 @@ const domain =
 // use a default that matches the sample: "Excited User <mailgun@{domain}>"
 const defaultFrom =
   process.env.MAILGUN_FROM_EMAIL ||
-  `Excited User <mailgun@${domain}>`;
+  `Megan Houssian Art <welcome@${domain}>`;
 
 type EmailRow = {
   label: string;
@@ -40,28 +41,42 @@ const buildNotificationText = (heading: string, intro: string, rows: EmailRow[],
   return sections.join('\n\n');
 };
 
-const buildNotificationHtml = (heading: string, intro: string, rows: EmailRow[], footer: string) => {
-  const introHtml = intro.trim() ? renderHtmlParagraphs(intro) : '';
-  const rowsHtml = rows
-    .map((row) => {
-      if (row.preformatted) {
-        return `<div><strong>${escapeHtml(row.label)}:</strong><pre style="margin:6px 0 0;padding:12px;background:#f7f2ea;border-radius:10px;white-space:pre-wrap;">${escapeHtml(
+const buildNotificationHtml = (
+  heading: string,
+  intro: string,
+  rows: EmailRow[],
+  footer: string,
+  branding: Awaited<ReturnType<typeof fetchEmailSettings>>['brandTemplate']
+) => {
+  const detailRows = rows
+    .filter((row) => !row.preformatted)
+    .map((row) => ({
+      label: row.label,
+      value: row.value,
+    }));
+  const preformattedRowsHtml = rows
+    .filter((row) => row.preformatted)
+    .map(
+      (row) =>
+        `<div style="margin:18px 0 0;">
+  <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:${branding.colors.bodyTextColor};font-weight:600;">${escapeHtml(
+          row.label
+        )}</p>
+  <pre style="margin:0;padding:12px;background:${branding.colors.pageBackground};border:1px solid ${branding.colors.borderColor};border-radius:10px;white-space:pre-wrap;font-family:Menlo,Consolas,monospace;font-size:13px;line-height:1.6;color:${branding.colors.bodyTextColor};">${escapeHtml(
           row.value
-        )}</pre></div>`;
-      }
-
-      const renderedValue = escapeHtml(row.value).replace(/\n/g, '<br/>');
-      return `<p><strong>${escapeHtml(row.label)}:</strong> ${renderedValue}</p>`;
-    })
+        )}</pre>
+</div>`
+    )
     .join('');
-  const footerHtml = footer.trim() ? renderHtmlParagraphs(footer) : '';
+  const footerHtml = footer.trim() ? renderHtmlParagraphs(footer, branding.colors.bodyTextColor) : '';
 
-  return `
-<h2>${escapeHtml(heading)}</h2>
-${introHtml}
-${rowsHtml}
-${footerHtml}
-          `;
+  return renderBrandEmail({
+    preheader: heading,
+    title: heading,
+    intro,
+    bodyHtml: `${detailRows.length > 0 ? renderDetailTable(detailRows, branding.colors) : ''}${preformattedRowsHtml}${footerHtml}`,
+    branding,
+  });
 };
 
 export async function POST(request: Request) {
@@ -69,6 +84,8 @@ export async function POST(request: Request) {
     const contentType = request.headers.get('content-type') || '';
     let messageData;
     const emailSettings = await fetchEmailSettings();
+    const brandedLinks = getEmailLinks(emailSettings.brandTemplate);
+    const replyTo = process.env.MAILGUN_REPLY_TO_EMAIL?.trim() || emailSettings.supportEmail;
 
     if (contentType.includes('multipart/form-data')) {
       const form = await request.formData();
@@ -144,9 +161,13 @@ export async function POST(request: Request) {
         messageData = {
           from: defaultFrom,
           to: emailSettings.commissionNotification.recipientEmails,
+          'h:Reply-To': replyTo,
           subject,
-          text: buildNotificationText(heading, intro, rows, footer),
-          html: buildNotificationHtml(heading, intro, rows, footer),
+          text: `${buildNotificationText(heading, intro, rows, footer)}\n\nLinks:\n${[
+            ...brandedLinks.footerLinks.map((link) => `- ${link.label}: ${link.href}`),
+            ...brandedLinks.socialLinks.map((link) => `- ${link.label}: ${link.href}`),
+          ].join('\n')}`,
+          html: buildNotificationHtml(heading, intro, rows, footer, emailSettings.brandTemplate),
           attachment: attachmentPayload.length ? attachmentPayload : undefined,
         };
       } else {
@@ -174,9 +195,13 @@ export async function POST(request: Request) {
         messageData = {
           from: defaultFrom,
           to: emailSettings.contactNotification.recipientEmails,
+          'h:Reply-To': replyTo,
           subject: applyTemplate(emailSettings.contactNotification.subjectTemplate, templateValues),
-          text: buildNotificationText(heading, intro, rows, footer),
-          html: buildNotificationHtml(heading, intro, rows, footer),
+          text: `${buildNotificationText(heading, intro, rows, footer)}\n\nLinks:\n${[
+            ...brandedLinks.footerLinks.map((link) => `- ${link.label}: ${link.href}`),
+            ...brandedLinks.socialLinks.map((link) => `- ${link.label}: ${link.href}`),
+          ].join('\n')}`,
+          html: buildNotificationHtml(heading, intro, rows, footer, emailSettings.brandTemplate),
         };
       }
     } else {
@@ -210,9 +235,13 @@ export async function POST(request: Request) {
         messageData = {
           from: defaultFrom,
           to: emailSettings.commissionNotification.recipientEmails,
+          'h:Reply-To': replyTo,
           subject: applyTemplate(emailSettings.commissionNotification.subjectTemplate, templateValues),
-          text: buildNotificationText(heading, intro, rows, footer),
-          html: buildNotificationHtml(heading, intro, rows, footer),
+          text: `${buildNotificationText(heading, intro, rows, footer)}\n\nLinks:\n${[
+            ...brandedLinks.footerLinks.map((link) => `- ${link.label}: ${link.href}`),
+            ...brandedLinks.socialLinks.map((link) => `- ${link.label}: ${link.href}`),
+          ].join('\n')}`,
+          html: buildNotificationHtml(heading, intro, rows, footer, emailSettings.brandTemplate),
         };
       } else {
         const { firstName, lastName, email, subject, message } = data;
@@ -235,9 +264,13 @@ export async function POST(request: Request) {
         messageData = {
           from: defaultFrom,
           to: emailSettings.contactNotification.recipientEmails,
+          'h:Reply-To': replyTo,
           subject: applyTemplate(emailSettings.contactNotification.subjectTemplate, templateValues),
-          text: buildNotificationText(heading, intro, rows, footer),
-          html: buildNotificationHtml(heading, intro, rows, footer),
+          text: `${buildNotificationText(heading, intro, rows, footer)}\n\nLinks:\n${[
+            ...brandedLinks.footerLinks.map((link) => `- ${link.label}: ${link.href}`),
+            ...brandedLinks.socialLinks.map((link) => `- ${link.label}: ${link.href}`),
+          ].join('\n')}`,
+          html: buildNotificationHtml(heading, intro, rows, footer, emailSettings.brandTemplate),
         };
       }
     }

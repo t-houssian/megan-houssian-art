@@ -1,6 +1,7 @@
 import { defineArrayMember, defineField, defineType } from 'sanity';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
 const isAllowedLinkValue = (value: unknown) => {
   if (typeof value !== 'string') {
@@ -40,6 +41,38 @@ const emailArrayField = (name: string, title: string, description: string, initi
     validation: (rule) => rule.required().min(1),
   });
 
+const linkItemFields = [
+  defineField({
+    name: 'label',
+    title: 'Label',
+    type: 'string',
+    validation: (rule) => rule.required(),
+  }),
+  defineField({
+    name: 'href',
+    title: 'Link',
+    type: 'string',
+    validation: (rule) =>
+      rule.required().custom((value) =>
+        isAllowedLinkValue(value) ? true : 'Use /path, #anchor, http(s)://, mailto:, or tel:'
+      ),
+  }),
+];
+
+const hexColorField = (name: string, title: string, initialValue: string) =>
+  defineField({
+    name,
+    title,
+    type: 'string',
+    initialValue,
+    validation: (rule) =>
+      rule.required().custom((value) =>
+        typeof value === 'string' && HEX_COLOR_PATTERN.test(value.trim())
+          ? true
+          : 'Use a hex color like #6b4f3a'
+      ),
+  });
+
 export default defineType({
   name: 'emailSettings',
   title: 'Email Settings',
@@ -63,6 +96,134 @@ export default defineType({
         rule.required().custom((value) =>
           typeof value === 'string' && EMAIL_PATTERN.test(value.trim()) ? true : 'Enter a valid email address.'
         ),
+    }),
+    defineField({
+      name: 'brandImage',
+      title: 'Main Email Image',
+      type: 'image',
+      group: 'general',
+      options: { hotspot: true },
+      description:
+        'Used in all branded transactional emails. Leave empty to fall back to /public/images/image.png on the website.',
+    }),
+    defineField({
+      name: 'brandImageAlt',
+      title: 'Main Email Image Alt Text',
+      type: 'string',
+      group: 'general',
+      initialValue: 'Megan Houssian Art featured artwork',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'brandTemplate',
+      title: 'Base Email Template',
+      type: 'object',
+      group: 'general',
+      fields: [
+        defineField({
+          name: 'brandName',
+          title: 'Brand Name',
+          type: 'string',
+          initialValue: 'Megan Houssian Art',
+          validation: (rule) => rule.required(),
+        }),
+        defineField({
+          name: 'imageLinkHref',
+          title: 'Image Link',
+          type: 'string',
+          description: 'Where the email image should point when clicked.',
+          initialValue: '/',
+          validation: (rule) =>
+            rule.required().custom((value) =>
+              isAllowedLinkValue(value) ? true : 'Use /path, #anchor, http(s)://, mailto:, or tel:'
+            ),
+        }),
+        defineField({
+          name: 'footerLinks',
+          title: 'Footer Links',
+          type: 'array',
+          of: [
+            defineArrayMember({
+              type: 'object',
+              fields: linkItemFields,
+              preview: {
+                select: {
+                  title: 'label',
+                  subtitle: 'href',
+                },
+              },
+            }),
+          ],
+          initialValue: [
+            { label: 'Website', href: '/' },
+            { label: 'Originals', href: '/originals' },
+            { label: 'Print Shop', href: '/prints' },
+            { label: 'Contact', href: '/contact' },
+          ],
+          validation: (rule) => rule.required().min(1),
+        }),
+        defineField({
+          name: 'socialLinks',
+          title: 'Social Links',
+          type: 'array',
+          of: [
+            defineArrayMember({
+              type: 'object',
+              fields: [
+                defineField({
+                  name: 'platform',
+                  title: 'Platform',
+                  type: 'string',
+                  options: {
+                    list: [
+                      { title: 'Instagram', value: 'instagram' },
+                      { title: 'Pinterest', value: 'pinterest' },
+                      { title: 'Facebook', value: 'facebook' },
+                    ],
+                  },
+                  validation: (rule) => rule.required(),
+                }),
+                ...linkItemFields,
+              ],
+              preview: {
+                select: {
+                  title: 'label',
+                  subtitle: 'href',
+                },
+              },
+            }),
+          ],
+          initialValue: [
+            { platform: 'pinterest', label: 'Pinterest', href: 'https://pin.it/1Scq2kp48' },
+            {
+              platform: 'facebook',
+              label: 'Facebook',
+              href: 'https://www.facebook.com/marketplace/profile/61550348800548/?ref=permalink&mibextid=6ojiHh',
+            },
+          ],
+        }),
+        defineField({
+          name: 'colors',
+          title: 'Colors',
+          type: 'object',
+          fields: [
+            hexColorField('pageBackground', 'Page Background', '#f7f2ea'),
+            hexColorField('cardBackground', 'Card Background', '#fffdf8'),
+            hexColorField('borderColor', 'Border', '#eadfce'),
+            hexColorField('headerGradientFrom', 'Header Gradient From', '#f4ebde'),
+            hexColorField('headerGradientTo', 'Header Gradient To', '#fbf7ef'),
+            hexColorField('footerBackground', 'Footer Background', '#faf5ec'),
+            hexColorField('titleColor', 'Heading Text', '#3f3126'),
+            hexColorField('bodyTextColor', 'Body Text', '#4a3a2d'),
+            hexColorField('mutedTextColor', 'Muted Text', '#8b7765'),
+            hexColorField('linkColor', 'Link Color', '#6b4f3a'),
+            hexColorField('buttonBackground', 'Button Background', '#6b4f3a'),
+            hexColorField('buttonTextColor', 'Button Text', '#fffaf2'),
+            hexColorField('detailTableBackground', 'Detail Table Background', '#fffdf8'),
+            hexColorField('detailTableLabelColor', 'Detail Table Label Text', '#5f4735'),
+          ],
+        }),
+      ],
     }),
     defineField({
       name: 'contactNotification',
@@ -175,59 +336,24 @@ export default defineType({
           name: 'preheader',
           title: 'Preheader',
           type: 'string',
-          initialValue: "Welcome to Megan's Collector List",
+          initialValue: "Welcome, and thank you for joining my Collector Circle.",
           validation: (rule) => rule.required(),
         }),
         defineField({
           name: 'title',
           title: 'Email Title',
           type: 'string',
-          initialValue: 'Welcome to the Collector List',
+          initialValue: 'Welcome to the Collector Circle',
           validation: (rule) => rule.required(),
-        }),
-        defineField({
-          name: 'greetingTemplate',
-          title: 'Greeting Template',
-          type: 'string',
-          description: 'Available placeholders: {{firstName}}',
-          initialValue: 'Hi {{firstName}},',
-          validation: (rule) => rule.required(),
-        }),
-        defineField({
-          name: 'intro',
-          title: 'Intro Copy',
-          type: 'text',
-          rows: 3,
-          description: 'Available placeholders: {{firstName}}',
-          initialValue: 'Thanks for signing up.',
-          validation: (rule) => rule.required(),
-        }),
-        defineField({
-          name: 'highlightsIntro',
-          title: 'Highlights Intro',
-          type: 'string',
-          initialValue: 'You are now on the list for:',
-          validation: (rule) => rule.required(),
-        }),
-        defineField({
-          name: 'highlights',
-          title: 'Highlights',
-          type: 'array',
-          of: [defineArrayMember({ type: 'string' })],
-          initialValue: [
-            'Private preview links before new originals go live',
-            'New painting releases',
-            'Studio updates',
-          ],
-          validation: (rule) => rule.required().min(1),
         }),
         defineField({
           name: 'body',
-          title: 'Body Copy',
+          title: 'Email Body',
           type: 'text',
-          rows: 4,
+          rows: 10,
           description: 'Available placeholders: {{firstName}}',
-          initialValue: 'I am so grateful you are here and I cannot wait to share new work with you.',
+          initialValue:
+            "Welcome, and thank you for joining my Collector Circle. I'm so happy to have you!\n\nThis is where I'll share new work, first looks at upcoming paintings, and notes from the studio along the way. You'll be the first to hear about new collections, available pieces, and the ongoing process behind my journey.\n\nI'm so glad you're here, and I look forward to sharing my work with you!",
           validation: (rule) => rule.required(),
         }),
         defineField({
@@ -247,15 +373,6 @@ export default defineType({
             rule.required().custom((value) =>
               isAllowedLinkValue(value) ? true : 'Use /path, #anchor, http(s)://, mailto:, or tel:'
             ),
-        }),
-        defineField({
-          name: 'outro',
-          title: 'Outro Copy',
-          type: 'text',
-          rows: 3,
-          description: 'Available placeholders: {{firstName}}',
-          initialValue: 'Thank you for supporting my work. - Megan',
-          validation: (rule) => rule.required(),
         }),
       ],
     }),
