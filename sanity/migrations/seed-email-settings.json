@@ -27,8 +27,8 @@
       "bodyTextColor": "#4a3a2d",
       "mutedTextColor": "#8b7765",
       "linkColor": "#6b4f3a",
-      "buttonBackground": "#6b4f3a",
-      "buttonTextColor": "#fffaf2",
+      "buttonBackground": "#f7f3e9",
+      "buttonTextColor": "#6b4f3a",
       "detailTableBackground": "#fffdf8",
       "detailTableLabelColor": "#5f4735"
     }
