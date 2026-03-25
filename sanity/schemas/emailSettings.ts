@@ -217,7 +217,7 @@ export default defineType({
             hexColorField('bodyTextColor', 'Body Text', '#4a3a2d'),
             hexColorField('mutedTextColor', 'Muted Text', '#8b7765'),
             hexColorField('linkColor', 'Link Color', '#6b4f3a'),
-            hexColorField('buttonBackground', 'Button Background', '#f7f3e9'),
+            hexColorField('buttonBackground', 'Button Background', '#fffdf8'),
             hexColorField('buttonTextColor', 'Button Text', '#6b4f3a'),
             hexColorField('detailTableBackground', 'Detail Table Background', '#fffdf8'),
             hexColorField('detailTableLabelColor', 'Detail Table Label Text', '#5f4735'),

@@ -88,7 +88,7 @@ export const DEFAULT_EMAIL_COLORS: EmailBrandingColors = {
   bodyTextColor: '#4a3a2d',
   mutedTextColor: '#8b7765',
   linkColor: '#6b4f3a',
-  buttonBackground: '#f7f3e9',
+  buttonBackground: '#fffdf8',
   buttonTextColor: '#6b4f3a',
   detailTableBackground: '#fffdf8',
   detailTableLabelColor: '#5f4735',
@@ -293,7 +293,7 @@ export const renderBrandEmail = (input: RenderBrandEmailInput) => {
       )}</p>`
     : '';
   const ctaBlock = input.cta
-    ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:26px auto 0;"><tr><td style="border-radius:999px;background:${colors.buttonBackground};border:1px solid ${colors.borderColor};box-shadow:0 10px 24px -18px rgba(30,24,20,.4);">
+    ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:26px auto 0;"><tr><td style="border-radius:999px;background:${colors.buttonBackground};border:2px solid ${colors.titleColor};">
 <a href="${escapeHtml(input.cta.href)}" style="display:inline-block;padding:13px 28px;font-size:15px;font-weight:600;letter-spacing:.01em;color:${colors.buttonTextColor};text-decoration:none;border-radius:999px;">${escapeHtml(
         input.cta.label
       )}</a>
