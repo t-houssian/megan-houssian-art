@@ -26,7 +26,7 @@ export default function NavBar() {
   };
 
   return (
-    <header className="relative z-50 border-b border-[color:rgba(212,196,168,0.35)] bg-[var(--bg-paper)]">
+    <header className="relative z-50 border-b border-[color:var(--border-tan-soft)] bg-[var(--nav-bg)]">
       <nav className="relative max-w-7xl mx-auto px-6 py-4 flex items-center justify-between overflow-visible">
         <div className={`${cormorant.className} text-3xl font-light text-[var(--text-brown)] tracking-wide hover:text-[var(--link-olive)] transition-colors duration-300`}>
           <Link href="/" className="flex items-center space-x-2">
@@ -35,7 +35,7 @@ export default function NavBar() {
         </div>
         
         <button
-          className="md:hidden focus:outline-none p-2 rounded-lg hover:bg-[rgba(107,91,71,0.08)] transition-colors duration-200"
+          className="md:hidden focus:outline-none p-2 rounded-lg hover:bg-[var(--link-olive-hover-bg)] transition-colors duration-200"
           onClick={() => {
             setIsOpen((prev) => {
               const next = !prev;
@@ -88,7 +88,7 @@ export default function NavBar() {
                 aria-haspopup="menu"
                 className={`relative group inline-flex h-10 items-center gap-0.5 border transition-colors duration-300 ${
                   isDesktopOriginalsOpen
-                    ? '-mx-2 rounded-t-md border-[color:rgba(212,196,168,0.45)] border-b-[var(--bg-paper)] bg-[var(--bg-paper)] px-3 text-[var(--text-brown)] z-40'
+                    ? '-mx-2 rounded-t-md border-[color:var(--border-tan-medium)] border-b-[var(--nav-bg)] bg-[var(--nav-bg)] px-3 text-[var(--text-brown)] z-40'
                     : 'border-transparent px-1 hover:text-[var(--link-olive)]'
                 }`}
               >
@@ -108,7 +108,7 @@ export default function NavBar() {
                 ></span>
               </button>
               <div
-                className={`absolute left-1/2 top-full z-30 w-56 -translate-x-1/2 origin-top overflow-hidden rounded-b-md border border-t-0 border-[color:rgba(212,196,168,0.45)] bg-[var(--bg-paper)] shadow-md transition-all duration-150 ${
+                className={`absolute left-1/2 top-full z-30 w-56 -translate-x-1/2 origin-top overflow-hidden rounded-b-md border border-t-0 border-[color:var(--border-tan-medium)] bg-[var(--nav-bg)] shadow-md transition-all duration-150 ${
                   isDesktopOriginalsOpen
                     ? 'visible translate-y-0 opacity-100'
                     : 'invisible -translate-y-1 opacity-0 pointer-events-none'
@@ -119,7 +119,7 @@ export default function NavBar() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setIsDesktopOriginalsOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-[var(--text-brown)] hover:bg-[rgba(107,91,71,0.08)] hover:text-[var(--link-olive)] transition-colors duration-200"
+                    className="block px-4 py-2.5 text-sm text-[var(--text-brown)] hover:bg-[var(--link-olive-hover-bg)] hover:text-[var(--link-olive)] transition-colors duration-200"
                   >
                     {link.label}
                   </Link>
@@ -168,13 +168,13 @@ export default function NavBar() {
       </nav>
       
       {isOpen && (
-        <div className="md:hidden px-6 pb-4 bg-[var(--bg-paper)] border-t border-[color:rgba(212,196,168,0.35)]">
+        <div className="md:hidden px-6 pb-4 bg-[var(--nav-bg)] border-t border-[color:var(--border-tan-soft)]">
           <ul className={`flex flex-col space-y-3 text-[var(--text-brown)] font-medium ${lora.className} pt-4`}>
             <li>
               <Link 
                 href="/about" 
                 onClick={closeMenus}
-                className="block py-3 px-4 rounded-lg hover:bg-[rgba(107,91,71,0.08)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
+                className="block py-3 px-4 rounded-lg hover:bg-[var(--link-olive-hover-bg)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
               >
                 About
               </Link>
@@ -183,7 +183,7 @@ export default function NavBar() {
               <Link 
                 href="/#gallery" 
                 onClick={closeMenus}
-                className="block py-3 px-4 rounded-lg hover:bg-[rgba(107,91,71,0.08)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
+                className="block py-3 px-4 rounded-lg hover:bg-[var(--link-olive-hover-bg)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
               >
                 Gallery
               </Link>
@@ -193,7 +193,7 @@ export default function NavBar() {
                 <button
                   type="button"
                   onClick={() => setIsMobileOriginalsOpen((prev) => !prev)}
-                  className="w-full text-left flex items-center justify-between py-3 px-4 rounded-lg hover:bg-[rgba(107,91,71,0.08)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
+                  className="w-full text-left flex items-center justify-between py-3 px-4 rounded-lg hover:bg-[var(--link-olive-hover-bg)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
                   aria-expanded={isMobileOriginalsOpen}
                 >
                   Originals
@@ -207,13 +207,13 @@ export default function NavBar() {
                   </svg>
                 </button>
                 {isMobileOriginalsOpen && (
-                  <ul className="mt-1 ml-4 space-y-1 rounded-md border border-[color:rgba(212,196,168,0.35)] bg-[var(--bg-paper)] p-2">
+                  <ul className="mt-1 ml-4 space-y-1 rounded-md border border-[color:var(--border-tan-soft)] bg-[var(--nav-bg)] p-2">
                     {originalsLinks.map((link) => (
                       <li key={link.href}>
                         <Link
                           href={link.href}
                           onClick={closeMenus}
-                          className="block rounded-md py-2 px-3 text-sm hover:bg-[rgba(107,91,71,0.08)] hover:text-[var(--link-olive)] transition-colors duration-200"
+                          className="block rounded-md py-2 px-3 text-sm hover:bg-[var(--link-olive-hover-bg)] hover:text-[var(--link-olive)] transition-colors duration-200"
                         >
                           {link.label}
                         </Link>
@@ -227,7 +227,7 @@ export default function NavBar() {
                 <Link
                   href="/originals"
                   onClick={closeMenus}
-                  className="block py-3 px-4 rounded-lg hover:bg-[rgba(107,91,71,0.08)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
+                  className="block py-3 px-4 rounded-lg hover:bg-[var(--link-olive-hover-bg)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
                 >
                   Originals
                 </Link>
@@ -237,7 +237,7 @@ export default function NavBar() {
               <Link 
                 href="/prints" 
                 onClick={() => setIsOpen(false)} 
-                className="block py-3 px-4 rounded-lg hover:bg-[rgba(107,91,71,0.08)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
+                className="block py-3 px-4 rounded-lg hover:bg-[var(--link-olive-hover-bg)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
               >
                 Prints
               </Link>
@@ -246,7 +246,7 @@ export default function NavBar() {
               <Link 
                 href="/commissions" 
                 onClick={closeMenus}
-                className="block py-3 px-4 rounded-lg hover:bg-[rgba(107,91,71,0.08)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
+                className="block py-3 px-4 rounded-lg hover:bg-[var(--link-olive-hover-bg)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
               >
                 Commissions
               </Link>
@@ -255,7 +255,7 @@ export default function NavBar() {
               <Link 
                 href="/contact" 
                 onClick={closeMenus}
-                className="block py-3 px-4 rounded-lg hover:bg-[rgba(107,91,71,0.08)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
+                className="block py-3 px-4 rounded-lg hover:bg-[var(--link-olive-hover-bg)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
               >
                 Contact
               </Link>

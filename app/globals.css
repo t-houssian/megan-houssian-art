@@ -4,16 +4,25 @@
 @tailwind utilities;
 
 :root {
-  --bg-ivory: #f7f3e9;
-  --bg-paper: #fefbf3;
-  --text-brown: #4a3f35;
-  --btn-brown: #8b4513;
-  --btn-brown-hover: #654321;
-  --link-olive: #6b5b47;
-  --border-tan: #d4c4a8;
-  --accent-cream: #f5ede0;
-  --text-warm-gray: #6d5a4f;
-  --hero-overlay: #d2b48c;
+  --bg-ivory: #F3F4F1;
+  --bg-paper: #E7E1D4;
+  --nav-bg: #F3F4F1;
+  --text-brown: #2F342F;
+  --btn-brown: #4D5853;
+  --btn-brown-hover: #2F342F;
+  --link-olive: #6A715A;
+  --border-tan: #C7D1CD;
+  --accent-cream: #D8DDD8;
+  --text-warm-gray: #8B927C;
+  --hero-overlay: #AEB9B5;
+  --surface-alt: #B6B0A0;
+  --border-tan-soft: rgba(199, 209, 205, 0.35);
+  --border-tan-medium: rgba(199, 209, 205, 0.45);
+  --link-olive-hover-bg: rgba(106, 113, 90, 0.08);
+  --shadow-color-soft: rgba(47, 52, 47, 0.1);
+  --shadow-color-strong: rgba(47, 52, 47, 0.2);
+  --focus-ring-soft: rgba(77, 88, 83, 0.1);
+  --focus-ring-strong: rgba(77, 88, 83, 0.3);
 }
 
 /* Custom font styles for enhanced vintage feel */
@@ -21,6 +30,7 @@ html, body {
   margin: 0;
   padding: 0;
   background-color: var(--bg-ivory);
+  color: var(--text-brown);
   scroll-behavior: smooth;
   line-height: 1.6;
 }

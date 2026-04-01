@@ -8,6 +8,7 @@ import Script from 'next/script';
 import type { Metadata } from 'next';
 import { fetchSiteSettings } from '../lib/site-settings';
 import { urlFor } from '../sanity/lib/image';
+import type { SiteTheme } from '../sanity/lib/siteTheme';
 
 const GOOGLE_ANALYTICS_ID = 'G-SWFSW2Z76Q';
 
@@ -50,9 +51,52 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+function hexToRgb(hex: string) {
+  const normalized = hex.replace('#', '');
+  const value = Number.parseInt(normalized, 16);
+
+  return {
+    r: (value >> 16) & 255,
+    g: (value >> 8) & 255,
+    b: value & 255,
+  };
+}
+
+function withAlpha(hex: string, alpha: number) {
+  const { r, g, b } = hexToRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function buildThemeVariables(theme: SiteTheme): Record<string, string> {
+  return {
+    '--bg-ivory': theme.mainBackgroundColor,
+    '--bg-paper': theme.secondaryBackgroundColor,
+    '--nav-bg': theme.navBackgroundColor,
+    '--text-brown': theme.textColor,
+    '--btn-brown': theme.buttonColor,
+    '--btn-brown-hover': theme.buttonHoverColor,
+    '--link-olive': theme.linkColor,
+    '--border-tan': theme.borderColor,
+    '--accent-cream': theme.accentColor,
+    '--text-warm-gray': theme.mutedTextColor,
+    '--hero-overlay': theme.heroOverlayColor,
+    '--surface-alt': theme.surfaceAccentColor,
+    '--border-tan-soft': withAlpha(theme.borderColor, 0.35),
+    '--border-tan-medium': withAlpha(theme.borderColor, 0.45),
+    '--link-olive-hover-bg': withAlpha(theme.linkColor, 0.08),
+    '--shadow-color-soft': withAlpha(theme.textColor, 0.1),
+    '--shadow-color-strong': withAlpha(theme.textColor, 0.2),
+    '--focus-ring-soft': withAlpha(theme.buttonColor, 0.1),
+    '--focus-ring-strong': withAlpha(theme.buttonColor, 0.3),
+  };
+}
+
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const siteSettings = await fetchSiteSettings();
+  const themeVariables = buildThemeVariables(siteSettings.theme);
+
   return (
-    <html lang="en">
+    <html lang="en" style={themeVariables}>
       <head>
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ANALYTICS_ID}`}

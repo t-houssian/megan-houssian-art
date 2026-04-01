@@ -285,8 +285,8 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
         }
         select option {
           padding: 12px 16px !important;
-          background: white !important;
-          color: #8B5A2B !important;
+          background: var(--bg-paper) !important;
+          color: var(--text-brown) !important;
           border: none !important;
           font-family: inherit !important;
           font-size: 16px !important;
@@ -294,11 +294,11 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
           min-height: 44px !important;
         }
         select option:hover {
-          background: #F5F1E8 !important;
+          background: var(--accent-cream) !important;
         }
         select option:checked {
-          background: #8B5A2B !important;
-          color: white !important;
+          background: var(--btn-brown) !important;
+          color: var(--bg-ivory) !important;
         }
         /* Ensure dropdowns are above other elements */
         .select-wrapper {
@@ -325,7 +325,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
         /* Custom focus styles */
         .focus-ring:focus {
           outline: none;
-          box-shadow: 0 0 0 3px rgba(139, 90, 43, 0.1), 0 0 0 1px rgba(139, 90, 43, 0.3);
+          box-shadow: 0 0 0 3px var(--focus-ring-soft), 0 0 0 1px var(--focus-ring-strong);
         }
         /* Dropdown hover effect */
         .select-wrapper:hover svg {

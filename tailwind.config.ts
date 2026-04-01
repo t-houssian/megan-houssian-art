@@ -18,15 +18,16 @@ export default {
         tan: 'var(--border-tan)',
         'accent-cream': 'var(--accent-cream)',
         'warm-gray': 'var(--text-warm-gray)',
-        'hero-overlay': 'var(--hero-overlay)'
+        'hero-overlay': 'var(--hero-overlay)',
+        'surface-alt': 'var(--surface-alt)'
       },
       fontFamily: {
         heading: ['Cormorant Garamond', 'serif'],
         body: ['Lora', 'serif']
       },
       boxShadow: {
-        'vintage': '0 4px 6px rgba(139, 69, 19, 0.1)',
-        'vintage-lg': '0 10px 15px rgba(139, 69, 19, 0.1)',
+        'vintage': '0 4px 6px var(--shadow-color-soft)',
+        'vintage-lg': '0 10px 15px var(--shadow-color-soft)',
       }
     },
   },

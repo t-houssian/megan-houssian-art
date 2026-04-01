@@ -32,7 +32,7 @@ export default async function AboutPage() {
           </div>
           <div className="flex justify-center md:justify-end">
             <div className="group relative w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
-              <figure className="relative aspect-[3/4] md:aspect-[4/5] overflow-hidden bg-paper shadow-[0_28px_48px_-32px_rgba(40,34,28,0.4)]">
+              <figure className="relative aspect-[3/4] md:aspect-[4/5] overflow-hidden bg-paper shadow-[0_28px_48px_-32px_var(--shadow-color-strong)]">
                 <Image
                   src={aboutImageUrl}
                   alt={aboutImageAlt}
