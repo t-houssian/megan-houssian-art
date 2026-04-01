@@ -114,7 +114,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body className={`${lora.className} bg-ivory text-brown min-h-screen flex flex-col`}>
         <NavBar />
         <main className="flex-grow">{children}</main>
-        <Footer />
+        <Footer content={siteSettings.footerContent} />
       </body>
     </html>
   );

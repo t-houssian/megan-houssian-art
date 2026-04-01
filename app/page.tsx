@@ -7,11 +7,13 @@ import Collections from './components/Collections';
 import CommisionsLink from './commissions/CommissionsLink';
 import ContactLink from './contact/ContactLink';
 import { fetchOriginalsPageSettings } from '../lib/originals-page-settings';
+import { fetchSiteSettings } from '../lib/site-settings';
 
 export const revalidate = 60;
 
 export default async function Home() {
   const settings = await fetchOriginalsPageSettings();
+  const siteSettings = await fetchSiteSettings();
 
   return (
     <>
@@ -26,9 +28,9 @@ export default async function Home() {
       <Suspense fallback={<div className="text-brown text-center py-8">Loading gallery…</div>}>
         <Collections />
       </Suspense>
-      <AboutSection />
-      <CommisionsLink />
-      <ContactLink />
+      <AboutSection content={siteSettings.homepageContent} />
+      <CommisionsLink content={siteSettings.homepageContent} />
+      <ContactLink content={siteSettings.homepageContent} />
     </>
   );
 }
