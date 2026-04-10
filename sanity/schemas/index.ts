@@ -5,7 +5,8 @@ import galleryOrder from './galleryOrder'
 import heroSettings from './heroSettings'
 import aboutPageSettings from './aboutPageSettings'
 import originalsPageSettings from './originalsPageSettings'
+import commissionsPageSettings from './commissionsPageSettings'
 import emailSettings from './emailSettings'
 import siteSettings from './siteSettings'
 
-export default [ siteSettings, emailSettings, gallery, galleryOrder, heroSettings, aboutPageSettings, originalsPageSettings, original, print ]
+export default [ siteSettings, emailSettings, gallery, galleryOrder, heroSettings, aboutPageSettings, originalsPageSettings, commissionsPageSettings, original, print ]
