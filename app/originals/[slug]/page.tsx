@@ -1,52 +1,34 @@
 // app/originals/[slug]/page.tsx
-import { sanityClient } from "../../../lib/sanity";
 import ArtworkGallery from "../../components/ArtworkGallery";
 import PurchaseSection from "../../components/PurchaseSection";
 import Link from "next/link";
 import { cormorant, lora } from "../../fonts";
+import { fetchOriginalBySlug } from "../../../lib/originals";
 
 export const revalidate = 0;
 
-type OriginalArtwork = {
-  _id: string;
-  title: string;
-  mainImage?: { asset: { _ref: string } };
-  gallery?: Array<{ asset: { _ref: string } }>;
-  price?: number;
-  sold?: boolean;
-  description?: string;
-  shipping?: {
-    weight?: number;
-    dimensions?: {
-      length?: number;
-      width?: number;
-      height?: number;
-    };
-  };
-};
-
-async function fetchOriginalBySlug(slug: string): Promise<OriginalArtwork | null> {
-  const query = `
-    *[_type == "original" && slug.current == $slug][0]{
-      _id,
-      title,
-      mainImage,
-      gallery,
-      price,
-      sold,
-      description,
-      shipping
-    }
-  `;
-  return sanityClient.fetch(query, { slug });
-}
+const ALLOWED_BACK_LINKS = new Set([
+  '/hidden-originals',
+  '/originals-collectors-access',
+]);
 
 // Instead of typing props directly, we accept props as unknown and then assert its type.
-export default async function OriginalDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function OriginalDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ from?: string | string[] }>;
+}) {
   const { slug: rawSlug } = await params;
+  const resolvedSearchParams = await searchParams;
   const slugParam = rawSlug;
   const slug = decodeURIComponent(slugParam);
   const artwork = await fetchOriginalBySlug(slug);
+  const fromParam = Array.isArray(resolvedSearchParams.from)
+    ? resolvedSearchParams.from[0]
+    : resolvedSearchParams.from;
+  const backHref = fromParam && ALLOWED_BACK_LINKS.has(fromParam) ? fromParam : '/originals';
 
   if (!artwork) {
     return (
@@ -61,7 +43,7 @@ export default async function OriginalDetailPage({ params }: { params: Promise<{
       <div className="max-w-6xl mx-auto py-12 px-6">
         {/* Back Navigation */}
         <div className="mb-8">
-          <Link href="/originals">
+          <Link href={backHref}>
             <button className={`group flex items-center space-x-2 px-4 py-2 bg-white/60 backdrop-blur-sm border border-tan/30 text-brown rounded-lg hover:bg-olive/10 hover:border-olive/50 transition-all duration-300 ${lora.className}`}>
               <svg className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
