@@ -12,6 +12,21 @@ const ALLOWED_BACK_LINKS = new Set([
   '/originals-collectors-access',
 ]);
 
+function isAllowedBackHref(href: string) {
+  return ALLOWED_BACK_LINKS.has(href) || /^\/originals\/collections\/[a-z0-9-]+$/.test(href);
+}
+
+function buildCollectionHref(slug: string, sourceHref: string) {
+  const collectionHref = `/originals/collections/${slug}`;
+
+  if (!ALLOWED_BACK_LINKS.has(sourceHref)) {
+    return collectionHref;
+  }
+
+  const params = new URLSearchParams({ from: sourceHref });
+  return `${collectionHref}?${params.toString()}`;
+}
+
 // Instead of typing props directly, we accept props as unknown and then assert its type.
 export default async function OriginalDetailPage({
   params,
@@ -28,7 +43,7 @@ export default async function OriginalDetailPage({
   const fromParam = Array.isArray(resolvedSearchParams.from)
     ? resolvedSearchParams.from[0]
     : resolvedSearchParams.from;
-  const backHref = fromParam && ALLOWED_BACK_LINKS.has(fromParam) ? fromParam : '/originals';
+  const backHref = fromParam && isAllowedBackHref(fromParam) ? fromParam : '/originals';
 
   if (!artwork) {
     return (
@@ -43,13 +58,14 @@ export default async function OriginalDetailPage({
       <div className="max-w-6xl mx-auto py-12 px-6">
         {/* Back Navigation */}
         <div className="mb-8">
-          <Link href={backHref}>
-            <button className={`group flex items-center space-x-2 px-4 py-2 bg-white/60 backdrop-blur-sm border border-tan/30 text-brown rounded-lg hover:bg-olive/10 hover:border-olive/50 transition-all duration-300 ${lora.className}`}>
-              <svg className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-              </svg>
-              <span>Back to Gallery</span>
-            </button>
+          <Link
+            href={backHref}
+            className={`group inline-flex items-center space-x-2 px-4 py-2 bg-white/60 backdrop-blur-sm border border-tan/30 text-brown rounded-lg hover:bg-olive/10 hover:border-olive/50 transition-all duration-300 ${lora.className}`}
+          >
+            <svg className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>Back to Gallery</span>
           </Link>
         </div>
 
@@ -71,6 +87,21 @@ export default async function OriginalDetailPage({
                 {artwork.title}
               </h1>
               <div className="w-16 h-0.5 bg-olive mb-6"></div>
+
+              {artwork.collections.length > 0 && (
+                <div className={`${lora.className} mb-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm`}>
+                  <span className="uppercase tracking-[0.18em] text-warm-gray">Part of</span>
+                  {artwork.collections.map((collection) => (
+                    <Link
+                      key={collection._id}
+                      href={buildCollectionHref(collection.slug.current, backHref)}
+                      className="font-medium text-olive underline underline-offset-4 hover:text-brown transition-colors duration-200"
+                    >
+                      {collection.title}
+                    </Link>
+                  ))}
+                </div>
+              )}
               
               {artwork.sold ? (
                 <div className="bg-ivory border border-tan/60 rounded-xl p-6">
@@ -123,6 +154,22 @@ export default async function OriginalDetailPage({
                   <span>Authenticity</span>
                   <span className="font-medium text-brown">Artist Signed</span>
                 </div>
+                {artwork.collections.length > 0 && (
+                  <div className="flex justify-between gap-6">
+                    <span>Collection</span>
+                    <span className="flex flex-wrap justify-end gap-x-2 gap-y-1 text-right font-medium text-brown">
+                      {artwork.collections.map((collection) => (
+                        <Link
+                          key={collection._id}
+                          href={buildCollectionHref(collection.slug.current, backHref)}
+                          className="text-olive underline underline-offset-4 hover:text-brown transition-colors duration-200"
+                        >
+                          {collection.title}
+                        </Link>
+                      ))}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span>Shipping</span>
                   <span className="font-medium text-brown">Free shipping included</span>

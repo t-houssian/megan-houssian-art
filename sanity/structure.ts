@@ -9,6 +9,11 @@ const singletonTypes = new Set([
   'emailSettings',
 ])
 
+const explicitContentTypes = new Set([
+  'original',
+  'originalCollection',
+])
+
 export const structure: StructureResolver = (S) =>
   S.list()
     .title('Content')
@@ -62,8 +67,23 @@ export const structure: StructureResolver = (S) =>
             .documentId('commissionsPageSettings')
         ),
       S.divider(),
+      S.listItem()
+        .title('Original Artwork')
+        .schemaType('original')
+        .child(
+          S.documentTypeList('original')
+            .title('Original Artwork')
+        ),
+      S.listItem()
+        .title('Original Collections')
+        .schemaType('originalCollection')
+        .child(
+          S.documentTypeList('originalCollection')
+            .title('Original Collections')
+        ),
+      S.divider(),
       ...S.documentTypeListItems().filter((listItem) => {
         const id = listItem.getId()
-        return id ? !singletonTypes.has(id) : true
+        return id ? !singletonTypes.has(id) && !explicitContentTypes.has(id) : true
       }),
     ])

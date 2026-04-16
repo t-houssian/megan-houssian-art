@@ -39,6 +39,19 @@ export default defineType({
       description: 'Additional images for this artwork',
     },
     {
+      name: 'collections',
+      title: 'Collections',
+      type: 'array',
+      of: [
+        {
+          type: 'reference',
+          to: [{type: 'originalCollection'}],
+        },
+      ],
+      description:
+        'Collections this original belongs to. Originals can also be added from the Original Collection document.',
+    },
+    {
       name: 'price',
       title: 'Price',
       type: 'number',

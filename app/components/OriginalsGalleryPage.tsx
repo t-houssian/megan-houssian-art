@@ -1,9 +1,7 @@
-import Image from 'next/image';
-import Link from 'next/link';
 import { cormorant, lora } from '../fonts';
 import { fetchOriginals } from '../../lib/originals';
 import { fetchOriginalsPageSettings } from '../../lib/originals-page-settings';
-import { urlFor } from '../../sanity/lib/image';
+import OriginalArtworkCard from './OriginalArtworkCard';
 
 type OriginalsGalleryPageProps = {
   sourcePath: '/hidden-originals' | '/originals-collectors-access';
@@ -14,16 +12,9 @@ function buildDetailHref(slug: string, sourcePath: OriginalsGalleryPageProps['so
   return `/originals/${slug}?${params.toString()}`;
 }
 
-function formatPrice(price?: number) {
-  if (!Number.isFinite(price) || !price || price <= 0) {
-    return 'Price available on request';
-  }
-
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(price);
+function buildCollectionHref(slug: string, sourcePath: OriginalsGalleryPageProps['sourcePath']) {
+  const params = new URLSearchParams({ from: sourcePath });
+  return `/originals/collections/${slug}?${params.toString()}`;
 }
 
 export default async function OriginalsGalleryPage({ sourcePath }: OriginalsGalleryPageProps) {
@@ -60,50 +51,12 @@ export default async function OriginalsGalleryPage({ sourcePath }: OriginalsGall
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {originals.map((item) => (
-              <Link key={item._id} href={buildDetailHref(item.slug.current, sourcePath)}>
-                <article className="group h-full cursor-pointer">
-                  <div className="h-full bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl overflow-hidden shadow-vintage hover:shadow-vintage-lg transition-all duration-500 transform hover:-translate-y-2">
-                    {item.mainImage?.asset && (
-                      <div className="relative w-full h-80 overflow-hidden bg-paper">
-                        <Image
-                          src={urlFor(item.mainImage).width(900).height(1100).fit('crop').url()}
-                          alt={item.title}
-                          fill
-                          className="object-cover transition-transform duration-700 group-hover:scale-105"
-                          sizes="(min-width: 1280px) 28vw, (min-width: 640px) 44vw, 92vw"
-                        />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
-                        {item.sold && (
-                          <div className="absolute top-4 left-4 rounded-full bg-paper/95 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-brown shadow-vintage">
-                            Sold
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="p-6">
-                      <h2 className={`${cormorant.className} text-2xl font-medium mb-3 text-brown group-hover:text-olive transition-colors duration-300`}>
-                        {item.title}
-                      </h2>
-
-                      <div className="flex items-end justify-between gap-4">
-                        <div>
-                          <p className={`${lora.className} text-sm text-warm-gray mb-1`}>
-                            {item.sold ? 'Previously collected' : 'Original artwork · Free shipping'}
-                          </p>
-                          <p className={`${lora.className} text-lg font-medium text-brown`}>
-                            {item.sold ? 'Unavailable' : formatPrice(item.price)}
-                          </p>
-                        </div>
-
-                        <span className={`${lora.className} text-sm font-medium text-olive opacity-0 group-hover:opacity-100 transition-opacity duration-300`}>
-                          View piece →
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              </Link>
+              <OriginalArtworkCard
+                key={item._id}
+                item={item}
+                detailHref={buildDetailHref(item.slug.current, sourcePath)}
+                collectionHref={(slug) => buildCollectionHref(slug, sourcePath)}
+              />
             ))}
           </div>
         )}

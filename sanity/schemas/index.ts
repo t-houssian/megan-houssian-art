@@ -8,5 +8,6 @@ import originalsPageSettings from './originalsPageSettings'
 import commissionsPageSettings from './commissionsPageSettings'
 import emailSettings from './emailSettings'
 import siteSettings from './siteSettings'
+import originalCollection from './originalCollection'
 
-export default [ siteSettings, emailSettings, gallery, galleryOrder, heroSettings, aboutPageSettings, originalsPageSettings, commissionsPageSettings, original, print ]
+export default [ siteSettings, emailSettings, gallery, galleryOrder, heroSettings, aboutPageSettings, originalsPageSettings, commissionsPageSettings, originalCollection, original, print ]
