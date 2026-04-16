@@ -9,6 +9,32 @@ const parseCheckoutEmailFromCustomId = (value: unknown): string | null => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
 };
 
+const getPayPalCapturedAmount = (purchaseUnit: {
+  amount?: { value?: unknown } | null;
+  payments?: {
+    captures?: Array<{
+      amount?: { value?: unknown } | null;
+    } | null> | null;
+  } | null;
+} | null | undefined): string | null => {
+  const captureAmount = purchaseUnit?.payments?.captures?.find((capture) => {
+    const value = capture?.amount?.value;
+    return typeof value === 'string' || typeof value === 'number';
+  })?.amount?.value;
+  const fallbackAmount = purchaseUnit?.amount?.value;
+  const amount = captureAmount ?? fallbackAmount;
+
+  if (typeof amount === 'number' && Number.isFinite(amount)) {
+    return amount.toString();
+  }
+
+  if (typeof amount === 'string' && amount.trim()) {
+    return amount.trim();
+  }
+
+  return null;
+};
+
 export async function POST(request: NextRequest) {
   try {
     const { orderId } = await request.json();
@@ -80,6 +106,7 @@ export async function POST(request: NextRequest) {
         const purchaseUnit = captureData.purchase_units?.[0];
         const shippingInfo = purchaseUnit?.shipping;
         const checkoutEmailFallback = parseCheckoutEmailFromCustomId(purchaseUnit?.custom_id);
+        const amountDollars = getPayPalCapturedAmount(purchaseUnit);
 
         await sendOrderConfirmationEmail({
           customerEmail: captureData.payer?.email_address || checkoutEmailFallback,
@@ -90,7 +117,7 @@ export async function POST(request: NextRequest) {
           paymentMethod: 'paypal',
           orderId: captureData.id || orderId,
           product: purchaseUnit?.description || 'Artwork Purchase',
-          amountDollars: purchaseUnit?.amount?.value,
+          amountDollars,
           shippingOption: shippingInfo ? 'shipping' : 'pickup',
           shippingAddress: shippingInfo
             ? {
