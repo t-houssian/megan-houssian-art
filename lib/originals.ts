@@ -6,6 +6,16 @@ export type OriginalCollectionSummary = {
   slug: { current: string };
   description?: string;
   pieceCount?: number;
+  sampleOriginals?: OriginalArtworkSample[];
+};
+
+export type OriginalArtworkSample = {
+  _id: string;
+  title: string;
+  slug: { current: string };
+  mainImage?: {
+    asset: { _ref: string };
+  };
 };
 
 export type OriginalArtworkSummary = {
@@ -17,6 +27,7 @@ export type OriginalArtworkSummary = {
   };
   price?: number;
   sold?: boolean;
+  testProduct?: boolean;
   collections: OriginalCollectionSummary[];
 };
 
@@ -35,6 +46,14 @@ export type OriginalArtwork = OriginalArtworkSummary & {
 
 export type OriginalCollection = OriginalCollectionSummary & {
   originals: OriginalArtworkSummary[];
+};
+
+export type OriginalCheckoutPricing = {
+  _id: string;
+  title: string;
+  slug: { current: string };
+  price?: number;
+  testProduct?: boolean;
 };
 
 type RawOriginalArtworkSummary = Omit<OriginalArtworkSummary, 'collections'> & {
@@ -62,6 +81,7 @@ const ORIGINAL_SUMMARY_PROJECTION = `
   mainImage,
   price,
   sold,
+  testProduct,
   "directCollections": collections[]->{
     ${COLLECTION_SUMMARY_PROJECTION}
   },
@@ -95,7 +115,21 @@ const ORIGINAL_COLLECTIONS_LIST_QUERY = `
         _id in coalesce(^.pieces[]._ref, []) ||
         ^._id in coalesce(collections[]._ref, [])
       )
-    ])
+    ]),
+    "sampleOriginals": *[
+      _type == "original" &&
+      defined(slug.current) &&
+      defined(mainImage.asset) &&
+      (
+        _id in coalesce(^.pieces[]._ref, []) ||
+        ^._id in coalesce(collections[]._ref, [])
+      )
+    ] | order(coalesce(sold, false) asc, _createdAt desc)[0...4]{
+      _id,
+      title,
+      "slug": slug,
+      mainImage
+    }
   } | order(title asc)
 `;
 
@@ -112,6 +146,16 @@ const ORIGINAL_COLLECTION_BY_SLUG_QUERY = `
     ]{
       ${ORIGINAL_SUMMARY_PROJECTION}
     } | order(coalesce(sold, false) asc, _createdAt desc)
+  }
+`;
+
+const ORIGINAL_CHECKOUT_PRICING_QUERY = `
+  *[_type == "original" && slug.current == $slug][0]{
+    _id,
+    title,
+    "slug": slug,
+    price,
+    testProduct
   }
 `;
 
@@ -189,4 +233,12 @@ export async function fetchOriginalCollectionBySlug(slug: string): Promise<Origi
   );
 
   return collection ? normalizeCollection(collection) : null;
+}
+
+export async function fetchOriginalCheckoutPricing(slug: string): Promise<OriginalCheckoutPricing | null> {
+  return sanityClient.fetch<OriginalCheckoutPricing | null>(
+    ORIGINAL_CHECKOUT_PRICING_QUERY,
+    { slug },
+    { cache: 'no-store' }
+  );
 }

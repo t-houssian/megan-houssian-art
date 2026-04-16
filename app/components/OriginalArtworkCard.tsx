@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { formatCurrency } from '../../lib/money';
 import type { OriginalArtworkSummary } from '../../lib/originals';
 import { urlFor } from '../../sanity/lib/image';
 import { cormorant, lora } from '../fonts';
@@ -15,11 +16,7 @@ function formatPrice(price?: number) {
     return 'Price available on request';
   }
 
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(price);
+  return formatCurrency(price);
 }
 
 export default function OriginalArtworkCard({
@@ -60,9 +57,9 @@ export default function OriginalArtworkCard({
           </Link>
 
           {collections.length > 0 && (
-            <div className="mb-4">
+            <div className="mb-3">
               <p className={`${lora.className} text-xs uppercase tracking-[0.18em] text-warm-gray mb-1`}>
-                Part of
+                In collection
               </p>
               <div className="flex flex-wrap gap-x-3 gap-y-1">
                 {collections.map((collection) => (
@@ -78,7 +75,7 @@ export default function OriginalArtworkCard({
             </div>
           )}
 
-          <div className="mt-auto flex items-end justify-between gap-4">
+          <div className="flex items-end justify-between gap-4 pt-1">
             <div>
               <p className={`${lora.className} text-sm text-warm-gray mb-1`}>
                 {item.sold ? 'Previously collected' : 'Original artwork · Free shipping'}

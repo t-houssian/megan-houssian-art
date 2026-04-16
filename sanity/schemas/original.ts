@@ -57,6 +57,14 @@ export default defineType({
       type: 'number',
     },
     {
+      name: 'testProduct',
+      title: 'Test Product',
+      type: 'boolean',
+      initialValue: false,
+      description:
+        'Turn this on only for payment testing. Test products can use very small prices such as $0.01.',
+    },
+    {
       name: 'sold',
       title: 'Sold',
       type: 'boolean',

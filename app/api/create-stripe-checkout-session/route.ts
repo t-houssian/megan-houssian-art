@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { roundUpCentsToNearestTenDollars } from '../../../lib/money';
+import { dollarsToCents, roundUpCentsToNearestTenDollars } from '../../../lib/money';
+import { fetchOriginalCheckoutPricing } from '../../../lib/originals';
 
 // Initialize Stripe only when the secret key is available
 const getStripe = () => {
@@ -32,15 +33,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { amount, shippingAddress, product, shippingOption, returnTo, checkoutEmail } = await request.json();
+    const { amount, shippingAddress, product, originalSlug, shippingOption, returnTo, checkoutEmail } = await request.json();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
     const safeReturnPath = getSafeReturnPath(returnTo);
     const normalizedCheckoutEmail = isValidEmail(checkoutEmail) ? checkoutEmail.trim() : null;
-    const rawAmount = typeof amount === 'number' ? amount : Number(amount);
-    const roundedAmount = roundUpCentsToNearestTenDollars(rawAmount);
+    const originalPricing = typeof originalSlug === 'string' && originalSlug
+      ? await fetchOriginalCheckoutPricing(originalSlug)
+      : null;
+    const rawAmount = originalPricing?.price
+      ? dollarsToCents(originalPricing.price)
+      : typeof amount === 'number'
+        ? amount
+        : Number(amount);
+    const checkoutAmount = originalPricing?.testProduct
+      ? rawAmount
+      : roundUpCentsToNearestTenDollars(rawAmount);
+    const productName = originalPricing?.title || product || 'Artwork Purchase';
 
     // Validate required fields
-    if (!roundedAmount || roundedAmount <= 0) {
+    if (!checkoutAmount || checkoutAmount <= 0) {
       return NextResponse.json(
         { error: 'Invalid amount' },
         { status: 400 }
@@ -65,10 +76,10 @@ export async function POST(request: NextRequest) {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: product || 'Artwork Purchase',
+              name: productName,
               description: `Original artwork by Megan Houssian${shippingOption === 'pickup' ? ' - Local Pickup in Marble Falls, TX' : ''}`,
             },
-            unit_amount: roundedAmount, // amount in cents, rounded to nearest $10
+            unit_amount: checkoutAmount,
           },
           quantity: 1,
         },
@@ -80,7 +91,9 @@ export async function POST(request: NextRequest) {
       // Always collect billing address
       billing_address_collection: 'required',
       metadata: {
-        product: product || 'artwork',
+        product: productName,
+        original_slug: originalPricing?.slug.current || originalSlug || '',
+        test_product: originalPricing?.testProduct ? 'true' : 'false',
         checkout_email: normalizedCheckoutEmail,
         shipping_option: shippingOption || 'shipping',
         ...(shippingOption === 'shipping' && shippingAddress ? {

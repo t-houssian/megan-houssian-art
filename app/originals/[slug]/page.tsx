@@ -90,7 +90,7 @@ export default async function OriginalDetailPage({
 
               {artwork.collections.length > 0 && (
                 <div className={`${lora.className} mb-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm`}>
-                  <span className="uppercase tracking-[0.18em] text-warm-gray">Part of</span>
+                  <span className="uppercase tracking-[0.18em] text-warm-gray">In collection</span>
                   {artwork.collections.map((collection) => (
                     <Link
                       key={collection._id}
@@ -118,6 +118,8 @@ export default async function OriginalDetailPage({
                 <PurchaseSection 
                   title={artwork.title} 
                   basePrice={artwork.price || 0}
+                  originalSlug={artwork.slug.current}
+                  isTestProduct={artwork.testProduct}
                 />
               )}
             </div>

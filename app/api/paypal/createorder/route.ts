@@ -1,16 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { roundUpToNearestTenDollars } from '../../../../lib/money';
+import { fetchOriginalCheckoutPricing } from '../../../../lib/originals';
 
 const isValidEmail = (value: unknown): value is string =>
   typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
 export async function POST(request: NextRequest) {
   try {
-    const { amount, shippingAddress, shippingOption, checkoutEmail } = await request.json();
+    const { amount, product, originalSlug, shippingAddress, shippingOption, checkoutEmail } = await request.json();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
     const normalizedCheckoutEmail = isValidEmail(checkoutEmail) ? checkoutEmail.trim().toLowerCase() : null;
-    const parsedAmount = typeof amount === 'number' ? amount : Number(amount);
-    const roundedAmount = roundUpToNearestTenDollars(parsedAmount);
+    const originalPricing = typeof originalSlug === 'string' && originalSlug
+      ? await fetchOriginalCheckoutPricing(originalSlug)
+      : null;
+    const parsedAmount = originalPricing?.price
+      ? originalPricing.price
+      : typeof amount === 'number'
+        ? amount
+        : Number(amount);
+    const checkoutAmount = originalPricing?.testProduct
+      ? parsedAmount
+      : roundUpToNearestTenDollars(parsedAmount);
+    const formattedCheckoutAmount = checkoutAmount.toFixed(2);
+    const productName = originalPricing?.title || product || 'Artwork purchase';
 
     // PayPal API configuration
     const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
@@ -33,7 +45,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!roundedAmount || roundedAmount <= 0) {
+    if (!checkoutAmount || checkoutAmount <= 0) {
       return NextResponse.json(
         { error: 'Invalid amount' },
         { status: 400 }
@@ -76,10 +88,10 @@ export async function POST(request: NextRequest) {
         {
           amount: {
             currency_code: 'USD',
-            value: roundedAmount.toString(), // amount in dollars, rounded to nearest $10
+            value: formattedCheckoutAmount,
           },
           custom_id: `checkout_email:${normalizedCheckoutEmail}`,
-          description: `Artwork purchase from Megan Houssian Art${shippingOption === 'pickup' ? ' - Local Pickup in Marble Falls, TX' : ''}`,
+          description: `${productName} from Megan Houssian Art${shippingOption === 'pickup' ? ' - Local Pickup in Marble Falls, TX' : ''}`,
           ...(shippingOption === 'shipping' && shippingAddress ? {
             shipping: {
               name: {

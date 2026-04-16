@@ -2,26 +2,37 @@
 import React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { lora } from "../fonts";
-import { formatRoundedDollars, roundUpToNearestTenDollars } from "../../lib/money";
+import { formatDollars, roundUpToNearestTenDollars } from "../../lib/money";
 
 type PurchaseSectionProps = {
   title: string;
   basePrice: number;
+  originalSlug: string;
+  isTestProduct?: boolean;
 };
 
-export default function PurchaseSection({ title, basePrice }: PurchaseSectionProps) {
+export default function PurchaseSection({
+  title,
+  basePrice,
+  originalSlug,
+  isTestProduct = false,
+}: PurchaseSectionProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const checkoutPrice = isTestProduct ? basePrice : roundUpToNearestTenDollars(basePrice);
 
   const handlePurchase = () => {
-    const roundedBasePrice = roundUpToNearestTenDollars(basePrice);
-
     // Build the checkout URL with product details
     const params = new URLSearchParams({
       product: title,
-      price: roundedBasePrice.toString(),
+      price: checkoutPrice.toString(),
+      originalSlug,
       returnTo: pathname,
     });
+
+    if (isTestProduct) {
+      params.set('testProduct', '1');
+    }
 
     router.push(`/checkout?${params.toString()}`);
   };
@@ -29,7 +40,7 @@ export default function PurchaseSection({ title, basePrice }: PurchaseSectionPro
   return (
     <div>
       <p className={`${lora.className} text-brown mb-6 text-lg font-light tracking-wide`}>
-        Price: {formatRoundedDollars(basePrice)}
+        Price: {formatDollars(checkoutPrice)}
       </p>
       <p className={`${lora.className} text-olive mb-6 text-sm tracking-wide`}>
         Free shipping included

@@ -8,7 +8,13 @@ import axios, { AxiosResponse } from "axios";
 import { SiStripe, SiPaypal } from "react-icons/si";
 import { cormorant, lora } from "../fonts";
 import FreeAddressValidator from "../components/FreeAddressValidator";
-import { formatRoundedCents, roundUpCentsToNearestTenDollars, roundUpToNearestTenDollars } from "../../lib/money";
+import {
+  dollarsToCents,
+  formatCents,
+  formatCurrencyFromCents,
+  roundUpCentsToNearestTenDollars,
+  roundUpToNearestTenDollars,
+} from "../../lib/money";
 
 let stripePromise: ReturnType<typeof loadStripe> | null = null;
 
@@ -56,6 +62,8 @@ const defaultShippingAddress: ShippingAddress = {
 type CheckoutDraft = {
   product: string;
   basePriceDollars: number;
+  originalSlug: string;
+  isTestProduct: boolean;
   returnTo: string;
   shippingOption: "shipping" | "pickup";
   checkoutEmail: string;
@@ -76,10 +84,17 @@ const CheckoutContent = () => {
       ? returnToFromQuery
       : "";
   const priceParam = searchParams.get("price");
+  const originalSlug = searchParams.get("originalSlug") || "";
+  const isTestProduct = searchParams.get("testProduct") === "1";
   const parsedBasePrice = priceParam ? Number.parseFloat(priceParam) : 20;
-  const basePriceDollars = roundUpToNearestTenDollars(Number.isFinite(parsedBasePrice) ? parsedBasePrice : 20);
+  const rawBasePriceDollars = Number.isFinite(parsedBasePrice) ? parsedBasePrice : 20;
+  const basePriceDollars = isTestProduct
+    ? rawBasePriceDollars
+    : roundUpToNearestTenDollars(rawBasePriceDollars);
   // Stripe expects amounts in cents.
-  const BASE_PRICE = roundUpCentsToNearestTenDollars(basePriceDollars * 100);
+  const BASE_PRICE = isTestProduct
+    ? dollarsToCents(basePriceDollars)
+    : roundUpCentsToNearestTenDollars(basePriceDollars * 100);
 
   // Local state
   const [shippingOption, setShippingOption] = useState<"shipping" | "pickup">("shipping");
@@ -119,7 +134,9 @@ const CheckoutContent = () => {
     if (
       parsedDraft &&
       parsedDraft.product === product &&
-      parsedDraft.basePriceDollars === basePriceDollars
+      parsedDraft.basePriceDollars === basePriceDollars &&
+      parsedDraft.originalSlug === originalSlug &&
+      parsedDraft.isTestProduct === isTestProduct
     ) {
       setShippingOption(parsedDraft.shippingOption);
       setCheckoutEmail(parsedDraft.checkoutEmail || "");
@@ -134,6 +151,8 @@ const CheckoutContent = () => {
     product,
     priceParam,
     basePriceDollars,
+    originalSlug,
+    isTestProduct,
     router,
   ]);
 
@@ -144,6 +163,8 @@ const CheckoutContent = () => {
     const draft: CheckoutDraft = {
       product,
       basePriceDollars,
+      originalSlug,
+      isTestProduct,
       returnTo: returnToPath,
       shippingOption,
       checkoutEmail,
@@ -157,6 +178,8 @@ const CheckoutContent = () => {
     product,
     priceParam,
     basePriceDollars,
+    originalSlug,
+    isTestProduct,
     returnToPath,
     shippingOption,
     checkoutEmail,
@@ -193,6 +216,7 @@ const CheckoutContent = () => {
       const response = await axios.post("/api/create-stripe-checkout-session", {
         amount: totalPrice,
         product: product,
+        originalSlug,
         checkoutEmail: checkoutEmail.trim(),
         shippingAddress: shippingOption === "pickup" ? null : shippingAddress,
         billingAddress: null, // Let Stripe collect billing info
@@ -225,13 +249,15 @@ const CheckoutContent = () => {
   const createPayPalOrder = async (): Promise<string> => {
     try {
       console.log('Creating PayPal order with:', {
-        amount: formatRoundedCents(totalPrice),
+        amount: formatCents(totalPrice),
         shippingOption,
         hasShippingAddress: !!shippingAddress.name,
       });
       
       const response = await axios.post("/api/paypal/createorder", {
-        amount: formatRoundedCents(totalPrice), // rounded dollars, no decimals
+        amount: formatCents(totalPrice),
+        product,
+        originalSlug,
         checkoutEmail: checkoutEmail.trim(),
         shippingAddress: shippingOption === "pickup" ? null : shippingAddress,
         billingAddress: null, // Let PayPal collect billing info
@@ -573,7 +599,7 @@ const CheckoutContent = () => {
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between items-center py-3 border-b border-tan/30">
                   <span className={`${lora.className} text-warm-gray`}>Artwork Price</span>
-                  <span className={`${lora.className} font-medium text-brown`}>{formatRoundedCents(BASE_PRICE)}</span>
+                  <span className={`${lora.className} font-medium text-brown`}>{formatCurrencyFromCents(BASE_PRICE)}</span>
                 </div>
                 
                 {shippingOption === "shipping" ? (
@@ -592,7 +618,7 @@ const CheckoutContent = () => {
               <div className="bg-gradient-to-r from-olive/10 to-brown/10 rounded-xl p-4 mb-6">
                 <div className="flex justify-between items-center">
                   <span className={`${cormorant.className} text-xl font-medium text-brown`}>Total</span>
-                  <span className={`${cormorant.className} text-2xl font-bold text-brown`}>{formatRoundedCents(totalPrice)}</span>
+                  <span className={`${cormorant.className} text-2xl font-bold text-brown`}>{formatCurrencyFromCents(totalPrice)}</span>
                 </div>
               </div>
               
