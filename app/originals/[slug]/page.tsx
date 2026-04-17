@@ -16,17 +16,6 @@ function isAllowedBackHref(href: string) {
   return ALLOWED_BACK_LINKS.has(href) || /^\/originals\/collections\/[a-z0-9-]+$/.test(href);
 }
 
-function buildCollectionHref(slug: string, sourceHref: string) {
-  const collectionHref = `/originals/collections/${slug}`;
-
-  if (!ALLOWED_BACK_LINKS.has(sourceHref)) {
-    return collectionHref;
-  }
-
-  const params = new URLSearchParams({ from: sourceHref });
-  return `${collectionHref}?${params.toString()}`;
-}
-
 // Instead of typing props directly, we accept props as unknown and then assert its type.
 export default async function OriginalDetailPage({
   params,
@@ -85,21 +74,6 @@ export default async function OriginalDetailPage({
                 {artwork.title}
               </h1>
               <div className="w-16 h-0.5 bg-olive mb-6"></div>
-
-              {artwork.collections.length > 0 && (
-                <div className={`${lora.className} mb-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm`}>
-                  <span className="uppercase tracking-[0.18em] text-warm-gray">In collection</span>
-                  {artwork.collections.map((collection) => (
-                    <Link
-                      key={collection._id}
-                      href={buildCollectionHref(collection.slug.current, backHref)}
-                      className="font-medium text-olive underline underline-offset-4 hover:text-brown transition-colors duration-200"
-                    >
-                      {collection.title}
-                    </Link>
-                  ))}
-                </div>
-              )}
               
               {artwork.sold ? (
                 <div className="border-y border-tan/50 py-5">
@@ -118,6 +92,7 @@ export default async function OriginalDetailPage({
                   basePrice={artwork.price || 0}
                   originalSlug={artwork.slug.current}
                   isTestProduct={artwork.testProduct}
+                  earlyAccess={artwork.earlyAccess}
                 />
               )}
             </div>

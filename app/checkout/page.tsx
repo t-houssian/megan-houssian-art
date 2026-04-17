@@ -67,6 +67,7 @@ type CheckoutDraft = {
   returnTo: string;
   shippingOption: "shipping" | "pickup";
   checkoutEmail: string;
+  earlyAccessPassword: string;
   shippingAddress: ShippingAddress;
   shippingCost: number;
 };
@@ -101,6 +102,7 @@ const CheckoutContent = () => {
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>(defaultShippingAddress);
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [checkoutEmail, setCheckoutEmail] = useState<string>("");
+  const [earlyAccessPassword, setEarlyAccessPassword] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<"stripe" | "paypal">("stripe");
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -122,6 +124,14 @@ const CheckoutContent = () => {
     const resolvedReturnTo = normalizedReturnToFromQuery || parsedDraft?.returnTo || "";
     if (resolvedReturnTo) setReturnToPath(resolvedReturnTo);
 
+    const storedEarlyAccessPassword =
+      originalSlug && typeof window !== "undefined"
+        ? window.sessionStorage.getItem(`mha-early-access-password:${originalSlug}`) || ""
+        : "";
+    if (storedEarlyAccessPassword) {
+      setEarlyAccessPassword(storedEarlyAccessPassword);
+    }
+
     const hasCheckoutParams = Boolean(product && priceParam);
 
     // If user returns to bare /checkout (e.g., from browser back), send them to the artwork page.
@@ -140,6 +150,7 @@ const CheckoutContent = () => {
     ) {
       setShippingOption(parsedDraft.shippingOption);
       setCheckoutEmail(parsedDraft.checkoutEmail || "");
+      setEarlyAccessPassword(storedEarlyAccessPassword || parsedDraft.earlyAccessPassword || "");
       setShippingAddress({ ...defaultShippingAddress, ...parsedDraft.shippingAddress });
       setShippingCost(0);
     }
@@ -168,6 +179,7 @@ const CheckoutContent = () => {
       returnTo: returnToPath,
       shippingOption,
       checkoutEmail,
+      earlyAccessPassword,
       shippingAddress,
       shippingCost,
     };
@@ -183,6 +195,7 @@ const CheckoutContent = () => {
     returnToPath,
     shippingOption,
     checkoutEmail,
+    earlyAccessPassword,
     shippingAddress,
     shippingCost,
   ]);
@@ -217,6 +230,7 @@ const CheckoutContent = () => {
         amount: totalPrice,
         product: product,
         originalSlug,
+        earlyAccessPassword,
         checkoutEmail: checkoutEmail.trim(),
         shippingAddress: shippingOption === "pickup" ? null : shippingAddress,
         billingAddress: null, // Let Stripe collect billing info
@@ -258,6 +272,7 @@ const CheckoutContent = () => {
         amount: formatCents(totalPrice),
         product,
         originalSlug,
+        earlyAccessPassword,
         checkoutEmail: checkoutEmail.trim(),
         shippingAddress: shippingOption === "pickup" ? null : shippingAddress,
         billingAddress: null, // Let PayPal collect billing info

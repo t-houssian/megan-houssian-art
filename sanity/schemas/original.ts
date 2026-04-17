@@ -71,6 +71,43 @@ export default defineType({
       initialValue: false,
     },
     {
+      name: 'releaseAt',
+      title: 'Public Release Date & Time',
+      type: 'datetime',
+      description:
+        'When this individual piece becomes publicly purchasable without a password. Leave blank to inherit from its collection or make it immediately available.',
+    },
+    {
+      name: 'earlyAccessStartsAt',
+      title: 'Early Access Starts',
+      type: 'datetime',
+      description:
+        'When collectors can begin purchasing this piece with the password. Leave blank to inherit from its collection.',
+    },
+    {
+      name: 'earlyAccessPassword',
+      title: 'Early Access Password',
+      type: 'string',
+      description:
+        'Collectors must enter this password to purchase this single piece during early access. Leave blank to inherit from its collection.',
+    },
+    {
+      name: 'earlyAccessMessage',
+      title: 'Early Access Purchase Message',
+      type: 'text',
+      rows: 3,
+      description:
+        'Shown on the artwork page while this piece is in early access. Leave blank to use the default or collection message.',
+    },
+    {
+      name: 'earlyAccessEmailMessage',
+      title: 'Collector Signup Email Message',
+      type: 'text',
+      rows: 3,
+      description:
+        'Optional message included with the password when someone joins the Collector List during early access.',
+    },
+    {
       name: 'description',
       title: 'Description',
       type: 'text',

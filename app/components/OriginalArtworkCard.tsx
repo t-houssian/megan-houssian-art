@@ -37,9 +37,7 @@ function getImageDimensions(image?: SanityImage) {
 export default function OriginalArtworkCard({
   item,
   detailHref,
-  collectionHref,
 }: OriginalArtworkCardProps) {
-  const collections = item.collections ?? [];
   const mainDimensions = getImageDimensions(item.mainImage);
   const hoverImage = item.hoverImage?.asset ? item.hoverImage : null;
 
@@ -85,25 +83,6 @@ export default function OriginalArtworkCard({
               {item.title}
             </h2>
           </Link>
-
-          {collections.length > 0 && (
-            <div className="mb-3">
-              <p className={`${lora.className} text-xs uppercase tracking-[0.18em] text-warm-gray mb-1`}>
-                In collection
-              </p>
-              <div className="flex flex-wrap gap-x-3 gap-y-1">
-                {collections.map((collection) => (
-                  <Link
-                    key={collection._id}
-                    href={collectionHref(collection.slug.current)}
-                    className={`${lora.className} text-sm font-medium text-olive underline underline-offset-4`}
-                  >
-                    {collection.title}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
 
           <div className="flex items-end justify-between gap-4 pt-1">
             <div>

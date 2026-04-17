@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server";
 import FormData from "form-data";
 import Mailgun from "mailgun.js";
-import { getEmailLinks, renderBrandEmail } from "../../../../lib/email-template";
+import { getEmailLinks, renderBrandEmail, renderDetailTable } from "../../../../lib/email-template";
 import {
   applyTemplate,
+  escapeHtml,
   fetchEmailSettings,
   renderHtmlParagraphs,
   resolveHref,
 } from "../../../../lib/email-settings";
+import {
+  type CollectorSignupEarlyAccessContext,
+  fetchCollectorSignupEarlyAccessContexts,
+} from "../../../../lib/originals";
 
 const KIT_API_BASE_URL = "https://api.kit.com/v4";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -60,7 +65,56 @@ const isValidReferrer = (value: unknown): value is string => {
   }
 };
 
-const sendCollectorWelcomeEmail = async (params: { email: string; firstName: string }) => {
+const buildEarlyAccessText = (contexts: CollectorSignupEarlyAccessContext[]) => {
+  if (contexts.length === 0) return "";
+
+  return [
+    "Collector early access:",
+    ...contexts.flatMap((context) => [
+      `- ${context.sourceTitle}: password ${context.password}`,
+      context.message ? `  ${context.message}` : "",
+      `  Open: ${resolveHref(context.accessHref, getEmailLinks().homeUrl, getEmailLinks().originalsUrl)}`,
+    ]),
+  ]
+    .filter(Boolean)
+    .join("\n");
+};
+
+const buildEarlyAccessHtml = (contexts: CollectorSignupEarlyAccessContext[], colors: { bodyTextColor: string }) => {
+  if (contexts.length === 0) return "";
+
+  const rows = contexts.flatMap((context) => [
+    { label: context.sourceType === "collection" ? "Collection" : "Piece", value: context.sourceTitle },
+    { label: "Password", value: context.password },
+  ]);
+
+  const messages = contexts
+    .map((context) => context.message?.trim())
+    .filter((message): message is string => Boolean(message));
+
+  return `
+    <div style="margin:24px 0 0;">
+      <h2 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:${colors.bodyTextColor};">Collector early access</h2>
+      ${
+        messages.length > 0
+          ? messages
+              .map(
+                (message) =>
+                  `<p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:${colors.bodyTextColor};">${escapeHtml(message)}</p>`
+              )
+              .join("")
+          : `<p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:${colors.bodyTextColor};">Your collector password is below. Use it on the artwork page to purchase during the early access window.</p>`
+      }
+      ${renderDetailTable(rows)}
+    </div>
+  `;
+};
+
+const sendCollectorWelcomeEmail = async (params: {
+  email: string;
+  firstName: string;
+  earlyAccessContexts: CollectorSignupEarlyAccessContext[];
+}) => {
   const mailgunApiKey = process.env.MAILGUN_API_KEY;
   if (!mailgunApiKey) {
     console.warn("MAILGUN_API_KEY is not set; skipping collector welcome email.");
@@ -82,9 +136,14 @@ const sendCollectorWelcomeEmail = async (params: { email: string; firstName: str
     firstName: collectorName,
   };
   const body = applyTemplate(welcomeSettings.body, templateValues).trim();
+  const earlyAccessText = buildEarlyAccessText(params.earlyAccessContexts);
+  const earlyAccessHtml = buildEarlyAccessHtml(params.earlyAccessContexts, {
+    bodyTextColor: emailSettings.brandTemplate.colors.bodyTextColor,
+  });
   const ctaHref = resolveHref(welcomeSettings.ctaHref, links.homeUrl, links.originalsUrl);
   const text = [
     body,
+    earlyAccessText ? "\n" + earlyAccessText : "",
     "",
     "Explore:",
     ...links.footerLinks
@@ -101,7 +160,7 @@ const sendCollectorWelcomeEmail = async (params: { email: string; firstName: str
   const html = renderBrandEmail({
     preheader: applyTemplate(welcomeSettings.preheader, templateValues),
     title: applyTemplate(welcomeSettings.title, templateValues),
-    bodyHtml: body ? renderHtmlParagraphs(body, emailSettings.brandTemplate.colors.bodyTextColor) : '',
+    bodyHtml: `${body ? renderHtmlParagraphs(body, emailSettings.brandTemplate.colors.bodyTextColor) : ''}${earlyAccessHtml}`,
     cta: {
       label: applyTemplate(welcomeSettings.ctaLabel, templateValues),
       href: ctaHref,
@@ -202,7 +261,8 @@ export async function POST(request: Request) {
     }
 
     try {
-      await sendCollectorWelcomeEmail({ email, firstName });
+      const earlyAccessContexts = await fetchCollectorSignupEarlyAccessContexts(referrer);
+      await sendCollectorWelcomeEmail({ email, firstName, earlyAccessContexts });
     } catch (error) {
       console.error("Failed to send collector welcome email:", error);
     }

@@ -24,6 +24,7 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
   const images: GalleryImage[] = mainImage ? [mainImage, ...(gallery || [])] : (gallery || []);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   const selectedImage = images[selectedIndex];
 
@@ -45,12 +46,29 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
     setSelectedIndex((prevIndex) => (prevIndex < images.length - 1 ? prevIndex + 1 : 0));
   };
 
+  const handleTouchEnd = (touchEndX: number) => {
+    if (touchStartX === null || images.length < 2) return;
+
+    const distance = touchStartX - touchEndX;
+    if (Math.abs(distance) > 40) {
+      if (distance > 0) {
+        nextImage();
+      } else {
+        prevImage();
+      }
+    }
+
+    setTouchStartX(null);
+  };
+
   return (
     <div className="space-y-6">
       {/* Main image */}
       <div
         className="relative w-full cursor-pointer overflow-hidden bg-ivory min-h-[420px] sm:min-h-[560px] lg:min-h-[720px]"
         onClick={openModal}
+        onTouchStart={(event) => setTouchStartX(event.touches[0]?.clientX ?? null)}
+        onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
       >
         <div className="absolute inset-0">
           {selectedImage && (
@@ -68,7 +86,7 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
 
       {/* Gallery navigation */}
       {images.length > 1 && (
-        <div className="flex justify-center gap-4">
+        <div className="hidden justify-center gap-4 md:flex">
           <button
             onClick={() => prevImage()}
             className="inline-flex items-center gap-2 border-b border-tan/70 px-2 py-1 text-sm font-medium text-brown hover:border-olive hover:text-olive transition"
@@ -115,6 +133,8 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
         <div
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
           onClick={closeModal}
+          onTouchStart={(event) => setTouchStartX(event.touches[0]?.clientX ?? null)}
+          onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
         >
           <div className="relative w-full max-w-3xl h-full max-h-screen" onClick={(e) => e.stopPropagation()}>
             {selectedImage && (
@@ -128,13 +148,13 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
             {/* Left and Right Navigation Arrows in modal */}
             <button
               onClick={prevImage}
-              className="absolute top-1/2 left-4 transform -translate-y-1/2 text-white text-3xl z-10"
+              className="absolute top-1/2 left-4 z-10 hidden -translate-y-1/2 transform text-3xl text-white md:block"
             >
               ❮
             </button>
             <button
               onClick={nextImage}
-              className="absolute top-1/2 right-4 transform -translate-y-1/2 text-white text-3xl z-10"
+              className="absolute top-1/2 right-4 z-10 hidden -translate-y-1/2 transform text-3xl text-white md:block"
             >
               ❯
             </button>

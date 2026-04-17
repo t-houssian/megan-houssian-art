@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { dollarsToCents, roundUpCentsToNearestTenDollars } from '../../../lib/money';
-import { fetchOriginalCheckoutPricing } from '../../../lib/originals';
+import { fetchOriginalCheckoutPricing, validateOriginalEarlyAccessForCheckout } from '../../../lib/originals';
 
 // Initialize Stripe only when the secret key is available
 const getStripe = () => {
@@ -33,7 +33,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { amount, shippingAddress, product, originalSlug, shippingOption, returnTo, checkoutEmail } = await request.json();
+    const {
+      amount,
+      shippingAddress,
+      product,
+      originalSlug,
+      shippingOption,
+      returnTo,
+      checkoutEmail,
+      earlyAccessPassword,
+    } = await request.json();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
     const safeReturnPath = getSafeReturnPath(returnTo);
     const normalizedCheckoutEmail = isValidEmail(checkoutEmail) ? checkoutEmail.trim() : null;
@@ -51,6 +60,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'This original artwork has already sold' },
         { status: 409 }
+      );
+    }
+
+    const earlyAccessValidation = await validateOriginalEarlyAccessForCheckout(
+      originalSlug,
+      earlyAccessPassword
+    );
+    if (!earlyAccessValidation.ok) {
+      return NextResponse.json(
+        { error: earlyAccessValidation.message },
+        { status: 403 }
       );
     }
 
