@@ -259,10 +259,10 @@ export const renderDetailTable = (rows: DetailRow[], colors: EmailBrandingColors
     .map(
       (row) => `
 <tr>
-  <td style="padding:10px 12px;border-bottom:1px solid ${colors.borderColor};font-weight:600;color:${colors.detailTableLabelColor};width:170px;">${escapeHtml(
+  <td class="email-detail-label" bgcolor="${colors.detailTableBackground}" style="padding:10px 12px;border-bottom:1px solid ${colors.borderColor};background-color:${colors.detailTableBackground};font-weight:600;color:${colors.detailTableLabelColor};width:170px;">${escapeHtml(
         row.label
       )}</td>
-  <td style="padding:10px 12px;border-bottom:1px solid ${colors.borderColor};color:${colors.bodyTextColor};">${escapeHtml(
+  <td class="email-detail-value" bgcolor="${colors.detailTableBackground}" style="padding:10px 12px;border-bottom:1px solid ${colors.borderColor};background-color:${colors.detailTableBackground};color:${colors.bodyTextColor};">${escapeHtml(
         row.value
       )}</td>
 </tr>`
@@ -270,7 +270,7 @@ export const renderDetailTable = (rows: DetailRow[], colors: EmailBrandingColors
     .join('');
 
   return `
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:${colors.detailTableBackground};border:1px solid ${colors.borderColor};border-radius:12px;overflow:hidden;">
+<table class="email-detail-table" role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="${colors.detailTableBackground}" style="border-collapse:collapse;background-color:${colors.detailTableBackground};border:1px solid ${colors.borderColor};border-radius:12px;overflow:hidden;">
   ${tableRows}
 </table>`;
 };
@@ -318,7 +318,7 @@ export const renderBrandEmail = (input: RenderBrandEmailInput) => {
     .join('&nbsp;|&nbsp;');
   const imageBlock = imageSrc
     ? `<tr>
-                    <td style="padding:0;background:${colors.cardBackground};">
+                    <td class="email-media" bgcolor="${colors.cardBackground}" style="padding:0;background-color:${colors.cardBackground};">
                       <a href="${escapeHtml(imageHref)}" style="display:block;text-decoration:none;">
                         <img src="${escapeHtml(imageSrc)}" alt="${escapeHtml(
         imageAlt
@@ -333,42 +333,102 @@ export const renderBrandEmail = (input: RenderBrandEmailInput) => {
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light only" />
+    <meta name="supported-color-schemes" content="light only" />
     <title>${escapeHtml(input.title)}</title>
+    <style>
+      :root {
+        color-scheme: only light;
+        supported-color-schemes: light only;
+      }
+      body,
+      table,
+      td,
+      p,
+      h1,
+      h2,
+      span,
+      a {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+      }
+      @media (prefers-color-scheme: dark) {
+        .email-page {
+          background-color: ${colors.pageBackground} !important;
+        }
+        .email-card,
+        .email-content,
+        .email-media {
+          background-color: ${colors.cardBackground} !important;
+        }
+        .email-header {
+          background-color: ${colors.headerGradientTo} !important;
+        }
+        .email-footer {
+          background-color: ${colors.footerBackground} !important;
+        }
+        .email-detail-table,
+        .email-detail-label,
+        .email-detail-value {
+          background-color: ${colors.detailTableBackground} !important;
+        }
+        .email-title,
+        .email-heading {
+          color: ${colors.titleColor} !important;
+        }
+        .email-brand,
+        .email-muted {
+          color: ${colors.mutedTextColor} !important;
+        }
+        .email-copy {
+          color: ${colors.bodyTextColor} !important;
+        }
+        .email-detail-label {
+          color: ${colors.detailTableLabelColor} !important;
+        }
+        .email-detail-value {
+          color: ${colors.bodyTextColor} !important;
+        }
+        .email-link {
+          color: ${colors.linkColor} !important;
+        }
+      }
+    </style>
   </head>
-  <body style="margin:0;padding:0;background:${colors.pageBackground};font-family:Georgia,'Times New Roman',serif;color:${colors.bodyTextColor};">
+  <body class="email-page" bgcolor="${colors.pageBackground}" style="margin:0;padding:0;background-color:${colors.pageBackground};font-family:Georgia,'Times New Roman',serif;color:${colors.bodyTextColor};">
     <span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;">${escapeHtml(
       input.preheader
     )}</span>
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:${colors.pageBackground};padding:24px 12px;">
+    <table class="email-page" role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="${colors.pageBackground}" style="background-color:${colors.pageBackground};padding:24px 12px;">
       <tr>
         <td align="center">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;border-collapse:collapse;">
             <tr>
-              <td style="background:${colors.cardBackground};border:1px solid ${colors.borderColor};border-radius:22px;overflow:hidden;box-shadow:0 24px 60px -44px rgba(39,31,24,.55);">
+              <td class="email-card" bgcolor="${colors.cardBackground}" style="background-color:${colors.cardBackground};border:1px solid ${colors.borderColor};border-radius:22px;overflow:hidden;box-shadow:0 24px 60px -44px rgba(39,31,24,.55);">
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
                   <tr>
-                    <td style="padding:24px 30px 22px;background:linear-gradient(180deg,${colors.headerGradientFrom} 0%,${colors.headerGradientTo} 100%);border-bottom:1px solid ${colors.borderColor};text-align:center;">
-                      <p style="margin:0;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:${colors.mutedTextColor};">${escapeHtml(
+                    <td class="email-header" bgcolor="${colors.headerGradientTo}" style="padding:24px 30px 22px;background-color:${colors.headerGradientTo};border-bottom:1px solid ${colors.borderColor};text-align:center;">
+                      <p class="email-brand email-muted" style="margin:0;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:${colors.mutedTextColor};">${escapeHtml(
                         brandName
                       )}</p>
-                      <h1 style="margin:10px 0 0;font-size:30px;line-height:1.2;color:${colors.titleColor};font-weight:500;">${escapeHtml(
+                      <h1 class="email-title" style="margin:10px 0 0;font-size:30px;line-height:1.2;color:${colors.titleColor};font-weight:500;">${escapeHtml(
                         input.title
                       )}</h1>
                     </td>
                   </tr>
                   ${imageBlock}
                   <tr>
-                    <td style="padding:34px 34px 24px;text-align:center;">
+                    <td class="email-content" bgcolor="${colors.cardBackground}" style="padding:34px 34px 24px;background-color:${colors.cardBackground};text-align:center;">
                       ${greetingBlock}
                       ${introBlock}
-                      <div style="font-size:15px;line-height:1.8;color:${colors.bodyTextColor};text-align:left;">${input.bodyHtml}</div>
+                      <div class="email-copy" style="font-size:15px;line-height:1.8;color:${colors.bodyTextColor};text-align:left;">${input.bodyHtml}</div>
                       ${ctaBlock}
                       ${outroBlock}
                     </td>
                   </tr>
                   <tr>
-                    <td style="padding:20px 30px 28px;border-top:1px solid ${colors.borderColor};background:${colors.footerBackground};text-align:center;">
-                      <p style="margin:0 0 10px;font-size:13px;line-height:1.6;color:${colors.mutedTextColor};text-align:center;">
+                    <td class="email-footer" bgcolor="${colors.footerBackground}" style="padding:20px 30px 28px;border-top:1px solid ${colors.borderColor};background-color:${colors.footerBackground};text-align:center;">
+                      <p class="email-muted" style="margin:0 0 10px;font-size:13px;line-height:1.6;color:${colors.mutedTextColor};text-align:center;">
                         ${footerLinksHtml}
                       </p>
                       ${renderSocialLinks(links.socialLinks, colors)}
