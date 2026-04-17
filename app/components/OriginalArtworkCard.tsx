@@ -86,7 +86,7 @@ export default function OriginalArtworkCard({
           <div className="flex items-end justify-between gap-4 pt-1">
             <div>
               <p className={`${lora.className} text-sm text-warm-gray mb-1`}>
-                {item.sold ? 'Previously collected' : 'Original artwork · Free shipping'}
+                {item.artworkSize || 'Size available on request'}
               </p>
               <p className={`${lora.className} text-lg font-medium text-brown`}>
                 {item.sold ? 'Unavailable' : formatPrice(item.price)}

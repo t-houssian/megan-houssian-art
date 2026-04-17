@@ -57,6 +57,12 @@ export default defineType({
       type: 'number',
     },
     {
+      name: 'artworkSize',
+      title: 'Artwork Size',
+      type: 'string',
+      description: 'Artwork dimensions in inches, shown on original artwork cards. Example: 24 x 36 in.',
+    },
+    {
       name: 'testProduct',
       title: 'Test Product',
       type: 'boolean',
