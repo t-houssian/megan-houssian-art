@@ -40,7 +40,21 @@ export async function POST(request: NextRequest) {
     const originalPricing = typeof originalSlug === 'string' && originalSlug
       ? await fetchOriginalCheckoutPricing(originalSlug)
       : null;
-    const rawAmount = originalPricing?.price
+    if (originalSlug && !originalPricing) {
+      return NextResponse.json(
+        { error: 'Original artwork not found' },
+        { status: 404 }
+      );
+    }
+
+    if (originalPricing?.sold) {
+      return NextResponse.json(
+        { error: 'This original artwork has already sold' },
+        { status: 409 }
+      );
+    }
+
+    const rawAmount = typeof originalPricing?.price === 'number'
       ? dollarsToCents(originalPricing.price)
       : typeof amount === 'number'
         ? amount

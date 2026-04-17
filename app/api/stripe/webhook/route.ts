@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { sendOrderConfirmationEmail } from '../../../../lib/order-confirmation-email';
+import { markOriginalSoldBySlug } from '../../../../lib/originals';
 
 // Initialize Stripe only when the secret key is available
 const getStripe = () => {
@@ -54,6 +55,13 @@ export async function POST(request: NextRequest) {
         console.log('Payment successful:', session.id);
         console.log('Customer email:', session.customer_details?.email);
         console.log('Amount paid:', session.amount_total);
+
+        try {
+          const soldResult = await markOriginalSoldBySlug(session.metadata?.original_slug);
+          console.log('Stripe original sold update:', soldResult);
+        } catch (soldError) {
+          console.error('Failed to mark Stripe original as sold:', soldError);
+        }
 
         try {
           await sendOrderConfirmationEmail({

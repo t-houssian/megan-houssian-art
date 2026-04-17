@@ -275,11 +275,11 @@ const CheckoutContent = () => {
       console.error('PayPal order creation error:', error);
       let errorMessage = "PayPal order creation failed.";
       
-      if (error instanceof Error) {
-        errorMessage = "PayPal order creation failed: " + error.message;
-      } else if (axios.isAxiosError(error)) {
+      if (axios.isAxiosError(error)) {
         const errorMsg = error.response?.data?.error || error.message;
         errorMessage = "PayPal order creation failed: " + errorMsg;
+      } else if (error instanceof Error) {
+        errorMessage = "PayPal order creation failed: " + error.message;
       }
       
       setErrorMessage(errorMessage);

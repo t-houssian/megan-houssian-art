@@ -13,7 +13,21 @@ export async function POST(request: NextRequest) {
     const originalPricing = typeof originalSlug === 'string' && originalSlug
       ? await fetchOriginalCheckoutPricing(originalSlug)
       : null;
-    const parsedAmount = originalPricing?.price
+    if (originalSlug && !originalPricing) {
+      return NextResponse.json(
+        { error: 'Original artwork not found' },
+        { status: 404 }
+      );
+    }
+
+    if (originalPricing?.sold) {
+      return NextResponse.json(
+        { error: 'This original artwork has already sold' },
+        { status: 409 }
+      );
+    }
+
+    const parsedAmount = typeof originalPricing?.price === 'number'
       ? originalPricing.price
       : typeof amount === 'number'
         ? amount
@@ -23,6 +37,7 @@ export async function POST(request: NextRequest) {
       : roundUpToNearestTenDollars(parsedAmount);
     const formattedCheckoutAmount = checkoutAmount.toFixed(2);
     const productName = originalPricing?.title || product || 'Artwork purchase';
+    const originalReferenceSlug = originalPricing?.slug.current || originalSlug || null;
 
     // PayPal API configuration
     const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
@@ -86,6 +101,7 @@ export async function POST(request: NextRequest) {
       intent: 'CAPTURE',
       purchase_units: [
         {
+          ...(originalReferenceSlug ? { reference_id: `original_slug:${originalReferenceSlug}` } : {}),
           amount: {
             currency_code: 'USD',
             value: formattedCheckoutAmount,

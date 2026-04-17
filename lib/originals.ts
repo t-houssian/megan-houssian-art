@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { sanityClient } from './sanity';
 
 export type OriginalCollectionSummary = {
@@ -53,6 +54,7 @@ export type OriginalCheckoutPricing = {
   title: string;
   slug: { current: string };
   price?: number;
+  sold?: boolean;
   testProduct?: boolean;
 };
 
@@ -150,11 +152,12 @@ const ORIGINAL_COLLECTION_BY_SLUG_QUERY = `
 `;
 
 const ORIGINAL_CHECKOUT_PRICING_QUERY = `
-  *[_type == "original" && slug.current == $slug][0]{
+  *[_type == "original" && slug.current == $slug && !(_id in path("drafts.**"))][0]{
     _id,
     title,
     "slug": slug,
     price,
+    sold,
     testProduct
   }
 `;
@@ -236,9 +239,87 @@ export async function fetchOriginalCollectionBySlug(slug: string): Promise<Origi
 }
 
 export async function fetchOriginalCheckoutPricing(slug: string): Promise<OriginalCheckoutPricing | null> {
-  return sanityClient.fetch<OriginalCheckoutPricing | null>(
+  return sanityClient.withConfig({ useCdn: false }).fetch<OriginalCheckoutPricing | null>(
     ORIGINAL_CHECKOUT_PRICING_QUERY,
     { slug },
     { cache: 'no-store' }
   );
+}
+
+export type MarkOriginalSoldResult =
+  | { status: 'updated'; id: string; title?: string }
+  | { status: 'already_sold'; id: string; title?: string }
+  | { status: 'not_found'; slug: string }
+  | { status: 'skipped'; reason: 'missing_slug' | 'missing_token'; slug?: string };
+
+const ORIGINAL_FOR_SALE_BY_SLUG_QUERY = `
+  *[_type == "original" && slug.current == $slug && !(_id in path("drafts.**"))][0]{
+    _id,
+    _rev,
+    title,
+    sold
+  }
+`;
+
+const getSanityWriteToken = () =>
+  process.env.SANITY_WRITE_TOKEN ||
+  process.env.SANITY_AUTH_TOKEN ||
+  process.env.SANITY_API_WRITE_TOKEN;
+
+const revalidateOriginalSoldPaths = (slug: string) => {
+  try {
+    revalidatePath('/originals');
+    revalidatePath('/hidden-originals');
+    revalidatePath('/originals-collectors-access');
+    revalidatePath('/originals/collections');
+    revalidatePath(`/originals/${slug}`);
+  } catch (error) {
+    console.error('Failed to revalidate original sold paths:', error);
+  }
+};
+
+export async function markOriginalSoldBySlug(slug: unknown): Promise<MarkOriginalSoldResult> {
+  if (typeof slug !== 'string' || !slug.trim()) {
+    return { status: 'skipped', reason: 'missing_slug' };
+  }
+
+  const normalizedSlug = slug.trim();
+  const token = getSanityWriteToken();
+
+  if (!token) {
+    return { status: 'skipped', reason: 'missing_token', slug: normalizedSlug };
+  }
+
+  const writeClient = sanityClient.withConfig({
+    useCdn: false,
+    token,
+  });
+
+  const original = await writeClient.fetch<{
+    _id: string;
+    _rev: string;
+    title?: string;
+    sold?: boolean;
+  } | null>(
+    ORIGINAL_FOR_SALE_BY_SLUG_QUERY,
+    { slug: normalizedSlug },
+    { cache: 'no-store' }
+  );
+
+  if (!original?._id) {
+    return { status: 'not_found', slug: normalizedSlug };
+  }
+
+  if (original.sold) {
+    return { status: 'already_sold', id: original._id, title: original.title };
+  }
+
+  await writeClient
+    .patch(original._id)
+    .set({ sold: true })
+    .commit({ visibility: 'sync' });
+
+  revalidateOriginalSoldPaths(normalizedSlug);
+
+  return { status: 'updated', id: original._id, title: original.title };
 }

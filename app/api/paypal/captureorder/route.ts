@@ -1,5 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendOrderConfirmationEmail } from '../../../../lib/order-confirmation-email';
+import { markOriginalSoldBySlug } from '../../../../lib/originals';
+
+type PayPalPurchaseUnit = {
+  reference_id?: unknown;
+  custom_id?: unknown;
+  description?: string;
+  amount?: { value?: unknown } | null;
+  payments?: {
+    captures?: Array<{
+      amount?: { value?: unknown } | null;
+    } | null> | null;
+  } | null;
+  shipping?: {
+    address?: {
+      address_line_1?: string;
+      address_line_2?: string;
+      admin_area_2?: string;
+      admin_area_1?: string;
+      postal_code?: string;
+      country_code?: string;
+    };
+  };
+};
 
 const parseCheckoutEmailFromCustomId = (value: unknown): string | null => {
   if (typeof value !== 'string') return null;
@@ -9,14 +32,15 @@ const parseCheckoutEmailFromCustomId = (value: unknown): string | null => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
 };
 
-const getPayPalCapturedAmount = (purchaseUnit: {
-  amount?: { value?: unknown } | null;
-  payments?: {
-    captures?: Array<{
-      amount?: { value?: unknown } | null;
-    } | null> | null;
-  } | null;
-} | null | undefined): string | null => {
+const parseOriginalSlugFromReferenceId = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null;
+  const prefix = 'original_slug:';
+  if (!value.startsWith(prefix)) return null;
+  const slug = value.slice(prefix.length).trim();
+  return slug || null;
+};
+
+const getPayPalCapturedAmount = (purchaseUnit: PayPalPurchaseUnit | null | undefined): string | null => {
   const captureAmount = purchaseUnit?.payments?.captures?.find((capture) => {
     const value = capture?.amount?.value;
     return typeof value === 'string' || typeof value === 'number';
@@ -101,9 +125,18 @@ export async function POST(request: NextRequest) {
       // - Update your database
       // - Fulfill the order
       console.log('PayPal payment captured successfully:', captureData.id);
+      const purchaseUnit = captureData.purchase_units?.[0] as PayPalPurchaseUnit | undefined;
 
       try {
-        const purchaseUnit = captureData.purchase_units?.[0];
+        const soldResult = await markOriginalSoldBySlug(
+          parseOriginalSlugFromReferenceId(purchaseUnit?.reference_id)
+        );
+        console.log('PayPal original sold update:', soldResult);
+      } catch (soldError) {
+        console.error('Failed to mark PayPal original as sold:', soldError);
+      }
+
+      try {
         const shippingInfo = purchaseUnit?.shipping;
         const checkoutEmailFallback = parseCheckoutEmailFromCustomId(purchaseUnit?.custom_id);
         const amountDollars = getPayPalCapturedAmount(purchaseUnit);

@@ -46,6 +46,7 @@ NEXT_PUBLIC_PAYPAL_CLIENT_ID=your_paypal_client_id
 # Sanity CMS
 NEXT_PUBLIC_SANITY_PROJECT_ID=your_project_id
 NEXT_PUBLIC_SANITY_DATASET=production
+SANITY_WRITE_TOKEN=your_sanity_write_token
 
 # Kit Email List
 KIT_API_KEY=your_kit_api_key_here
