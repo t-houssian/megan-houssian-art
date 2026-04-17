@@ -13,6 +13,17 @@ type GalleryImage = {
   asset: { _ref: string };
 };
 
+function getImageDimensions(image?: GalleryImage) {
+  const match = image?.asset?._ref?.match(/-(\d+)x(\d+)-/);
+  const width = match ? Number(match[1]) : 1200;
+  const height = match ? Number(match[2]) : 1500;
+
+  return {
+    width: Number.isFinite(width) && width > 0 ? width : 1200,
+    height: Number.isFinite(height) && height > 0 ? height : 1500,
+  };
+}
+
 type ArtworkGalleryProps = {
   mainImage?: GalleryImage;
   gallery?: GalleryImage[];
@@ -27,6 +38,7 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   const selectedImage = images[selectedIndex];
+  const selectedDimensions = getImageDimensions(selectedImage);
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -131,19 +143,23 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
       {/* Modal for enlarged view */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
           onClick={closeModal}
-          onTouchStart={(event) => setTouchStartX(event.touches[0]?.clientX ?? null)}
-          onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
         >
-          <div className="relative w-full max-w-3xl h-full max-h-screen" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="relative inline-block"
+            onClick={(event) => event.stopPropagation()}
+            onTouchStart={(event) => setTouchStartX(event.touches[0]?.clientX ?? null)}
+            onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
+          >
             {selectedImage && (
               <Image
                 src={urlFor(selectedImage).width(2400).fit("max").quality(95).url()}
                 alt={`${title} enlarged image`}
-                fill
-                className="object-contain"
-                />
+                width={selectedDimensions.width}
+                height={selectedDimensions.height}
+                className="block h-auto max-h-[88vh] w-auto max-w-[92vw] object-contain"
+              />
             )}
             {/* Left and Right Navigation Arrows in modal */}
             <button
@@ -161,7 +177,9 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
             {/* Close Button */}
             <button
               onClick={closeModal}
-              className="absolute top-4 right-4 text-white text-2xl z-10"
+              className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center bg-ivory/90 text-2xl text-brown shadow-sm transition-colors duration-200 hover:bg-paper"
+              aria-label="Close enlarged image"
+              type="button"
             >
               ✕
             </button>

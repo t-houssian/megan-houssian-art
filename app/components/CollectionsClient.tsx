@@ -138,28 +138,34 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
 
       {/* Modal for enlarged image */}
       {selectedImage && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 z-50">
-          <div className="relative max-w-5xl w-full p-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
+          onClick={handleCloseModal}
+        >
+          <div
+            className="relative inline-block"
+            onClick={(event) => event.stopPropagation()}
+          >
             <button 
-              className="absolute top-4 right-4 z-50 flex h-10 w-10 items-center justify-center bg-ivory/90 text-brown focus:outline-none focus:ring-2 focus:ring-olive/50"
+              className="absolute right-3 top-3 z-50 flex h-10 w-10 items-center justify-center bg-ivory/90 text-brown shadow-sm transition-colors duration-200 hover:bg-paper focus:outline-none focus:ring-2 focus:ring-olive/50"
               onClick={handleCloseModal}
               aria-label="Close"
+              type="button"
             >
               <span className="sr-only">Close</span>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
                 <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
               </svg>
             </button>
-            <div className="relative w-full h-[85vh]">
-              {selectedImage.mainImage?.asset && (
-                <Image
-                  src={urlFor(selectedImage.mainImage).width(1800).fit('max').quality(95).url()}
-                  alt={selectedImage.title || 'Gallery image enlarged'}
-                  fill
-                  className="object-contain"
-                />
-              )}
-            </div>
+            {selectedImage.mainImage?.asset && (
+              <Image
+                src={urlFor(selectedImage.mainImage).width(1800).fit('max').quality(95).url()}
+                alt={selectedImage.title || 'Gallery image enlarged'}
+                width={getImageDimensions(selectedImage).width}
+                height={getImageDimensions(selectedImage).height}
+                className="block h-auto max-h-[88vh] w-auto max-w-[92vw] object-contain"
+              />
+            )}
           </div>
         </div>
       )}

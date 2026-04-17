@@ -16,7 +16,6 @@ export default function NavBar() {
   const originalsLinks = [
     { label: 'Originals', href: '/originals' },
     // { label: 'Prints', href: '/prints' },
-    // { label: 'Collections', href: '/originals/collections' },
   ];
 
   const closeMenus = () => {
