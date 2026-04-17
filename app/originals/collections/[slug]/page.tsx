@@ -74,12 +74,12 @@ export default async function OriginalCollectionPage({
   const backHref = sourcePath ?? '/originals/collections';
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-ivory via-paper to-accent-cream">
+    <section className="min-h-screen bg-ivory">
       <div className="max-w-7xl mx-auto py-12 px-6">
         <div className="mb-8">
           <Link
             href={backHref}
-            className={`group inline-flex items-center space-x-2 px-4 py-2 bg-white/60 backdrop-blur-sm border border-tan/30 text-brown rounded-lg hover:bg-olive/10 hover:border-olive/50 transition-all duration-300 ${lora.className}`}
+            className={`group inline-flex items-center space-x-2 text-brown hover:text-olive transition-colors duration-300 ${lora.className}`}
           >
             <svg className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
@@ -103,7 +103,7 @@ export default async function OriginalCollectionPage({
         </div>
 
         {collection.originals.length === 0 ? (
-          <div className="max-w-3xl mx-auto rounded-2xl border border-tan/30 bg-white/80 p-10 text-center shadow-vintage">
+          <div className="max-w-3xl mx-auto border-y border-tan/40 py-10 text-center">
             <h2 className={`${cormorant.className} text-3xl text-brown mb-3`}>No pieces are listed yet</h2>
             <p className={`${lora.className} text-warm-gray`}>
               Add originals to this collection in Sanity and they will appear here automatically.

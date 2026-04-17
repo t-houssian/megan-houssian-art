@@ -22,6 +22,17 @@ type PrintProduct = {
   soldOut?: boolean;
 };
 
+function getImageDimensions(image?: { asset: { _ref: string } }) {
+  const match = image?.asset?._ref?.match(/-(\d+)x(\d+)-/);
+  const width = match ? Number(match[1]) : 1200;
+  const height = match ? Number(match[2]) : 1500;
+
+  return {
+    width: Number.isFinite(width) && width > 0 ? width : 1200,
+    height: Number.isFinite(height) && height > 0 ? height : 1500,
+  };
+}
+
 async function fetchPrints(): Promise<PrintProduct[]> {
   const query = `
     *[_type == "print" && defined(slug.current)]{
@@ -39,7 +50,7 @@ export default async function PrintsPage() {
   const prints = await fetchPrints();
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-ivory via-paper to-accent-cream">
+    <section className="min-h-screen bg-ivory">
       <div className="max-w-7xl mx-auto py-16 px-6">
         <div className="text-center mb-12">
           <h1 className={`${cormorant.className} text-4xl md:text-5xl font-light mb-6 text-brown tracking-wide`}>
@@ -54,31 +65,31 @@ export default async function PrintsPage() {
               href={`/prints/${item.slug.current}`}
             >
               <div className="group cursor-pointer">
-                <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl overflow-hidden shadow-vintage hover:shadow-vintage-lg transition-all duration-500 transform hover:-translate-y-2">
+                <div>
                   {item.mainImage?.asset && (
-                    <div className="relative w-full h-80 overflow-hidden bg-paper">
+                    <div className="relative w-full overflow-hidden bg-ivory">
                       <Image
-                        src={urlFor(item.mainImage).width(600).height(600).url()}
+                        src={urlFor(item.mainImage).width(1200).fit('max').quality(92).url()}
                         alt={item.title}
-                        fill
-                        style={{ objectFit: 'cover' }}
-                        className="transition-transform duration-700 group-hover:scale-105"
+                        width={getImageDimensions(item.mainImage).width}
+                        height={getImageDimensions(item.mainImage).height}
+                        className="h-auto w-full object-contain"
+                        sizes="(min-width: 1280px) 28vw, (min-width: 640px) 44vw, 92vw"
                       />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
                       {item.soldOut && (
-                        <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
+                        <div className={`${lora.className} absolute left-0 top-0 bg-ivory/90 pr-4 pb-2 text-xs font-semibold uppercase tracking-[0.2em] text-warm-gray`}>
                           SOLD OUT
                         </div>
                       )}
                     </div>
                   )}
 
-                  <div className="p-6">
-                    <h2 className={`${cormorant.className} text-2xl font-medium mb-3 text-brown group-hover:text-olive transition-colors duration-300`}>
+                  <div className="pt-4">
+                    <h2 className={`${cormorant.className} text-2xl font-medium mb-3 text-brown`}>
                       {item.title}
                     </h2>
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-end justify-between gap-4">
                       <div>
                         <p className={`${lora.className} text-sm text-warm-gray mb-1`}>
                           Multiple print options available · Free shipping

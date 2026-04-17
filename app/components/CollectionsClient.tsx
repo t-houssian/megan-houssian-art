@@ -11,6 +11,17 @@ type CollectionsClientProps = {
   artPieces: ArtPiece[];
 };
 
+function getImageDimensions(piece: ArtPiece) {
+  const match = piece.mainImage?.asset?._ref?.match(/-(\d+)x(\d+)-/);
+  const width = match ? Number(match[1]) : 1200;
+  const height = match ? Number(match[2]) : 1200;
+
+  return {
+    width: Number.isFinite(width) && width > 0 ? width : 1200,
+    height: Number.isFinite(height) && height > 0 ? height : 1200,
+  };
+}
+
 export default function CollectionsClient({ artPieces }: CollectionsClientProps) {
   const [selectedImage, setSelectedImage] = useState<ArtPiece | null>(null);
   const PAGE_SIZE = 15;
@@ -72,22 +83,18 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
             return (
               <div 
                 key={piece._id} 
-                className={`group overflow-hidden rounded-sm shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer border border-tan bg-paper sm:col-span-2 ${positionClass}`}
+                className={`group cursor-pointer sm:col-span-2 ${positionClass}`}
                 onClick={() => handleImageClick(piece)}
               >
               {piece.mainImage?.asset && (
-                <div className="relative w-full aspect-square bg-paper">
-                  <Image
-                    src={urlFor(piece.mainImage).width(800).fit('max').url()}
-                    alt={piece.title || 'Gallery image'}
-                    fill
-                    style={{ 
-                      objectFit: 'contain',
-                      objectPosition: 'center'
-                    }}
-                    className="transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
+                <Image
+                  src={urlFor(piece.mainImage).width(900).fit('max').quality(92).url()}
+                  alt={piece.title || 'Gallery image'}
+                  width={getImageDimensions(piece).width}
+                  height={getImageDimensions(piece).height}
+                  className="h-auto w-full object-contain"
+                  sizes="(min-width: 1024px) 30vw, (min-width: 640px) 44vw, 92vw"
+                />
               )}
               {/* Title removed per request; images only */}
             </div>
@@ -107,8 +114,8 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
             type="button"
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className={`px-4 py-2 rounded-lg border text-sm ${lora.className} transition-colors
-                       ${currentPage === 1 ? 'border-tan/40 text-warm-gray/60 bg-white/40 cursor-not-allowed' : 'border-tan text-brown hover:bg-olive/10 hover:border-olive/60'}`}
+            className={`border-b px-2 py-1 text-sm ${lora.className} transition-colors
+                       ${currentPage === 1 ? 'border-tan/40 text-warm-gray/60 cursor-not-allowed' : 'border-tan text-brown hover:border-olive'}`}
             aria-label="Previous page"
           >
             ← Previous
@@ -120,8 +127,8 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
             type="button"
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded-lg border text-sm ${lora.className} transition-colors
-                       ${currentPage === totalPages ? 'border-tan/40 text-warm-gray/60 bg-white/40 cursor-not-allowed' : 'border-tan text-brown hover:bg-olive/10 hover:border-olive/60'}`}
+            className={`border-b px-2 py-1 text-sm ${lora.className} transition-colors
+                       ${currentPage === totalPages ? 'border-tan/40 text-warm-gray/60 cursor-not-allowed' : 'border-tan text-brown hover:border-olive'}`}
             aria-label="Next page"
           >
             Next →
@@ -132,11 +139,9 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
       {/* Modal for enlarged image */}
       {selectedImage && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 z-50">
-          <div className="relative max-w-3xl w-full p-4">
+          <div className="relative max-w-5xl w-full p-4">
             <button 
-              className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full flex items-center justify-center 
-                         bg-tan/80 text-brown hover:bg-tan focus:outline-none focus:ring-2 focus:ring-olive/50 
-                         transition-colors"
+              className="absolute top-4 right-4 z-50 flex h-10 w-10 items-center justify-center bg-ivory/90 text-brown focus:outline-none focus:ring-2 focus:ring-olive/50"
               onClick={handleCloseModal}
               aria-label="Close"
             >
@@ -145,21 +150,16 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
                 <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
               </svg>
             </button>
-            <div className="relative w-full h-[80vh] bg-paper rounded border border-tan">
+            <div className="relative w-full h-[85vh]">
               {selectedImage.mainImage?.asset && (
                 <Image
-                  src={urlFor(selectedImage.mainImage).width(1200).fit('max').url()}
+                  src={urlFor(selectedImage.mainImage).width(1800).fit('max').quality(95).url()}
                   alt={selectedImage.title || 'Gallery image enlarged'}
                   fill
-                  style={{ 
-                    objectFit: 'contain',
-                    objectPosition: 'center'
-                  }}
-                  className="rounded"
+                  className="object-contain"
                 />
               )}
             </div>
-            {/* Title removed per request */}
           </div>
         </div>
       )}

@@ -24,7 +24,7 @@ export default async function OriginalsGalleryPage({ sourcePath }: OriginalsGall
   ]);
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-ivory via-paper to-accent-cream">
+    <section className="min-h-screen bg-ivory">
       <div className="max-w-7xl mx-auto py-16 px-6">
         <div className="text-center mb-12">
           <p className={`${lora.className} text-sm uppercase tracking-[0.22em] text-olive mb-4`}>
@@ -42,7 +42,7 @@ export default async function OriginalsGalleryPage({ sourcePath }: OriginalsGall
         </div>
 
         {originals.length === 0 ? (
-          <div className="max-w-3xl mx-auto rounded-2xl border border-tan/30 bg-white/80 p-10 text-center shadow-vintage">
+          <div className="max-w-3xl mx-auto border-y border-tan/40 py-10 text-center">
             <h2 className={`${cormorant.className} text-3xl text-brown mb-3`}>No originals are listed yet</h2>
             <p className={`${lora.className} text-warm-gray`}>
               Add original artworks in Sanity and they will appear here automatically.

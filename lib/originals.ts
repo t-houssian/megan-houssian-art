@@ -26,6 +26,9 @@ export type OriginalArtworkSummary = {
   mainImage?: {
     asset: { _ref: string };
   };
+  hoverImage?: {
+    asset: { _ref: string };
+  };
   price?: number;
   sold?: boolean;
   testProduct?: boolean;
@@ -81,6 +84,7 @@ const ORIGINAL_SUMMARY_PROJECTION = `
   title,
   "slug": slug,
   mainImage,
+  "hoverImage": gallery[0],
   price,
   sold,
   testProduct,

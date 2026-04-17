@@ -49,7 +49,7 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
     <div className="space-y-6">
       {/* Main image */}
       <div
-        className="relative w-full cursor-pointer rounded-2xl bg-gradient-to-br from-paper via-white to-paper shadow-vintage overflow-hidden aspect-[4/5] sm:aspect-[3/4] lg:aspect-[4/5] min-h-[360px] sm:min-h-[420px] lg:min-h-[520px]"
+        className="relative w-full cursor-pointer overflow-hidden bg-ivory min-h-[420px] sm:min-h-[560px] lg:min-h-[720px]"
         onClick={openModal}
       >
         <div className="absolute inset-0">
@@ -64,9 +64,6 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
             />
           )}
         </div>
-        {selectedImage && (
-          <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-transparent to-black/5" />
-        )}
       </div>
 
       {/* Gallery navigation */}
@@ -74,7 +71,7 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
         <div className="flex justify-center gap-4">
           <button
             onClick={() => prevImage()}
-            className="inline-flex items-center gap-2 rounded-full border border-tan/50 bg-white/80 px-5 py-2 text-sm font-medium text-brown shadow-vintage hover:bg-olive/10 hover:border-olive/40 transition"
+            className="inline-flex items-center gap-2 border-b border-tan/70 px-2 py-1 text-sm font-medium text-brown hover:border-olive hover:text-olive transition"
             aria-label="Previous image"
             type="button"
           >
@@ -83,7 +80,7 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
           </button>
           <button
             onClick={() => nextImage()}
-            className="inline-flex items-center gap-2 rounded-full border border-tan/50 bg-white/80 px-5 py-2 text-sm font-medium text-brown shadow-vintage hover:bg-olive/10 hover:border-olive/40 transition"
+            className="inline-flex items-center gap-2 border-b border-tan/70 px-2 py-1 text-sm font-medium text-brown hover:border-olive hover:text-olive transition"
             aria-label="Next image"
             type="button"
           >
@@ -98,16 +95,16 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
         {images.map((img, index) => (
           <div
             key={index}
-            className={`relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 cursor-pointer rounded-xl border-2 transition ${
-              index === selectedIndex ? "border-olive shadow-vintage" : "border-tan/40"
-            } bg-white/80`}
+            className={`relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 cursor-pointer border-b-2 transition ${
+              index === selectedIndex ? "border-olive" : "border-transparent opacity-70 hover:opacity-100"
+            } bg-ivory`}
             onClick={() => setSelectedIndex(index)}
           >
             <Image
               src={urlFor(img).width(400).fit("max").quality(80).url()}
               alt={`${title} thumbnail ${index + 1}`}
               fill
-              className="object-contain p-2"
+              className="object-contain"
             />
           </div>
         ))}

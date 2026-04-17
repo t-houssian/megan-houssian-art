@@ -5,6 +5,10 @@ import type { OriginalArtworkSummary } from '../../lib/originals';
 import { urlFor } from '../../sanity/lib/image';
 import { cormorant, lora } from '../fonts';
 
+type SanityImage = {
+  asset: { _ref: string };
+};
+
 type OriginalArtworkCardProps = {
   item: OriginalArtworkSummary;
   detailHref: string;
@@ -19,29 +23,55 @@ function formatPrice(price?: number) {
   return formatCurrency(price);
 }
 
+function getImageDimensions(image?: SanityImage) {
+  const match = image?.asset?._ref?.match(/-(\d+)x(\d+)-/);
+  const width = match ? Number(match[1]) : 1200;
+  const height = match ? Number(match[2]) : 1500;
+
+  return {
+    width: Number.isFinite(width) && width > 0 ? width : 1200,
+    height: Number.isFinite(height) && height > 0 ? height : 1500,
+  };
+}
+
 export default function OriginalArtworkCard({
   item,
   detailHref,
   collectionHref,
 }: OriginalArtworkCardProps) {
   const collections = item.collections ?? [];
+  const mainDimensions = getImageDimensions(item.mainImage);
+  const hoverImage = item.hoverImage?.asset ? item.hoverImage : null;
 
   return (
     <article className="group h-full">
-      <div className="h-full bg-white/80 backdrop-blur-sm border border-tan/30 overflow-hidden shadow-vintage hover:shadow-vintage-lg transition-all duration-500 transform hover:-translate-y-2">
+      <div className="h-full">
         {item.mainImage?.asset && (
           <Link href={detailHref} className="block">
-            <div className="relative w-full h-80 overflow-hidden bg-paper">
+            <div
+              className="relative w-full overflow-hidden bg-ivory"
+              style={{ aspectRatio: `${mainDimensions.width} / ${mainDimensions.height}` }}
+            >
               <Image
-                src={urlFor(item.mainImage).width(900).height(1100).fit('crop').url()}
+                src={urlFor(item.mainImage).width(1200).fit('max').quality(92).url()}
                 alt={item.title}
                 fill
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                className={`object-contain transition-opacity duration-300 ${
+                  hoverImage ? 'md:group-hover:opacity-0' : ''
+                }`}
                 sizes="(min-width: 1280px) 28vw, (min-width: 640px) 44vw, 92vw"
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+              {hoverImage && (
+                <Image
+                  src={urlFor(hoverImage).width(1200).fit('max').quality(92).url()}
+                  alt={`${item.title} alternate view`}
+                  fill
+                  className="hidden object-contain opacity-0 transition-opacity duration-300 md:block md:group-hover:opacity-100"
+                  sizes="(min-width: 1280px) 28vw, (min-width: 640px) 44vw, 92vw"
+                />
+              )}
               {item.sold && (
-                <div className="absolute top-4 left-4 rounded-full bg-paper/95 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-brown shadow-vintage">
+                <div className={`${lora.className} absolute left-0 top-0 bg-ivory/90 pr-4 pb-2 text-xs font-semibold uppercase tracking-[0.2em] text-warm-gray`}>
                   Sold
                 </div>
               )}
@@ -49,9 +79,9 @@ export default function OriginalArtworkCard({
           </Link>
         )}
 
-        <div className="flex h-[calc(100%-20rem)] min-h-56 flex-col p-6">
+        <div className="flex min-h-36 flex-col pt-4">
           <Link href={detailHref} className="block">
-            <h2 className={`${cormorant.className} text-2xl font-medium mb-3 text-brown group-hover:text-olive transition-colors duration-300`}>
+            <h2 className={`${cormorant.className} text-2xl font-medium mb-3 text-brown`}>
               {item.title}
             </h2>
           </Link>
@@ -66,7 +96,7 @@ export default function OriginalArtworkCard({
                   <Link
                     key={collection._id}
                     href={collectionHref(collection.slug.current)}
-                    className={`${lora.className} text-sm font-medium text-olive underline underline-offset-4 hover:text-brown transition-colors duration-200`}
+                    className={`${lora.className} text-sm font-medium text-olive underline underline-offset-4`}
                   >
                     {collection.title}
                   </Link>

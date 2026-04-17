@@ -33,15 +33,15 @@ type AccordionSectionProps = {
 // Accordion Component
 function AccordionSection({ title, isOpen, onToggle, children, badge }: AccordionSectionProps) {
   return (
-    <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl overflow-hidden shadow-vintage hover:shadow-vintage-lg transition-all duration-300">
+    <div className="border-t border-tan/40">
       <button
         onClick={onToggle}
-        className="w-full p-8 text-left flex items-center justify-between hover:bg-accent-cream/30 transition-all duration-300"
+        className="w-full py-6 text-left flex items-center justify-between"
       >
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <h3 className={`${cormorant.className} text-2xl font-medium text-brown`}>{title}</h3>
           {badge && (
-            <span className="px-4 py-1 bg-olive/10 text-olive text-sm rounded-full border border-olive/20 font-medium">
+            <span className="text-sm font-medium text-olive">
               {badge}
             </span>
           )}
@@ -55,7 +55,7 @@ function AccordionSection({ title, isOpen, onToggle, children, badge }: Accordio
       <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
         isOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
       }`}>
-        <div className="px-8 pb-8 border-t border-tan/20">
+        <div className="pb-8">
           {children}
         </div>
       </div>
@@ -216,9 +216,9 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
   // Critical error fallback
   if (criticalError) {
     return (
-      <section className="min-h-screen bg-gradient-to-br from-ivory via-paper to-accent-cream py-16 px-6">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white/90 backdrop-blur-sm border border-tan/30 rounded-2xl p-12 shadow-vintage-lg text-center">
+      <section className="bg-ivory py-8">
+        <div className="max-w-2xl">
+          <div className="border-y border-tan/40 py-10 text-center">
             <div className="text-red-600 mb-6">
               <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 14.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -235,7 +235,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                 setCriticalError(null);
                 window.location.reload();
               }}
-              className={`${lora.className} px-8 py-3 bg-btn-brown text-paper rounded-xl hover:bg-btn-brown-hover transition-colors duration-300 shadow-vintage`}
+              className={`${lora.className} border border-btn-brown bg-btn-brown px-8 py-3 text-paper transition-colors duration-300 hover:bg-btn-brown-hover`}
             >
               Retry
             </button>
@@ -247,10 +247,10 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
 
   if (successMessage) {
     return (
-      <section className="min-h-screen bg-gradient-to-br from-ivory via-paper to-accent-cream py-16 px-6">
-        <div className="max-w-3xl mx-auto">
-          <div className="bg-white/90 backdrop-blur-sm border border-tan/30 rounded-2xl p-12 shadow-vintage-lg text-center">
-            <div className="w-24 h-24 bg-gradient-to-r from-btn-brown to-btn-brown-hover rounded-full flex items-center justify-center mx-auto mb-8">
+      <section className="bg-ivory py-8">
+        <div className="max-w-3xl">
+          <div className="border-y border-tan/40 py-10 text-center">
+            <div className="mx-auto mb-8 flex h-16 w-16 items-center justify-center border border-btn-brown bg-btn-brown">
               <svg className="w-12 h-12 text-paper" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
               </svg>
@@ -258,7 +258,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
             <h1 className={`${cormorant.className} text-4xl md:text-5xl font-light text-brown mb-8 tracking-wide`}>
               Order Submitted Successfully!
             </h1>
-            <div className="bg-accent-cream/60 rounded-2xl p-8 mb-8 border border-tan/20">
+            <div className="mb-8 border-y border-tan/40 py-6">
               <p className={`${lora.className} text-brown font-medium text-lg mb-2`}>{successMessage}</p>
             </div>
             <p className={`${lora.className} text-warm-gray leading-relaxed text-lg mb-8`}>
@@ -276,7 +276,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
   }
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-ivory via-paper to-accent-cream py-16 px-6 relative">
+    <section className="bg-ivory relative">
       {/* Custom styles for enhanced dropdowns */}
       <style jsx global>{`
         select {
@@ -343,14 +343,14 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
         }
       `}</style>
       
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl">
         {isLoading ? (
-          <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-16 shadow-vintage-lg text-center">
+          <div className="border-y border-tan/40 py-10 text-center">
             <div className="animate-spin h-12 w-12 border-b-2 border-btn-brown mx-auto mb-6"></div>
             <p className={`${lora.className} text-warm-gray text-lg`}>Loading print options...</p>
           </div>
         ) : errorMessage && Object.keys(printOptions).length === 0 ? (
-          <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-16 shadow-vintage-lg text-center">
+          <div className="border-y border-tan/40 py-10 text-center">
             <div className="text-red-600 mb-4">
               <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 14.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -364,7 +364,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
             </p>
             <button 
               onClick={() => window.location.reload()}
-              className={`${lora.className} px-8 py-3 bg-btn-brown text-paper rounded-xl hover:bg-btn-brown-hover transition-colors duration-300 shadow-vintage`}
+              className={`${lora.className} border border-btn-brown bg-btn-brown px-8 py-3 text-paper transition-colors duration-300 hover:bg-btn-brown-hover`}
             >
               Retry
             </button>
@@ -405,7 +405,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                           customer: true
                         }));
                       }}
-                      className={`${lora.className} focus-ring w-full px-5 py-4 border border-tan/50 rounded-xl focus:border-btn-brown focus:ring-2 focus:ring-btn-brown/20 bg-white/95 backdrop-blur-sm transition-all duration-300 text-brown appearance-none cursor-pointer shadow-sm hover:shadow-md`}
+                      className={`${lora.className} focus-ring w-full border-0 border-b border-tan/60 bg-transparent px-0 py-4 text-brown transition-all duration-300 focus:border-btn-brown focus:ring-0 appearance-none cursor-pointer`}
                       style={{ minHeight: '56px' }}
                     >
                       <option value="" disabled>Select a print type...</option>
@@ -425,7 +425,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                   
                   {/* Display selected print description */}
                   {selectedProduct && printOptions[selectedProduct] && (
-                    <div className="mt-4 p-4 bg-accent-cream/30 rounded-xl border border-tan/20">
+                    <div className="mt-4 border-l border-tan/60 pl-4">
                       <p className={`${lora.className} text-warm-gray leading-relaxed text-sm`}>
                         {printOptions[selectedProduct].description}
                       </p>
@@ -438,7 +438,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <label className={`${lora.className} text-brown font-semibold text-lg`}>Size & Price</label>
-                      <span className={`${lora.className} text-warm-gray text-sm bg-accent-cream/50 px-3 py-1 rounded-full`}>
+                      <span className={`${lora.className} text-warm-gray text-sm`}>
                         {printOptions[selectedProduct]?.sizes.length} sizes available
                       </span>
                     </div>
@@ -446,7 +446,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                       <select
                         value={selectedSize}
                         onChange={(e) => setSelectedSize(e.target.value)}
-                        className={`${lora.className} focus-ring w-full px-5 py-4 border border-tan/50 rounded-xl focus:border-btn-brown focus:ring-2 focus:ring-btn-brown/20 bg-white/95 backdrop-blur-sm transition-all duration-300 text-brown appearance-none cursor-pointer shadow-sm hover:shadow-md`}
+                        className={`${lora.className} focus-ring w-full border-0 border-b border-tan/60 bg-transparent px-0 py-4 text-brown transition-all duration-300 focus:border-btn-brown focus:ring-0 appearance-none cursor-pointer`}
                         style={{ minHeight: '56px' }}
                       >
                         <option value="" disabled>Select a size...</option>
@@ -466,7 +466,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                     
                     {/* Display selected size details with enhanced visual */}
                     {selectedSize && (
-                      <div className="mt-4 p-6 bg-gradient-to-r from-btn-brown/5 to-tan/5 rounded-xl border border-btn-brown/20 backdrop-blur-sm">
+                      <div className="mt-4 border-y border-tan/40 py-5">
                         <div className="flex justify-between items-center">
                           <div>
                             <span className={`${lora.className} text-brown font-medium block`}>
@@ -514,14 +514,14 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                         setOpenSections(prev => ({...prev, shipping: true}));
                       }
                     }}
-                    className={`${lora.className} focus-ring w-full px-5 py-4 border border-tan/50 rounded-xl focus:border-btn-brown focus:ring-2 focus:ring-btn-brown/20 bg-white/95 backdrop-blur-sm transition-all duration-300 text-brown placeholder-warm-gray shadow-sm hover:shadow-md`}
+                    className={`${lora.className} focus-ring w-full border-0 border-b border-tan/60 bg-transparent px-0 py-4 text-brown placeholder-warm-gray transition-all duration-300 focus:border-btn-brown focus:ring-0`}
                   />
                   <input
                     type="email"
                     placeholder="Email Address *"
                     value={customerInfo.email}
                     onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})}
-                    className={`${lora.className} focus-ring w-full px-5 py-4 border border-tan/50 rounded-xl focus:border-btn-brown focus:ring-2 focus:ring-btn-brown/20 bg-white/95 backdrop-blur-sm transition-all duration-300 text-brown placeholder-warm-gray shadow-sm hover:shadow-md`}
+                    className={`${lora.className} focus-ring w-full border-0 border-b border-tan/60 bg-transparent px-0 py-4 text-brown placeholder-warm-gray transition-all duration-300 focus:border-btn-brown focus:ring-0`}
                   />
                 </div>
                 <input
@@ -529,7 +529,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                   placeholder="Phone Number (optional)"
                   value={customerInfo.phone}
                   onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
-                  className={`${lora.className} focus-ring w-full px-5 py-4 border border-tan/50 rounded-xl focus:border-btn-brown focus:ring-2 focus:ring-btn-brown/20 bg-white/95 backdrop-blur-sm transition-all duration-300 text-brown placeholder-warm-gray shadow-sm hover:shadow-md`}
+                  className={`${lora.className} focus-ring w-full border-0 border-b border-tan/60 bg-transparent px-0 py-4 text-brown placeholder-warm-gray transition-all duration-300 focus:border-btn-brown focus:ring-0`}
                 />
               </div>
             </AccordionSection>
@@ -553,7 +553,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                       setOpenSections(prev => ({...prev, summary: true}));
                     }
                   }}
-                  className={`${lora.className} w-full px-5 py-4 border border-tan/50 rounded-xl focus:border-btn-brown focus:ring-2 focus:ring-btn-brown/20 bg-white/90 transition-all duration-300 text-brown placeholder-warm-gray`}
+                  className={`${lora.className} w-full border-0 border-b border-tan/60 bg-transparent px-0 py-4 text-brown placeholder-warm-gray transition-all duration-300 focus:border-btn-brown focus:ring-0`}
                 />
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <input
@@ -561,26 +561,26 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                     placeholder="City *"
                     value={shippingAddress.city}
                     onChange={(e) => setShippingAddress({...shippingAddress, city: e.target.value})}
-                    className={`${lora.className} w-full px-5 py-4 border border-tan/50 rounded-xl focus:border-btn-brown focus:ring-2 focus:ring-btn-brown/20 bg-white/90 transition-all duration-300 text-brown placeholder-warm-gray`}
+                    className={`${lora.className} w-full border-0 border-b border-tan/60 bg-transparent px-0 py-4 text-brown placeholder-warm-gray transition-all duration-300 focus:border-btn-brown focus:ring-0`}
                   />
                   <input
                     type="text"
                     placeholder="State *"
                     value={shippingAddress.state}
                     onChange={(e) => setShippingAddress({...shippingAddress, state: e.target.value})}
-                    className={`${lora.className} w-full px-5 py-4 border border-tan/50 rounded-xl focus:border-btn-brown focus:ring-2 focus:ring-btn-brown/20 bg-white/90 transition-all duration-300 text-brown placeholder-warm-gray`}
+                    className={`${lora.className} w-full border-0 border-b border-tan/60 bg-transparent px-0 py-4 text-brown placeholder-warm-gray transition-all duration-300 focus:border-btn-brown focus:ring-0`}
                   />
                   <input
                     type="text"
                     placeholder="ZIP Code *"
                     value={shippingAddress.zip}
                     onChange={(e) => setShippingAddress({...shippingAddress, zip: e.target.value})}
-                    className={`${lora.className} w-full px-5 py-4 border border-tan/50 rounded-xl focus:border-btn-brown focus:ring-2 focus:ring-btn-brown/20 bg-white/90 transition-all duration-300 text-brown placeholder-warm-gray`}
+                    className={`${lora.className} w-full border-0 border-b border-tan/60 bg-transparent px-0 py-4 text-brown placeholder-warm-gray transition-all duration-300 focus:border-btn-brown focus:ring-0`}
                   />
                   <select
                     value={shippingAddress.country}
                     onChange={(e) => setShippingAddress({...shippingAddress, country: e.target.value})}
-                    className={`${lora.className} w-full px-5 py-4 border border-tan/50 rounded-xl focus:border-btn-brown focus:ring-2 focus:ring-btn-brown/20 bg-white/90 transition-all duration-300 text-brown`}
+                    className={`${lora.className} w-full border-0 border-b border-tan/60 bg-transparent px-0 py-4 text-brown transition-all duration-300 focus:border-btn-brown focus:ring-0`}
                   >
                     <option value="US">United States</option>
                     <option value="CA">Canada</option>
@@ -599,7 +599,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
               <div className="pt-6">
                 {/* Error Message */}
                 {errorMessage && (
-                  <div className="bg-red-50 border-l-4 border-red-400 p-6 mb-8 rounded-r-xl">
+                  <div className="border-l-2 border-red-400 pl-4 mb-8">
                     <div className="flex">
                       <div className="flex-shrink-0">
                         <svg className="h-6 w-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
@@ -613,7 +613,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                   </div>
                 )}
 
-                <div className="bg-accent-cream/40 rounded-2xl p-8 border border-tan/30">
+                <div className="border-y border-tan/40 py-6">
                   <div className="flex justify-between items-start mb-8">
                     <div>
                       <h4 className={`${cormorant.className} text-2xl font-medium text-brown mb-2`}>
@@ -636,7 +636,7 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                   <button
                     onClick={handleSubmitOrder}
                     disabled={isSubmitting || !selectedProduct || !selectedSize || !customerInfo.name || !customerInfo.email || !shippingAddress.street}
-                    className={`w-full bg-gradient-to-r from-btn-brown to-btn-brown-hover text-accent-cream px-8 py-4 rounded-lg hover:from-btn-brown-hover hover:to-brown transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed font-serif text-lg shadow-vintage hover:shadow-vintage-lg transform hover:-translate-y-1 border border-opacity-20 border-paper relative overflow-hidden group ${lora.className}`}
+                    className={`w-full border border-btn-brown bg-btn-brown px-8 py-4 text-accent-cream transition-colors duration-300 hover:bg-btn-brown-hover disabled:cursor-not-allowed disabled:opacity-50 ${lora.className} text-lg font-medium`}
                   >
                     <span className="relative z-10">
                       {isSubmitting ? (
@@ -651,7 +651,6 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                         `Order Print - ${formatRoundedDollars(getSelectedPrice())}`
                       )}
                     </span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-paper to-transparent opacity-0 group-hover:opacity-10 transform -skew-x-12 group-hover:translate-x-full transition-all duration-700"></div>
                   </button>
                 </div>
               </div>

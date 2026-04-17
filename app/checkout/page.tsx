@@ -311,34 +311,30 @@ const CheckoutContent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ivory via-paper to-accent-cream">
-      <div className="max-w-4xl mx-auto py-12 px-6">
+    <div className="min-h-screen bg-ivory">
+      <div className="max-w-6xl mx-auto py-12 px-6">
         {/* Elegant Header */}
         <div className="text-center mb-12">
           <h1 className={`${cormorant.className} text-4xl md:text-5xl font-light text-brown mb-4 tracking-wide`}>
             Complete Your Purchase
           </h1>
-          <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-olive to-transparent mx-auto mb-6"></div>
+          <div className="w-24 h-px bg-olive/70 mx-auto mb-6"></div>
           <p className={`${lora.className} text-lg text-warm-gray max-w-2xl mx-auto leading-relaxed`}>
             Acquiring <span className="italic font-medium text-brown">&ldquo;{product}&rdquo;</span> - A unique piece from the curated collection
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-12 lg:gap-16">
           {/* Left Column - Order Details */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="space-y-10">
             {/* Delivery Options */}
-            <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
+            <section className="border-t border-tan/40 pt-8">
               <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown flex items-center`}>
                 Delivery Method
               </h2>
-              <div className="space-y-4">
+              <div className="border-b border-tan/40">
                 <label className="group cursor-pointer block">
-                  <div className={`border-2 rounded-xl p-6 transition-all duration-300 ${
-                    shippingOption === "shipping" 
-                      ? "border-olive bg-olive/5 shadow-md" 
-                      : "border-tan/50 hover:border-olive/50 hover:bg-olive/2"
-                  }`}>
+                  <div className="border-t border-tan/40 py-5 transition-colors duration-300 hover:text-olive">
                     <div className="flex items-start">
                       <input
                         type="radio"
@@ -362,11 +358,7 @@ const CheckoutContent = () => {
                 </label>
                 
                 <label className="group cursor-pointer block">
-                  <div className={`border-2 rounded-xl p-6 transition-all duration-300 ${
-                    shippingOption === "pickup" 
-                      ? "border-olive bg-olive/5 shadow-md" 
-                      : "border-tan/50 hover:border-olive/50 hover:bg-olive/2"
-                  }`}>
+                  <div className="border-t border-tan/40 py-5 transition-colors duration-300 hover:text-olive">
                     <div className="flex items-start">
                       <input
                         type="radio"
@@ -389,11 +381,11 @@ const CheckoutContent = () => {
                   </div>
                 </label>
               </div>
-            </div>
+            </section>
 
             {/* Address Section */}
             {shippingOption === "shipping" ? (
-              <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
+              <section className="border-t border-tan/40 pt-8">
                 <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown flex items-center`}>
                   Delivery Address
                 </h2>
@@ -401,9 +393,9 @@ const CheckoutContent = () => {
                 <FreeAddressValidator
                   currentAddress={shippingAddress}
                   onAddressChange={handleShippingAddressChange}
-                  className="block w-full rounded-lg border border-tan/50 bg-white/90 px-4 py-3 text-brown placeholder-warm-gray/60 focus:border-olive focus:ring-2 focus:ring-olive/20 transition-all duration-200"
+                  className="block w-full border-0 border-b border-tan/60 bg-transparent px-0 py-3 text-brown placeholder-warm-gray/60 focus:border-olive focus:outline-none focus:ring-0 transition-all duration-200"
                 />
-                <div className="mt-6 bg-olive/5 rounded-lg p-4 border border-tan/30">
+                <div className="mt-6 border-t border-tan/40 pt-4">
                   <div className="flex justify-between items-center mb-2">
                     <span className={`${lora.className} font-medium text-brown`}>Shipping</span>
                     <span className={`${lora.className} font-medium text-olive`}>Free</span>
@@ -412,14 +404,14 @@ const CheckoutContent = () => {
                     Free shipping is included. Please allow about 2 weeks to package and ship your artwork.
                   </p>
                 </div>
-              </div>
+              </section>
             ) : (
-              <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
+              <section className="border-t border-tan/40 pt-8">
                 <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown flex items-center`}>
                   Gallery Appointment Details
                 </h2>
-                <div className="bg-gradient-to-r from-accent-cream to-paper rounded-xl p-6 border border-tan/30">
-                  <div className="space-y-4">
+                <div>
+                  <div className="space-y-4 border-y border-tan/40 py-5">
                     <div className="flex items-start space-x-3">
                       <div>
                         <h4 className="font-medium text-brown">Gallery Location</h4>
@@ -439,17 +431,17 @@ const CheckoutContent = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="mt-6 p-3 bg-olive/10 rounded-lg">
+                  <div className="mt-5">
                     <p className="text-sm text-olive font-medium">
                       Your billing information will be collected securely during checkout
                     </p>
                   </div>
                 </div>
-              </div>
+              </section>
             )}
 
             {/* Payment Method */}
-            <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
+            <section className="border-t border-tan/40 pt-8">
               <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown flex items-center`}>
                 Payment Method
               </h2>
@@ -464,7 +456,7 @@ const CheckoutContent = () => {
                   value={checkoutEmail}
                   onChange={(event) => setCheckoutEmail(event.target.value)}
                   placeholder="you@example.com"
-                  className="block w-full rounded-lg border border-tan/50 bg-white/90 px-4 py-3 text-brown placeholder-warm-gray/60 focus:border-olive focus:ring-2 focus:ring-olive/20 transition-all duration-200"
+                  className="block w-full border-0 border-b border-tan/60 bg-transparent px-0 py-3 text-brown placeholder-warm-gray/60 focus:border-olive focus:outline-none focus:ring-0 transition-all duration-200"
                   required
                 />
                 <p className="mt-2 text-sm text-warm-gray">
@@ -472,13 +464,9 @@ const CheckoutContent = () => {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                <label className="group cursor-pointer">
-                  <div className={`border-2 rounded-xl p-6 transition-all duration-300 ${
-                    paymentMethod === "stripe" 
-                      ? "border-olive bg-olive/5 shadow-md" 
-                      : "border-tan/50 hover:border-olive/50 hover:bg-olive/2"
-                  }`}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 mb-8 border-y border-tan/40">
+                <label className="group cursor-pointer block border-b border-tan/40 py-5 sm:border-b-0">
+                  <div>
                     <div className="flex items-center">
                       <input
                         type="radio"
@@ -493,12 +481,8 @@ const CheckoutContent = () => {
                     </div>
                   </div>
                 </label>
-                <label className="group cursor-pointer">
-                  <div className={`border-2 rounded-xl p-6 transition-all duration-300 ${
-                    paymentMethod === "paypal" 
-                      ? "border-olive bg-olive/5 shadow-md" 
-                      : "border-tan/50 hover:border-olive/50 hover:bg-olive/2"
-                  }`}>
+                <label className="group cursor-pointer block py-5">
+                  <div>
                     <div className="flex items-center">
                       <input
                         type="radio"
@@ -517,7 +501,7 @@ const CheckoutContent = () => {
 
               {/* Error Messages */}
               {errorMessage && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                <div className="mb-6 border-l-2 border-red-500 pl-4">
                   <p className="text-red-700 text-sm">{errorMessage}</p>
                 </div>
               )}
@@ -527,12 +511,12 @@ const CheckoutContent = () => {
                 <button
                   onClick={handleStripeCheckout}
                   disabled={isProcessing}
-                  className={`w-full bg-gradient-to-r from-brown to-warm-gray text-ivory px-8 py-4 rounded-xl hover:from-warm-gray hover:to-brown transition-all duration-500 text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none border border-opacity-20 border-white relative overflow-hidden group ${lora.className} font-medium`}
+                  className={`w-full border border-btn-brown bg-btn-brown px-8 py-4 text-lg text-paper transition-colors duration-300 hover:bg-btn-brown-hover disabled:cursor-not-allowed disabled:opacity-60 ${lora.className} font-medium`}
                 >
-                  <span className="relative z-10 flex items-center justify-center text-ivory">
+                  <span className="flex items-center justify-center text-paper">
                     {isProcessing ? (
                       <>
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-ivory" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-paper" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
@@ -540,12 +524,11 @@ const CheckoutContent = () => {
                       </>
                     ) : "Continue with Stripe/Card"}
                   </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 transform -skew-x-12 group-hover:translate-x-full transition-all duration-700"></div>
                 </button>
               ) : (
                 <div>
                   {!process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ? (
-                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <div className="border-l-2 border-amber-500 pl-4">
                       <p className="text-amber-700 text-sm">PayPal payment is temporarily unavailable. Please use card payment or contact support.</p>
                     </div>
                   ) : (
@@ -588,12 +571,12 @@ const CheckoutContent = () => {
                   )}
                 </div>
               )}
-            </div>
+            </section>
           </div>
 
           {/* Right Column - Order Summary */}
-          <div className="lg:col-span-1">
-            <div className="bg-white/90 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg sticky top-8">
+          <div>
+            <aside className="sticky top-8 border-t border-tan/40 pt-8">
               <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown`}>Order Summary</h2>
               
               <div className="space-y-4 mb-6">
@@ -615,7 +598,7 @@ const CheckoutContent = () => {
                 )}
               </div>
               
-              <div className="bg-gradient-to-r from-olive/10 to-brown/10 rounded-xl p-4 mb-6">
+              <div className="border-y border-tan/40 py-4 mb-6">
                 <div className="flex justify-between items-center">
                   <span className={`${cormorant.className} text-xl font-medium text-brown`}>Total</span>
                   <span className={`${cormorant.className} text-2xl font-bold text-brown`}>{formatCurrencyFromCents(totalPrice)}</span>
@@ -627,7 +610,7 @@ const CheckoutContent = () => {
                   Secure payment processing. Your information is protected with industry-standard encryption.
                 </p>
               </div>
-            </div>
+            </aside>
           </div>
         </div>
       </div>

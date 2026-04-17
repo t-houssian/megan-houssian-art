@@ -21,6 +21,17 @@ type PrintProduct = {
   description?: string;
 };
 
+function getImageDimensions(image?: { asset: { _ref: string } }) {
+  const match = image?.asset?._ref?.match(/-(\d+)x(\d+)-/);
+  const width = match ? Number(match[1]) : 1200;
+  const height = match ? Number(match[2]) : 1500;
+
+  return {
+    width: Number.isFinite(width) && width > 0 ? width : 1200,
+    height: Number.isFinite(height) && height > 0 ? height : 1500,
+  };
+}
+
 async function fetchPrintBySlug(slug: string): Promise<PrintProduct | null> {
   const query = `
     *[_type == "print" && slug.current == $slug][0]{
@@ -49,39 +60,35 @@ export default async function PrintDetailPage({ params }: PageProps) {
   }
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-ivory via-paper to-accent-cream">
-      <div className="max-w-6xl mx-auto py-16 px-6">
+    <section className="min-h-screen bg-ivory">
+      <div className="max-w-7xl mx-auto py-16 px-6">
         {/* Back to Print Shop Button */}
         <div className="mb-8">
-          <Link href="/prints">
-            <button className={`flex items-center space-x-2 px-6 py-3 bg-white/80 border border-tan/50 text-brown rounded-lg hover:bg-olive/5 hover:border-olive transition-all duration-200 ${lora.className}`}>
+          <Link href="/prints" className={`inline-flex items-center space-x-2 text-brown hover:text-olive transition-colors duration-300 ${lora.className}`}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
               </svg>
               <span>Back to Print Shop</span>
-            </button>
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)] gap-12 lg:gap-16">
           {/* Artwork Image */}
           {printItem.mainImage?.asset && (
-            <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl overflow-hidden shadow-vintage-lg">
-              <div className="relative w-full h-96 lg:h-[600px]">
-                <Image
-                  src={urlFor(printItem.mainImage).width(800).height(800).url()}
-                  alt={printItem.title}
-                  fill
-                  style={{ objectFit: "cover" }}
-                  className="transition-transform duration-300 hover:scale-105"
-                />
-              </div>
-            </div>
+            <Image
+              src={urlFor(printItem.mainImage).width(1600).fit("max").quality(92).url()}
+              alt={printItem.title}
+              width={getImageDimensions(printItem.mainImage).width}
+              height={getImageDimensions(printItem.mainImage).height}
+              className="h-auto w-full object-contain"
+              sizes="(min-width: 1280px) 48vw, (min-width: 1024px) 55vw, 92vw"
+              priority
+            />
           )}
 
           {/* Print Details and Ordering */}
-          <div className="space-y-8">
-            <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
+          <div className="space-y-10 lg:pt-12">
+            <div>
               <h1 className={`${cormorant.className} text-4xl font-light mb-4 text-brown tracking-wide`}>
                 {printItem.title}
               </h1>
@@ -92,7 +99,7 @@ export default async function PrintDetailPage({ params }: PageProps) {
                 </div>
               )}
 
-              <div className="border-t border-tan/30 pt-6">
+              <div className="border-t border-tan/40 pt-6">
                 <h3 className={`${cormorant.className} text-xl font-medium text-brown mb-3`}>
                   Professional Print Services by Luma Labs
                 </h3>
@@ -105,7 +112,7 @@ export default async function PrintDetailPage({ params }: PageProps) {
 
             {/* Luma Labs Purchase Section */}
             {printItem.soldOut ? (
-              <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg text-center">
+              <div className="border-y border-tan/50 py-5 text-center">
                 <span className={`${lora.className} text-red-600 font-medium text-lg`}>
                   This print is currently unavailable
                 </span>

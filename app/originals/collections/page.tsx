@@ -19,12 +19,12 @@ export default async function OriginalsCollectionsPage() {
   const collections = await fetchOriginalCollections();
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-ivory via-paper to-accent-cream">
+    <section className="min-h-screen bg-ivory">
       <div className="max-w-6xl mx-auto py-16 px-6">
         <div className="mb-8">
           <Link
             href="/originals"
-            className={`group inline-flex items-center space-x-2 px-4 py-2 bg-white/60 backdrop-blur-sm border border-tan/30 text-brown rounded-lg hover:bg-olive/10 hover:border-olive/50 transition-all duration-300 ${lora.className}`}
+            className={`group inline-flex items-center space-x-2 text-brown hover:text-olive transition-colors duration-300 ${lora.className}`}
           >
             <svg className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
@@ -43,7 +43,7 @@ export default async function OriginalsCollectionsPage() {
         </div>
 
         {collections.length === 0 ? (
-          <div className="max-w-3xl mx-auto rounded-2xl border border-tan/30 bg-white/80 p-10 text-center shadow-vintage">
+          <div className="max-w-3xl mx-auto border-y border-tan/40 py-10 text-center">
             <h2 className={`${cormorant.className} text-3xl text-brown mb-3`}>No collections are listed yet</h2>
             <p className={`${lora.className} text-warm-gray`}>
               Add original collections in Sanity and they will appear here automatically.
@@ -55,23 +55,23 @@ export default async function OriginalsCollectionsPage() {
               <Link
                 key={collection._id}
                 href={`/originals/collections/${collection.slug.current}`}
-                className="group block overflow-hidden border border-tan/30 bg-white/80 shadow-vintage hover:shadow-vintage-lg transition-all duration-300 hover:-translate-y-1"
+                className="group block"
               >
                 {collection.sampleOriginals && collection.sampleOriginals.length > 0 && (
-                  <div className="grid h-52 grid-cols-4 grid-rows-2 gap-1 bg-paper">
+                  <div className="grid h-52 grid-cols-4 grid-rows-2 gap-3 bg-ivory">
                     {collection.sampleOriginals.map((sample, index) => (
                       <div
                         key={sample._id}
-                        className={`relative overflow-hidden ${
+                        className={`relative overflow-hidden bg-ivory ${
                           index === 0 ? 'col-span-2 row-span-2' : 'col-span-1 row-span-1'
                         }`}
                       >
                         {sample.mainImage?.asset && (
                           <Image
-                            src={urlFor(sample.mainImage).width(index === 0 ? 640 : 320).height(index === 0 ? 520 : 260).fit('crop').url()}
+                            src={urlFor(sample.mainImage).width(index === 0 ? 640 : 320).fit('max').quality(90).url()}
                             alt={sample.title}
                             fill
-                            className="object-cover transition-transform duration-700 group-hover:scale-105"
+                            className="object-contain transition-opacity duration-300 group-hover:opacity-90"
                             sizes="(min-width: 768px) 25vw, 46vw"
                           />
                         )}
@@ -80,11 +80,11 @@ export default async function OriginalsCollectionsPage() {
                   </div>
                 )}
 
-                <div className="p-7">
+                <div className="pt-6">
                   <p className={`${lora.className} mb-3 text-xs uppercase tracking-[0.2em] text-olive`}>
                     {collection.pieceCount ?? 0} {(collection.pieceCount ?? 0) === 1 ? 'piece' : 'pieces'}
                   </p>
-                  <h2 className={`${cormorant.className} text-3xl font-light text-brown group-hover:text-olive transition-colors duration-300`}>
+                  <h2 className={`${cormorant.className} text-3xl font-light text-brown`}>
                     {collection.title}
                   </h2>
                   {collection.description && (

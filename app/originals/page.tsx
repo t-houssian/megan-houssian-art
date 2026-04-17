@@ -14,7 +14,7 @@ export default async function OriginalsPage() {
   const comingSoonImageAlt = settings.comingSoonImage?.alt?.trim() || 'Upcoming original collection';
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-ivory via-paper to-accent-cream">
+    <section className="min-h-screen bg-ivory">
       <div className="max-w-5xl mx-auto py-16 px-6">
         <div className="text-center mb-10">
           <h1 className={`${cormorant.className} text-4xl md:text-5xl font-light mb-6 text-brown tracking-wide`}>
@@ -28,12 +28,12 @@ export default async function OriginalsPage() {
         </div>
 
         <div className="mx-auto max-w-3xl">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-tan/30 bg-white/70 shadow-vintage">
+          <div className="relative aspect-[4/5] overflow-hidden bg-ivory">
             <Image
               src={comingSoonImageUrl}
               alt={comingSoonImageAlt}
               fill
-              className="object-cover"
+              className="object-contain"
               sizes="(min-width: 1024px) 50vw, (min-width: 768px) 70vw, 92vw"
               priority
             />

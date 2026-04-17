@@ -54,13 +54,13 @@ export default async function OriginalDetailPage({
   }
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-ivory via-paper to-accent-cream">
-      <div className="max-w-6xl mx-auto py-12 px-6">
+    <section className="min-h-screen bg-ivory">
+      <div className="max-w-7xl mx-auto py-12 px-6">
         {/* Back Navigation */}
         <div className="mb-8">
           <Link
             href={backHref}
-            className={`group inline-flex items-center space-x-2 px-4 py-2 bg-white/60 backdrop-blur-sm border border-tan/30 text-brown rounded-lg hover:bg-olive/10 hover:border-olive/50 transition-all duration-300 ${lora.className}`}
+            className={`group inline-flex items-center space-x-2 text-brown hover:text-olive transition-colors duration-300 ${lora.className}`}
           >
             <svg className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
@@ -69,20 +69,18 @@ export default async function OriginalDetailPage({
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)] gap-12 lg:gap-16">
           {/* Left Column: Gallery */}
-          <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
-            <ArtworkGallery
-              mainImage={artwork.mainImage}
-              gallery={artwork.gallery}
-              title={artwork.title}
-            />
-          </div>
+          <ArtworkGallery
+            mainImage={artwork.mainImage}
+            gallery={artwork.gallery}
+            title={artwork.title}
+          />
 
           {/* Right Column: Artwork Details */}
-          <div className="space-y-8">
+          <div className="space-y-10 lg:pt-12">
             {/* Title Section */}
-            <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
+            <div>
               <h1 className={`${cormorant.className} text-3xl md:text-4xl font-light mb-4 text-brown leading-tight`}>
                 {artwork.title}
               </h1>
@@ -104,10 +102,10 @@ export default async function OriginalDetailPage({
               )}
               
               {artwork.sold ? (
-                <div className="bg-ivory border border-tan/60 rounded-xl p-6">
+                <div className="border-y border-tan/50 py-5">
                   <div className="flex items-center gap-3">
-                    <span className="inline-flex items-center rounded-full bg-tan/60 text-brown px-2.5 py-0.5 text-xs font-semibold border border-tan/80">
-                      sold
+                    <span className="inline-flex items-center text-xs font-semibold uppercase tracking-[0.2em] text-warm-gray">
+                      Sold
                     </span>
                     <span className={`${lora.className} text-warm-gray text-sm`}>
                       This artwork is no longer available for purchase
@@ -126,7 +124,7 @@ export default async function OriginalDetailPage({
 
             {/* Description Section */}
             {artwork.description && (
-              <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
+              <div className="border-t border-tan/40 pt-8">
                 <h2 className={`${cormorant.className} text-2xl font-medium mb-4 text-brown`}>
                   About This Piece
                 </h2>
@@ -136,48 +134,6 @@ export default async function OriginalDetailPage({
                 </div>
               </div>
             )}
-
-            {/* Additional Info */}
-            <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
-              <h3 className={`${cormorant.className} text-xl font-medium mb-4 text-brown`}>
-                Artwork Details
-              </h3>
-              <div className="w-12 h-0.5 bg-olive mb-6"></div>
-              <div className="space-y-3 text-sm text-warm-gray">
-                <div className="flex justify-between">
-                  <span>Original Artwork</span>
-                  <span className="font-medium text-brown">One-of-a-kind</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Artist</span>
-                  <span className="font-medium text-brown">Megan Houssian</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Authenticity</span>
-                  <span className="font-medium text-brown">Artist Signed</span>
-                </div>
-                {artwork.collections.length > 0 && (
-                  <div className="flex justify-between gap-6">
-                    <span>Collection</span>
-                    <span className="flex flex-wrap justify-end gap-x-2 gap-y-1 text-right font-medium text-brown">
-                      {artwork.collections.map((collection) => (
-                        <Link
-                          key={collection._id}
-                          href={buildCollectionHref(collection.slug.current, backHref)}
-                          className="text-olive underline underline-offset-4 hover:text-brown transition-colors duration-200"
-                        >
-                          {collection.title}
-                        </Link>
-                      ))}
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span>Shipping</span>
-                  <span className="font-medium text-brown">Free shipping included</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
