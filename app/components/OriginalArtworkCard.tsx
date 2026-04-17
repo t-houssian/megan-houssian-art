@@ -12,7 +12,6 @@ type SanityImage = {
 type OriginalArtworkCardProps = {
   item: OriginalArtworkSummary;
   detailHref: string;
-  collectionHref: (slug: string) => string;
 };
 
 function formatPrice(price?: number) {

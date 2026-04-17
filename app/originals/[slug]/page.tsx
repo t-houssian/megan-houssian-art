@@ -13,7 +13,7 @@ const ALLOWED_BACK_LINKS = new Set([
 ]);
 
 function isAllowedBackHref(href: string) {
-  return ALLOWED_BACK_LINKS.has(href) || /^\/originals\/collections\/[a-z0-9-]+$/.test(href);
+  return ALLOWED_BACK_LINKS.has(href);
 }
 
 // Instead of typing props directly, we accept props as unknown and then assert its type.

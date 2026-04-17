@@ -1,6 +1,5 @@
 import { cormorant, lora } from '../fonts';
 import { fetchOriginals } from '../../lib/originals';
-import { fetchOriginalsPageSettings } from '../../lib/originals-page-settings';
 import OriginalArtworkCard from './OriginalArtworkCard';
 
 type OriginalsGalleryPageProps = {
@@ -12,35 +11,12 @@ function buildDetailHref(slug: string, sourcePath: OriginalsGalleryPageProps['so
   return `/originals/${slug}?${params.toString()}`;
 }
 
-function buildCollectionHref(slug: string, sourcePath: OriginalsGalleryPageProps['sourcePath']) {
-  const params = new URLSearchParams({ from: sourcePath });
-  return `/originals/collections/${slug}?${params.toString()}`;
-}
-
 export default async function OriginalsGalleryPage({ sourcePath }: OriginalsGalleryPageProps) {
-  const [settings, originals] = await Promise.all([
-    fetchOriginalsPageSettings(),
-    fetchOriginals(),
-  ]);
+  const originals = await fetchOriginals();
 
   return (
     <section className="min-h-screen bg-ivory">
-      <div className="max-w-7xl mx-auto py-16 px-6">
-        <div className="text-center mb-12">
-          <p className={`${lora.className} text-sm uppercase tracking-[0.22em] text-olive mb-4`}>
-            Private access gallery
-          </p>
-          <h1 className={`${cormorant.className} text-4xl md:text-5xl font-light mb-4 text-brown tracking-wide`}>
-            {settings.availableOriginalsLabel}
-          </h1>
-          <p className={`${lora.className} text-lg text-warm-gray max-w-3xl mx-auto`}>
-            {settings.availableOriginalsAnnouncement}
-          </p>
-          <p className={`${lora.className} text-base text-warm-gray max-w-3xl mx-auto mt-4`}>
-            {settings.availableOriginalsDescription}
-          </p>
-        </div>
-
+      <div className="max-w-7xl mx-auto px-6 pt-8 pb-16">
         {originals.length === 0 ? (
           <div className="max-w-3xl mx-auto border-y border-tan/40 py-10 text-center">
             <h2 className={`${cormorant.className} text-3xl text-brown mb-3`}>No originals are listed yet</h2>
@@ -55,7 +31,6 @@ export default async function OriginalsGalleryPage({ sourcePath }: OriginalsGall
                 key={item._id}
                 item={item}
                 detailHref={buildDetailHref(item.slug.current, sourcePath)}
-                collectionHref={(slug) => buildCollectionHref(slug, sourcePath)}
               />
             ))}
           </div>
