@@ -731,7 +731,9 @@ const ORIGINAL_FOR_SALE_BY_SLUG_QUERY = `
 const getSanityWriteToken = () =>
   process.env.SANITY_WRITE_TOKEN ||
   process.env.SANITY_AUTH_TOKEN ||
-  process.env.SANITY_API_WRITE_TOKEN;
+  process.env.SANITY_API_WRITE_TOKEN ||
+  process.env.SANITY_API_TOKEN ||
+  process.env.SANITY_TOKEN;
 
 export const canMarkOriginalsSold = () => Boolean(getSanityWriteToken());
 

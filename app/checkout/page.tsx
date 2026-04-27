@@ -124,6 +124,7 @@ const CheckoutContent = () => {
   const [isDraftInitialized, setIsDraftInitialized] = useState<boolean>(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const checkoutEmailRef = useRef<HTMLInputElement>(null);
+  const payPalCreateOrderErrorRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!isCartCheckout || typeof window === "undefined") return;
@@ -355,7 +356,7 @@ const CheckoutContent = () => {
       if (!response.data || !response.data.orderId) {
         throw new Error('No order ID received from server');
       }
-      
+      payPalCreateOrderErrorRef.current = null;
       return response.data.orderId as string;
     } catch (error: unknown) {
       console.error('PayPal order creation error:', error);
@@ -368,6 +369,7 @@ const CheckoutContent = () => {
         errorMessage = "PayPal order creation failed: " + error.message;
       }
       
+      payPalCreateOrderErrorRef.current = errorMessage;
       setErrorMessage(errorMessage);
       
       // Throw error to prevent PayPal SDK from proceeding with empty order ID
@@ -661,6 +663,10 @@ const CheckoutContent = () => {
                         onApprove={onPayPalApprove}
                         onError={(err: unknown) => {
                           console.error("PayPal Error:", err);
+                          if (payPalCreateOrderErrorRef.current) {
+                            setErrorMessage(payPalCreateOrderErrorRef.current);
+                            return;
+                          }
                           if (
                             err instanceof Error &&
                             (err.message.includes("email above") || err.message.includes("required shipping fields"))

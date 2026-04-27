@@ -46,6 +46,8 @@ NEXT_PUBLIC_PAYPAL_CLIENT_ID=your_paypal_client_id
 # Sanity CMS
 NEXT_PUBLIC_SANITY_PROJECT_ID=your_project_id
 NEXT_PUBLIC_SANITY_DATASET=production
+# Required in production so completed original artwork payments can mark pieces sold in Sanity.
+# SANITY_API_TOKEN, SANITY_TOKEN, SANITY_AUTH_TOKEN, and SANITY_API_WRITE_TOKEN also work.
 SANITY_WRITE_TOKEN=your_sanity_write_token
 
 # Kit Email List
