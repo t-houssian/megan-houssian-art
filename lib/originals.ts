@@ -735,7 +735,37 @@ const getSanityWriteToken = () =>
   process.env.SANITY_API_TOKEN ||
   process.env.SANITY_TOKEN;
 
-export const canMarkOriginalsSold = () => Boolean(getSanityWriteToken());
+export async function validateOriginalSoldWriteAccess() {
+  const token = getSanityWriteToken();
+
+  if (!token) {
+    return {
+      ok: false,
+      message: 'Original checkout is temporarily unavailable because Sanity write access is not configured.',
+    };
+  }
+
+  try {
+    const writeClient = sanityClient.withConfig({
+      useCdn: false,
+      token,
+    });
+
+    await writeClient.fetch(
+      `count(*[_type == "original" && !(_id in path("drafts.**"))][0...1])`,
+      {},
+      { cache: 'no-store' }
+    );
+
+    return { ok: true, message: null };
+  } catch (error) {
+    console.error('Sanity write token validation failed:', error);
+    return {
+      ok: false,
+      message: 'Original checkout is temporarily unavailable because Sanity write access is invalid for this project.',
+    };
+  }
+}
 
 const revalidateOriginalSoldPaths = (slug: string) => {
   try {

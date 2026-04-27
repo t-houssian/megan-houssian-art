@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { roundUpToNearestTenDollars } from '../../../../lib/money';
 import {
-  canMarkOriginalsSold,
   fetchOriginalCheckoutPricing,
+  validateOriginalSoldWriteAccess,
   validateOriginalEarlyAccessForCheckout,
 } from '../../../../lib/originals';
 import { cartToPayPalItems, validateCartForCheckout } from '../../../../lib/cart-checkout';
@@ -93,11 +93,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (originalSlugsForSale.length > 0 && !canMarkOriginalsSold()) {
-      return NextResponse.json(
-        { error: 'Original checkout is temporarily unavailable. Please contact support so we can confirm inventory before payment.' },
-        { status: 503 }
-      );
+    if (originalSlugsForSale.length > 0) {
+      const writeAccessValidation = await validateOriginalSoldWriteAccess();
+      if (!writeAccessValidation.ok) {
+        return NextResponse.json(
+          { error: writeAccessValidation.message },
+          { status: 503 }
+        );
+      }
     }
 
     if (!checkoutAmount || checkoutAmount <= 0) {
