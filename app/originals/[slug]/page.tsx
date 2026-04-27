@@ -4,6 +4,7 @@ import PurchaseSection from "../../components/PurchaseSection";
 import Link from "next/link";
 import { cormorant, lora } from "../../fonts";
 import { fetchOriginalBySlug } from "../../../lib/originals";
+import { urlFor } from "../../../sanity/lib/image";
 
 export const revalidate = 0;
 
@@ -79,6 +80,11 @@ export default async function OriginalDetailPage({
                 title={artwork.title} 
                 basePrice={artwork.price || 0}
                 originalSlug={artwork.slug.current}
+                imageUrl={
+                  artwork.mainImage?.asset
+                    ? urlFor(artwork.mainImage).width(800).height(800).fit("max").quality(92).url()
+                    : undefined
+                }
                 isTestProduct={artwork.testProduct}
                 earlyAccess={artwork.earlyAccess}
                 isSold={artwork.sold}

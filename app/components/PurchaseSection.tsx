@@ -10,6 +10,7 @@ type PurchaseSectionProps = {
   title: string;
   basePrice: number;
   originalSlug: string;
+  imageUrl?: string;
   isTestProduct?: boolean;
   earlyAccess?: OriginalEarlyAccessState;
   isSold?: boolean;
@@ -19,6 +20,7 @@ export default function PurchaseSection({
   title,
   basePrice,
   originalSlug,
+  imageUrl,
   isTestProduct = false,
   earlyAccess,
   isSold = false,
@@ -138,6 +140,7 @@ export default function PurchaseSection({
             type: "original",
             title,
             price: checkoutPrice,
+            imageUrl,
             originalSlug,
             isTestProduct,
             quantity: 1,
