@@ -6,6 +6,9 @@ type PayPalPurchaseUnit = {
   reference_id?: unknown;
   custom_id?: unknown;
   description?: string;
+  items?: Array<{
+    sku?: unknown;
+  } | null> | null;
   amount?: { value?: unknown } | null;
   payments?: {
     captures?: Array<{
@@ -56,6 +59,19 @@ const parseOriginalSlugsFromReferenceId = (value: unknown): string[] => {
 
   const slug = parseOriginalSlugFromReferenceId(value);
   return slug ? [slug] : [];
+};
+
+const getUniqueOriginalSlugs = (slugs: string[]) =>
+  Array.from(new Set(slugs.map((slug) => slug.trim()).filter(Boolean)));
+
+const parseOriginalSlugsFromPurchaseUnit = (purchaseUnit: PayPalPurchaseUnit | null | undefined): string[] => {
+  const referenceSlugs = parseOriginalSlugsFromReferenceId(purchaseUnit?.reference_id);
+  const itemSlugs =
+    purchaseUnit?.items
+      ?.map((item) => parseOriginalSlugFromReferenceId(item?.sku))
+      .filter((slug): slug is string => Boolean(slug)) ?? [];
+
+  return getUniqueOriginalSlugs([...referenceSlugs, ...itemSlugs]);
 };
 
 const getPayPalCapturedAmount = (purchaseUnit: PayPalPurchaseUnit | null | undefined): string | null => {
@@ -150,7 +166,7 @@ export async function POST(request: NextRequest) {
     }
 
     const orderPurchaseUnit = orderDetails.purchase_units?.[0];
-    const originalSlugs = parseOriginalSlugsFromReferenceId(orderPurchaseUnit?.reference_id);
+    const originalSlugs = parseOriginalSlugsFromPurchaseUnit(orderPurchaseUnit);
     const originalSlug = originalSlugs[0] ?? null;
 
     for (const slug of originalSlugs) {
@@ -202,10 +218,16 @@ export async function POST(request: NextRequest) {
       const purchaseUnit = (captureData.purchase_units?.[0] as PayPalPurchaseUnit | undefined) ?? orderPurchaseUnit;
 
       try {
-        const capturedOriginalSlugs = parseOriginalSlugsFromReferenceId(purchaseUnit?.reference_id);
+        const capturedOriginalSlugs = parseOriginalSlugsFromPurchaseUnit(purchaseUnit);
         const slugsToMarkSold = capturedOriginalSlugs.length ? capturedOriginalSlugs : originalSlugs;
         const soldResults = await Promise.all(slugsToMarkSold.map((slug) => markOriginalSoldBySlug(slug)));
         console.log('PayPal original sold update:', soldResults);
+        const failedSoldResults = soldResults.filter(
+          (result) => result.status !== 'updated' && result.status !== 'already_sold'
+        );
+        if (failedSoldResults.length > 0) {
+          console.error('PayPal payment captured but some originals were not marked sold:', failedSoldResults);
+        }
       } catch (soldError) {
         console.error('Failed to mark PayPal original as sold:', soldError);
       }

@@ -166,6 +166,7 @@ export function cartToPayPalItems(cart: ValidatedCart) {
   return cart.lines.map((line) => ({
     name: line.title.slice(0, 127),
     description: line.description.slice(0, 127),
+    ...(line.originalSlug ? { sku: `original_slug:${line.originalSlug}`.slice(0, 127) } : {}),
     quantity: line.quantity.toString(),
     unit_amount: {
       currency_code: 'USD',

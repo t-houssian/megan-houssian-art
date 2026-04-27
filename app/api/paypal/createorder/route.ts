@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { roundUpToNearestTenDollars } from '../../../../lib/money';
-import { fetchOriginalCheckoutPricing, validateOriginalEarlyAccessForCheckout } from '../../../../lib/originals';
+import {
+  canMarkOriginalsSold,
+  fetchOriginalCheckoutPricing,
+  validateOriginalEarlyAccessForCheckout,
+} from '../../../../lib/originals';
 import { cartToPayPalItems, validateCartForCheckout } from '../../../../lib/cart-checkout';
 
 const isValidEmail = (value: unknown): value is string =>
@@ -66,6 +70,7 @@ export async function POST(request: NextRequest) {
     const formattedCheckoutAmount = checkoutAmount.toFixed(2);
     const productName = validatedCart?.productSummary || originalPricing?.title || product || 'Artwork purchase';
     const originalReferenceSlug = originalPricing?.slug.current || originalSlug || null;
+    const originalSlugsForSale = validatedCart?.originalSlugs ?? (originalReferenceSlug ? [originalReferenceSlug] : []);
 
     // PayPal API configuration
     const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
@@ -85,6 +90,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Valid checkout email is required' },
         { status: 400 }
+      );
+    }
+
+    if (originalSlugsForSale.length > 0 && !canMarkOriginalsSold()) {
+      return NextResponse.json(
+        { error: 'Original checkout is temporarily unavailable. Please contact support so we can confirm inventory before payment.' },
+        { status: 503 }
       );
     }
 

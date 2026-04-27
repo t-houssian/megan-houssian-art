@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { dollarsToCents, roundUpCentsToNearestTenDollars } from '../../../lib/money';
-import { fetchOriginalCheckoutPricing, validateOriginalEarlyAccessForCheckout } from '../../../lib/originals';
+import {
+  canMarkOriginalsSold,
+  fetchOriginalCheckoutPricing,
+  validateOriginalEarlyAccessForCheckout,
+} from '../../../lib/originals';
 import { cartToStripeLineItems, validateCartForCheckout } from '../../../lib/cart-checkout';
 
 // Initialize Stripe only when the secret key is available
@@ -92,6 +96,8 @@ export async function POST(request: NextRequest) {
       ? rawAmount
       : roundUpCentsToNearestTenDollars(rawAmount));
     const productName = validatedCart?.productSummary || originalPricing?.title || product || 'Artwork Purchase';
+    const originalReferenceSlug = originalPricing?.slug.current || originalSlug || null;
+    const originalSlugsForSale = validatedCart?.originalSlugs ?? (originalReferenceSlug ? [originalReferenceSlug] : []);
 
     // Validate required fields
     if (!checkoutAmount || checkoutAmount <= 0) {
@@ -105,6 +111,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Valid checkout email is required' },
         { status: 400 }
+      );
+    }
+
+    if (originalSlugsForSale.length > 0 && !canMarkOriginalsSold()) {
+      return NextResponse.json(
+        { error: 'Original checkout is temporarily unavailable. Please contact support so we can confirm inventory before payment.' },
+        { status: 503 }
       );
     }
 
@@ -135,7 +148,7 @@ export async function POST(request: NextRequest) {
       billing_address_collection: 'required',
       metadata: {
         product: productName,
-        original_slug: originalPricing?.slug.current || originalSlug || '',
+        original_slug: originalReferenceSlug || '',
         original_slugs: validatedCart?.originalSlugs.join(',') || '',
         cart_checkout: validatedCart ? 'true' : 'false',
         test_product: originalPricing?.testProduct ? 'true' : 'false',

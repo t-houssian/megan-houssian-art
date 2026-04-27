@@ -733,6 +733,8 @@ const getSanityWriteToken = () =>
   process.env.SANITY_AUTH_TOKEN ||
   process.env.SANITY_API_WRITE_TOKEN;
 
+export const canMarkOriginalsSold = () => Boolean(getSanityWriteToken());
+
 const revalidateOriginalSoldPaths = (slug: string) => {
   try {
     revalidatePath('/originals');
