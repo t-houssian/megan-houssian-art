@@ -42,43 +42,41 @@ export default function OriginalArtworkCard({
   const titleWithSize = item.artworkSize ? `${item.title}, ${item.artworkSize}` : item.title;
 
   return (
-    <article className="group h-full">
-      <div className="h-full">
+    <Link href={detailHref} className="group block h-full">
+      <article className="h-full">
         {item.mainImage?.asset && (
-          <Link href={detailHref} className="block">
-            <div
-              className="relative w-full overflow-hidden bg-ivory"
-              style={{ aspectRatio: `${mainDimensions.width} / ${mainDimensions.height}` }}
-            >
+          <div
+            className="relative w-full overflow-hidden bg-ivory"
+            style={{ aspectRatio: `${mainDimensions.width} / ${mainDimensions.height}` }}
+          >
+            <Image
+              src={urlFor(item.mainImage).width(1200).fit('max').quality(92).url()}
+              alt={item.title}
+              fill
+              className={`object-contain transition-opacity duration-300 ${
+                hoverImage ? 'md:group-hover:opacity-0' : ''
+              }`}
+              sizes="(min-width: 1280px) 28vw, (min-width: 640px) 44vw, 92vw"
+            />
+            {hoverImage && (
               <Image
-                src={urlFor(item.mainImage).width(1200).fit('max').quality(92).url()}
-                alt={item.title}
+                src={urlFor(hoverImage).width(1200).fit('max').quality(92).url()}
+                alt={`${item.title} alternate view`}
                 fill
-                className={`object-contain transition-opacity duration-300 ${
-                  hoverImage ? 'md:group-hover:opacity-0' : ''
-                }`}
+                className="hidden object-contain opacity-0 transition-opacity duration-300 md:block md:group-hover:opacity-100"
                 sizes="(min-width: 1280px) 28vw, (min-width: 640px) 44vw, 92vw"
               />
-              {hoverImage && (
-                <Image
-                  src={urlFor(hoverImage).width(1200).fit('max').quality(92).url()}
-                  alt={`${item.title} alternate view`}
-                  fill
-                  className="hidden object-contain opacity-0 transition-opacity duration-300 md:block md:group-hover:opacity-100"
-                  sizes="(min-width: 1280px) 28vw, (min-width: 640px) 44vw, 92vw"
-                />
-              )}
-            </div>
-          </Link>
+            )}
+          </div>
         )}
 
         <div className="flex min-h-36 flex-col pt-4">
           <div className="mb-3 flex items-start justify-between gap-4">
-            <Link href={detailHref} className="block min-w-0">
+            <div className="min-w-0">
               <h2 className={`${cormorant.className} text-2xl font-medium text-brown`}>
                 {titleWithSize}
               </h2>
-            </Link>
+            </div>
             {item.sold && (
               <span className={`${cormorant.className} shrink-0 text-2xl font-medium text-warm-gray`}>
                 Sold
@@ -93,15 +91,14 @@ export default function OriginalArtworkCard({
               </p>
             </div>
 
-            <Link
-              href={detailHref}
+            <span
               className={`${lora.className} shrink-0 text-sm font-medium text-olive opacity-100 transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100`}
             >
               View piece
-            </Link>
+            </span>
           </div>
         </div>
-      </div>
-    </article>
+      </article>
+    </Link>
   );
 }
