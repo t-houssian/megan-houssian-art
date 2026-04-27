@@ -124,7 +124,9 @@ const COLLECTION_SUMMARY_PROJECTION = `
 const ORIGINAL_SUMMARY_PROJECTION = `
   _id,
   title,
-  "slug": slug,
+  "slug": {
+    "current": coalesce(slug.current, _id)
+  },
   mainImage,
   "hoverImage": gallery[0],
   price,
@@ -150,14 +152,14 @@ const ORIGINALS_LIST_QUERY = `{
     },
     "orderedIds": items[]._ref
   },
-  "all": *[_type == "original" && defined(slug.current)] | order(coalesce(sold, false) asc, _createdAt desc){
+  "all": *[_type == "original"] | order(coalesce(sold, false) asc, _createdAt desc){
     ${ORIGINAL_SUMMARY_PROJECTION}
   }
 }
 `;
 
 const ORIGINAL_BY_SLUG_QUERY = `
-  *[_type == "original" && slug.current == $slug][0]{
+  *[_type == "original" && (slug.current == $slug || _id == $slug)][0]{
     ${ORIGINAL_SUMMARY_PROJECTION},
     gallery,
     description
@@ -169,7 +171,6 @@ const ORIGINAL_COLLECTIONS_LIST_QUERY = `
     ${COLLECTION_SUMMARY_PROJECTION},
     "pieceCount": count(*[
       _type == "original" &&
-      defined(slug.current) &&
       (
         _id in coalesce(^.pieces[]._ref, []) ||
         ^._id in coalesce(collections[]._ref, [])
@@ -177,7 +178,6 @@ const ORIGINAL_COLLECTIONS_LIST_QUERY = `
     ]),
     "sampleOriginals": *[
       _type == "original" &&
-      defined(slug.current) &&
       defined(mainImage.asset) &&
       (
         _id in coalesce(^.pieces[]._ref, []) ||
@@ -186,7 +186,9 @@ const ORIGINAL_COLLECTIONS_LIST_QUERY = `
     ] | order(coalesce(sold, false) asc, _createdAt desc)[0...4]{
       _id,
       title,
-      "slug": slug,
+      "slug": {
+        "current": coalesce(slug.current, _id)
+      },
       mainImage
     }
   } | order(title asc)
@@ -197,7 +199,6 @@ const ORIGINAL_COLLECTION_BY_SLUG_QUERY = `
     ${COLLECTION_SUMMARY_PROJECTION},
     "originals": *[
       _type == "original" &&
-      defined(slug.current) &&
       (
         _id in coalesce(^.pieces[]._ref, []) ||
         ^._id in coalesce(collections[]._ref, [])
@@ -209,10 +210,16 @@ const ORIGINAL_COLLECTION_BY_SLUG_QUERY = `
 `;
 
 const ORIGINAL_CHECKOUT_PRICING_QUERY = `
-  *[_type == "original" && slug.current == $slug && !(_id in path("drafts.**"))][0]{
+  *[
+    _type == "original" &&
+    (slug.current == $slug || _id == $slug) &&
+    !(_id in path("drafts.**"))
+  ][0]{
     _id,
     title,
-    "slug": slug,
+    "slug": {
+      "current": coalesce(slug.current, _id)
+    },
     price,
     sold,
     testProduct
@@ -220,10 +227,14 @@ const ORIGINAL_CHECKOUT_PRICING_QUERY = `
 `;
 
 const EARLY_ACCESS_ORIGINAL_BY_SLUG_QUERY = `
-  *[_type == "original" && slug.current == $slug && !(_id in path("drafts.**"))][0]{
+  *[
+    _type == "original" &&
+    (slug.current == $slug || _id == $slug) &&
+    !(_id in path("drafts.**"))
+  ][0]{
     _id,
     title,
-    "slug": slug.current,
+    "slug": coalesce(slug.current, _id),
     releaseAt,
     earlyAccessStartsAt,
     earlyAccessMessage,
@@ -272,7 +283,6 @@ const ACTIVE_EARLY_ACCESS_CONTEXTS_QUERY = `
     },
     "pieces": *[
       _type == "original" &&
-      defined(slug.current) &&
       defined(earlyAccessPassword) &&
       defined(releaseAt) &&
       dateTime($now) >= dateTime(earlyAccessStartsAt) &&
@@ -280,7 +290,7 @@ const ACTIVE_EARLY_ACCESS_CONTEXTS_QUERY = `
     ]{
       _id,
       title,
-      "slug": slug.current,
+      "slug": coalesce(slug.current, _id),
       releaseAt,
       earlyAccessStartsAt,
       earlyAccessMessage,
@@ -706,7 +716,11 @@ export type MarkOriginalSoldResult =
   | { status: 'skipped'; reason: 'missing_slug' | 'missing_token'; slug?: string };
 
 const ORIGINAL_FOR_SALE_BY_SLUG_QUERY = `
-  *[_type == "original" && slug.current == $slug && !(_id in path("drafts.**"))][0]{
+  *[
+    _type == "original" &&
+    (slug.current == $slug || _id == $slug) &&
+    !(_id in path("drafts.**"))
+  ][0]{
     _id,
     _rev,
     title,
