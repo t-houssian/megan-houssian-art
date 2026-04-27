@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { lora, cormorant } from "../fonts";
 import { formatRoundedDollars } from "../../lib/money";
+import AddToCartButton from "./AddToCartButton";
 
 type PrintOption = {
   name: string;
@@ -20,6 +21,7 @@ type PrintOptions = {
 type LumaPrintPurchaseProps = {
   artworkTitle: string;
   artworkImageUrl?: string;
+  printSlug: string;
 };
 
 type AccordionSectionProps = {
@@ -64,7 +66,7 @@ function AccordionSection({ title, isOpen, onToggle, children, badge }: Accordio
 }
 
 // Main component
-export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: LumaPrintPurchaseProps) {
+export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl, printSlug }: LumaPrintPurchaseProps) {
   const [printOptions, setPrintOptions] = useState<PrintOptions>({});
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [selectedSize, setSelectedSize] = useState<string>('');
@@ -169,6 +171,14 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
     } catch (error) {
       console.error('Get product name error:', error);
       return '';
+    }
+  };
+
+  const getSelectedSizeName = () => {
+    try {
+      return printOptions[selectedProduct]?.sizes.find((s) => s.value === selectedSize)?.name || selectedSize;
+    } catch {
+      return selectedSize;
     }
   };
 
@@ -652,6 +662,24 @@ export default function LumaPrintPurchase({ artworkTitle, artworkImageUrl }: Lum
                       )}
                     </span>
                   </button>
+                  <div className="mt-4">
+                    <AddToCartButton
+                      disabled={!selectedProduct || !selectedSize}
+                      item={{
+                        id: `print:${printSlug}:${selectedProduct}:${selectedSize}`,
+                        type: "print",
+                        title: artworkTitle,
+                        price: getSelectedPrice(),
+                        imageUrl: artworkImageUrl,
+                        printSlug,
+                        printProductType: selectedProduct,
+                        printProductName: printOptions[selectedProduct]?.name,
+                        printSize: selectedSize,
+                        printSizeName: getSelectedSizeName(),
+                        quantity: 1,
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </AccordionSection>

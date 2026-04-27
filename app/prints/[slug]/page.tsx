@@ -121,6 +121,7 @@ export default async function PrintDetailPage({ params }: PageProps) {
               <LumaPrintPurchase 
                 artworkTitle={printItem.title}
                 artworkImageUrl={printItem.mainImage?.asset ? urlFor(printItem.mainImage).width(800).height(800).url() : undefined}
+                printSlug={slug}
               />
             )}
           </div>

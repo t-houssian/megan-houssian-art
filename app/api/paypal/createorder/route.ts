@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { roundUpToNearestTenDollars } from '../../../../lib/money';
 import { fetchOriginalCheckoutPricing, validateOriginalEarlyAccessForCheckout } from '../../../../lib/originals';
+import { cartToPayPalItems, validateCartForCheckout } from '../../../../lib/cart-checkout';
 
 const isValidEmail = (value: unknown): value is string =>
   typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
@@ -15,35 +16,43 @@ export async function POST(request: NextRequest) {
       shippingOption,
       checkoutEmail,
       earlyAccessPassword,
+      earlyAccessPasswords,
+      cartItems,
     } = await request.json();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
     const normalizedCheckoutEmail = isValidEmail(checkoutEmail) ? checkoutEmail.trim().toLowerCase() : null;
-    const originalPricing = typeof originalSlug === 'string' && originalSlug
+    const isCartCheckout = Array.isArray(cartItems) && cartItems.length > 0;
+    const validatedCart = isCartCheckout
+      ? await validateCartForCheckout(cartItems, earlyAccessPasswords)
+      : null;
+    const originalPricing = !isCartCheckout && typeof originalSlug === 'string' && originalSlug
       ? await fetchOriginalCheckoutPricing(originalSlug)
       : null;
-    if (originalSlug && !originalPricing) {
+    if (!isCartCheckout && originalSlug && !originalPricing) {
       return NextResponse.json(
         { error: 'Original artwork not found' },
         { status: 404 }
       );
     }
 
-    if (originalPricing?.sold) {
+    if (!isCartCheckout && originalPricing?.sold) {
       return NextResponse.json(
         { error: 'This original artwork has already sold' },
         { status: 409 }
       );
     }
 
-    const earlyAccessValidation = await validateOriginalEarlyAccessForCheckout(
-      originalSlug,
-      earlyAccessPassword
-    );
-    if (!earlyAccessValidation.ok) {
-      return NextResponse.json(
-        { error: earlyAccessValidation.message },
-        { status: 403 }
+    if (!isCartCheckout) {
+      const earlyAccessValidation = await validateOriginalEarlyAccessForCheckout(
+        originalSlug,
+        earlyAccessPassword
       );
+      if (!earlyAccessValidation.ok) {
+        return NextResponse.json(
+          { error: earlyAccessValidation.message },
+          { status: 403 }
+        );
+      }
     }
 
     const parsedAmount = typeof originalPricing?.price === 'number'
@@ -51,11 +60,11 @@ export async function POST(request: NextRequest) {
       : typeof amount === 'number'
         ? amount
         : Number(amount);
-    const checkoutAmount = originalPricing?.testProduct
+    const checkoutAmount = validatedCart?.totalDollars ?? (originalPricing?.testProduct
       ? parsedAmount
-      : roundUpToNearestTenDollars(parsedAmount);
+      : roundUpToNearestTenDollars(parsedAmount));
     const formattedCheckoutAmount = checkoutAmount.toFixed(2);
-    const productName = originalPricing?.title || product || 'Artwork purchase';
+    const productName = validatedCart?.productSummary || originalPricing?.title || product || 'Artwork purchase';
     const originalReferenceSlug = originalPricing?.slug.current || originalSlug || null;
 
     // PayPal API configuration
@@ -121,10 +130,13 @@ export async function POST(request: NextRequest) {
       purchase_units: [
         {
           ...(originalReferenceSlug ? { reference_id: `original_slug:${originalReferenceSlug}` } : {}),
+          ...(validatedCart?.originalSlugs.length ? { reference_id: `cart_original_slugs:${validatedCart.originalSlugs.join(',')}` } : {}),
           amount: {
             currency_code: 'USD',
             value: formattedCheckoutAmount,
+            ...(validatedCart ? { breakdown: { item_total: { currency_code: 'USD', value: formattedCheckoutAmount } } } : {}),
           },
+          ...(validatedCart ? { items: cartToPayPalItems(validatedCart) } : {}),
           custom_id: `checkout_email:${normalizedCheckoutEmail}`,
           description: `${productName} from Megan Houssian Art${shippingOption === 'pickup' ? ' - Local Pickup in Marble Falls, TX' : ''}`,
           ...(shippingOption === 'shipping' && shippingAddress ? {

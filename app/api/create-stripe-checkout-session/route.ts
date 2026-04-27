@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { dollarsToCents, roundUpCentsToNearestTenDollars } from '../../../lib/money';
 import { fetchOriginalCheckoutPricing, validateOriginalEarlyAccessForCheckout } from '../../../lib/originals';
+import { cartToStripeLineItems, validateCartForCheckout } from '../../../lib/cart-checkout';
 
 // Initialize Stripe only when the secret key is available
 const getStripe = () => {
@@ -42,36 +43,44 @@ export async function POST(request: NextRequest) {
       returnTo,
       checkoutEmail,
       earlyAccessPassword,
+      earlyAccessPasswords,
+      cartItems,
     } = await request.json();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
     const safeReturnPath = getSafeReturnPath(returnTo);
     const normalizedCheckoutEmail = isValidEmail(checkoutEmail) ? checkoutEmail.trim() : null;
-    const originalPricing = typeof originalSlug === 'string' && originalSlug
+    const isCartCheckout = Array.isArray(cartItems) && cartItems.length > 0;
+    const validatedCart = isCartCheckout
+      ? await validateCartForCheckout(cartItems, earlyAccessPasswords)
+      : null;
+    const originalPricing = !isCartCheckout && typeof originalSlug === 'string' && originalSlug
       ? await fetchOriginalCheckoutPricing(originalSlug)
       : null;
-    if (originalSlug && !originalPricing) {
+    if (!isCartCheckout && originalSlug && !originalPricing) {
       return NextResponse.json(
         { error: 'Original artwork not found' },
         { status: 404 }
       );
     }
 
-    if (originalPricing?.sold) {
+    if (!isCartCheckout && originalPricing?.sold) {
       return NextResponse.json(
         { error: 'This original artwork has already sold' },
         { status: 409 }
       );
     }
 
-    const earlyAccessValidation = await validateOriginalEarlyAccessForCheckout(
-      originalSlug,
-      earlyAccessPassword
-    );
-    if (!earlyAccessValidation.ok) {
-      return NextResponse.json(
-        { error: earlyAccessValidation.message },
-        { status: 403 }
+    if (!isCartCheckout) {
+      const earlyAccessValidation = await validateOriginalEarlyAccessForCheckout(
+        originalSlug,
+        earlyAccessPassword
       );
+      if (!earlyAccessValidation.ok) {
+        return NextResponse.json(
+          { error: earlyAccessValidation.message },
+          { status: 403 }
+        );
+      }
     }
 
     const rawAmount = typeof originalPricing?.price === 'number'
@@ -79,10 +88,10 @@ export async function POST(request: NextRequest) {
       : typeof amount === 'number'
         ? amount
         : Number(amount);
-    const checkoutAmount = originalPricing?.testProduct
+    const checkoutAmount = validatedCart?.totalCents ?? (originalPricing?.testProduct
       ? rawAmount
-      : roundUpCentsToNearestTenDollars(rawAmount);
-    const productName = originalPricing?.title || product || 'Artwork Purchase';
+      : roundUpCentsToNearestTenDollars(rawAmount));
+    const productName = validatedCart?.productSummary || originalPricing?.title || product || 'Artwork Purchase';
 
     // Validate required fields
     if (!checkoutAmount || checkoutAmount <= 0) {
@@ -105,7 +114,7 @@ export async function POST(request: NextRequest) {
     // Create session configuration
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ['card'],
-      line_items: [
+      line_items: validatedCart ? cartToStripeLineItems(validatedCart) : [
         {
           price_data: {
             currency: 'usd',
@@ -127,6 +136,8 @@ export async function POST(request: NextRequest) {
       metadata: {
         product: productName,
         original_slug: originalPricing?.slug.current || originalSlug || '',
+        original_slugs: validatedCart?.originalSlugs.join(',') || '',
+        cart_checkout: validatedCart ? 'true' : 'false',
         test_product: originalPricing?.testProduct ? 'true' : 'false',
         checkout_email: normalizedCheckoutEmail,
         shipping_option: shippingOption || 'shipping',

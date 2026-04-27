@@ -15,6 +15,8 @@ import {
   roundUpCentsToNearestTenDollars,
   roundUpToNearestTenDollars,
 } from "../../lib/money";
+import type { CartItem, CartPayloadItem } from "../../lib/cart-types";
+import { clearCart, readCart } from "../components/cart-storage";
 
 let stripePromise: ReturnType<typeof loadStripe> | null = null;
 
@@ -86,6 +88,7 @@ const CheckoutContent = () => {
       : "";
   const priceParam = searchParams.get("price");
   const originalSlug = searchParams.get("originalSlug") || "";
+  const isCartCheckout = searchParams.get("cart") === "1";
   const isTestProduct = searchParams.get("testProduct") === "1";
   const parsedBasePrice = priceParam ? Number.parseFloat(priceParam) : 20;
   const rawBasePriceDollars = Number.isFinite(parsedBasePrice) ? parsedBasePrice : 20;
@@ -108,6 +111,34 @@ const CheckoutContent = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [returnToPath, setReturnToPath] = useState<string>(normalizedReturnToFromQuery);
   const [isDraftInitialized, setIsDraftInitialized] = useState<boolean>(false);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+
+  useEffect(() => {
+    if (!isCartCheckout || typeof window === "undefined") return;
+    setCartItems(readCart());
+  }, [isCartCheckout]);
+
+  const cartPayloadItems: CartPayloadItem[] = cartItems.map((item) => ({
+    id: item.id,
+    type: item.type,
+    title: item.title,
+    price: item.price,
+    originalSlug: item.originalSlug,
+    isTestProduct: item.isTestProduct,
+    printSlug: item.printSlug,
+    printProductType: item.printProductType,
+    printProductName: item.printProductName,
+    printSize: item.printSize,
+    printSizeName: item.printSizeName,
+    quantity: item.quantity ?? 1,
+  }));
+
+  const earlyAccessPasswordsForCart = cartItems.reduce<Record<string, string>>((passwords, item) => {
+    if (item.type === "original" && item.originalSlug && typeof window !== "undefined") {
+      passwords[item.originalSlug] = window.sessionStorage.getItem(`mha-early-access-password:${item.originalSlug}`) || "";
+    }
+    return passwords;
+  }, {});
 
   useEffect(() => {
     if (typeof window === "undefined" || isDraftInitialized) return;
@@ -132,7 +163,7 @@ const CheckoutContent = () => {
       setEarlyAccessPassword(storedEarlyAccessPassword);
     }
 
-    const hasCheckoutParams = Boolean(product && priceParam);
+    const hasCheckoutParams = Boolean(product && priceParam) || isCartCheckout;
 
     // If user returns to bare /checkout (e.g., from browser back), send them to the artwork page.
     if (!hasCheckoutParams && resolvedReturnTo) {
@@ -164,11 +195,13 @@ const CheckoutContent = () => {
     basePriceDollars,
     originalSlug,
     isTestProduct,
+    isCartCheckout,
     router,
   ]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !isDraftInitialized) return;
+    if (isCartCheckout) return;
     if (!product || !priceParam) return;
 
     const draft: CheckoutDraft = {
@@ -198,10 +231,20 @@ const CheckoutContent = () => {
     earlyAccessPassword,
     shippingAddress,
     shippingCost,
+    isCartCheckout,
   ]);
 
   // Shipping is free site-wide.
-  const totalPrice = BASE_PRICE;
+  const cartTotalPrice = cartItems.reduce(
+    (total, item) => total + dollarsToCents(item.price * (item.quantity ?? 1)),
+    0
+  );
+  const totalPrice = isCartCheckout ? cartTotalPrice : BASE_PRICE;
+  const productDisplayName = isCartCheckout
+    ? cartItems.length === 1
+      ? cartItems[0].title
+      : `${cartItems.length} artwork items`
+    : product;
 
   const handleShippingAddressChange = (address: ShippingAddress) => {
     setShippingAddress(address);
@@ -228,14 +271,16 @@ const CheckoutContent = () => {
     try {
       const response = await axios.post("/api/create-stripe-checkout-session", {
         amount: totalPrice,
-        product: product,
-        originalSlug,
-        earlyAccessPassword,
+        product: productDisplayName,
+        originalSlug: isCartCheckout ? "" : originalSlug,
+        earlyAccessPassword: isCartCheckout ? "" : earlyAccessPassword,
+        earlyAccessPasswords: isCartCheckout ? earlyAccessPasswordsForCart : undefined,
+        cartItems: isCartCheckout ? cartPayloadItems : undefined,
         checkoutEmail: checkoutEmail.trim(),
         shippingAddress: shippingOption === "pickup" ? null : shippingAddress,
         billingAddress: null, // Let Stripe collect billing info
         shippingOption: shippingOption,
-        returnTo: returnToPath || null,
+        returnTo: returnToPath || (isCartCheckout ? "/cart" : null),
       });
       const { sessionId } = response.data;
       const stripe = await getStripeClient();
@@ -270,9 +315,11 @@ const CheckoutContent = () => {
       
       const response = await axios.post("/api/paypal/createorder", {
         amount: formatCents(totalPrice),
-        product,
-        originalSlug,
-        earlyAccessPassword,
+        product: productDisplayName,
+        originalSlug: isCartCheckout ? "" : originalSlug,
+        earlyAccessPassword: isCartCheckout ? "" : earlyAccessPassword,
+        earlyAccessPasswords: isCartCheckout ? earlyAccessPasswordsForCart : undefined,
+        cartItems: isCartCheckout ? cartPayloadItems : undefined,
         checkoutEmail: checkoutEmail.trim(),
         shippingAddress: shippingOption === "pickup" ? null : shippingAddress,
         billingAddress: null, // Let PayPal collect billing info
@@ -310,6 +357,7 @@ const CheckoutContent = () => {
       const orderId = data.orderID as string;
       const response = await axios.post("/api/paypal/captureorder", { orderId });
       if (response.data.success) {
+        if (isCartCheckout) clearCart();
         window.location.href = "/success";
       } else {
         throw new Error("Order capture failed");
@@ -335,9 +383,17 @@ const CheckoutContent = () => {
           </h1>
           <div className="w-24 h-px bg-olive/70 mx-auto mb-6"></div>
           <p className={`${lora.className} text-lg text-warm-gray max-w-2xl mx-auto leading-relaxed`}>
-            Acquiring <span className="italic font-medium text-brown">&ldquo;{product}&rdquo;</span> - A unique piece from the curated collection
+            Acquiring <span className="italic font-medium text-brown">&ldquo;{productDisplayName}&rdquo;</span> - A unique piece from the curated collection
           </p>
         </div>
+
+        {isCartCheckout && cartItems.length === 0 && (
+          <div className="mb-8 border-l-2 border-amber-500 pl-4">
+            <p className={`${lora.className} text-amber-700 text-sm`}>
+              Your cart is empty. Add artwork to your cart before checking out.
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-12 lg:gap-16">
           {/* Left Column - Order Details */}
@@ -525,7 +581,7 @@ const CheckoutContent = () => {
               {paymentMethod === "stripe" ? (
                 <button
                   onClick={handleStripeCheckout}
-                  disabled={isProcessing}
+                  disabled={isProcessing || totalPrice <= 0}
                   className={`w-full border border-btn-brown bg-btn-brown px-8 py-4 text-lg text-paper transition-colors duration-300 hover:bg-btn-brown-hover disabled:cursor-not-allowed disabled:opacity-60 ${lora.className} font-medium`}
                 >
                   <span className="flex items-center justify-center text-paper">
@@ -595,10 +651,29 @@ const CheckoutContent = () => {
               <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown`}>Order Summary</h2>
               
               <div className="space-y-4 mb-6">
-                <div className="flex justify-between items-center py-3 border-b border-tan/30">
-                  <span className={`${lora.className} text-warm-gray`}>Artwork Price</span>
-                  <span className={`${lora.className} font-medium text-brown`}>{formatCurrencyFromCents(BASE_PRICE)}</span>
-                </div>
+                {isCartCheckout ? (
+                  cartItems.map((item) => (
+                    <div key={item.id} className="flex justify-between items-start gap-4 py-3 border-b border-tan/30">
+                      <div>
+                        <span className={`${lora.className} block text-warm-gray`}>{item.title}</span>
+                        <span className={`${lora.className} block text-xs text-warm-gray/80`}>
+                          {item.type === "original"
+                            ? "Original"
+                            : `${item.printProductName || "Print"}${item.printSizeName ? `, ${item.printSizeName}` : ""}`}
+                          {(item.quantity ?? 1) > 1 ? ` x ${item.quantity}` : ""}
+                        </span>
+                      </div>
+                      <span className={`${lora.className} font-medium text-brown`}>
+                        {formatCurrencyFromCents(dollarsToCents(item.price * (item.quantity ?? 1)))}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex justify-between items-center py-3 border-b border-tan/30">
+                    <span className={`${lora.className} text-warm-gray`}>Artwork Price</span>
+                    <span className={`${lora.className} font-medium text-brown`}>{formatCurrencyFromCents(BASE_PRICE)}</span>
+                  </div>
+                )}
                 
                 {shippingOption === "shipping" ? (
                   <div className="flex justify-between items-center py-3 border-b border-tan/30">

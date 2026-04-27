@@ -44,6 +44,20 @@ const parseOriginalSlugFromReferenceId = (value: unknown): string | null => {
   return slug || null;
 };
 
+const parseOriginalSlugsFromReferenceId = (value: unknown): string[] => {
+  if (typeof value !== 'string') return [];
+  if (value.startsWith('cart_original_slugs:')) {
+    return value
+      .slice('cart_original_slugs:'.length)
+      .split(',')
+      .map((slug) => slug.trim())
+      .filter(Boolean);
+  }
+
+  const slug = parseOriginalSlugFromReferenceId(value);
+  return slug ? [slug] : [];
+};
+
 const getPayPalCapturedAmount = (purchaseUnit: PayPalPurchaseUnit | null | undefined): string | null => {
   const captureAmount = purchaseUnit?.payments?.captures?.find((capture) => {
     const value = capture?.amount?.value;
@@ -136,10 +150,11 @@ export async function POST(request: NextRequest) {
     }
 
     const orderPurchaseUnit = orderDetails.purchase_units?.[0];
-    const originalSlug = parseOriginalSlugFromReferenceId(orderPurchaseUnit?.reference_id);
+    const originalSlugs = parseOriginalSlugsFromReferenceId(orderPurchaseUnit?.reference_id);
+    const originalSlug = originalSlugs[0] ?? null;
 
-    if (originalSlug) {
-      const originalPricing = await fetchOriginalCheckoutPricing(originalSlug);
+    for (const slug of originalSlugs) {
+      const originalPricing = await fetchOriginalCheckoutPricing(slug);
 
       if (!originalPricing) {
         return NextResponse.json(
@@ -187,10 +202,10 @@ export async function POST(request: NextRequest) {
       const purchaseUnit = (captureData.purchase_units?.[0] as PayPalPurchaseUnit | undefined) ?? orderPurchaseUnit;
 
       try {
-        const soldResult = await markOriginalSoldBySlug(
-          parseOriginalSlugFromReferenceId(purchaseUnit?.reference_id) ?? originalSlug
-        );
-        console.log('PayPal original sold update:', soldResult);
+        const capturedOriginalSlugs = parseOriginalSlugsFromReferenceId(purchaseUnit?.reference_id);
+        const slugsToMarkSold = capturedOriginalSlugs.length ? capturedOriginalSlugs : originalSlugs;
+        const soldResults = await Promise.all(slugsToMarkSold.map((slug) => markOriginalSoldBySlug(slug)));
+        console.log('PayPal original sold update:', soldResults);
       } catch (soldError) {
         console.error('Failed to mark PayPal original as sold:', soldError);
       }

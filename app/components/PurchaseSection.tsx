@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { lora } from "../fonts";
 import { formatDollars, roundUpToNearestTenDollars } from "../../lib/money";
 import type { OriginalEarlyAccessState } from "../../lib/originals";
+import AddToCartButton from "./AddToCartButton";
 
 type PurchaseSectionProps = {
   title: string;
@@ -129,6 +130,20 @@ export default function PurchaseSection({
       >
         {isSold ? "Sold" : "Purchase This Piece"}
       </button>
+      <div className="mt-4">
+        <AddToCartButton
+          disabled={isUpcoming || isSold}
+          item={{
+            id: `original:${originalSlug}`,
+            type: "original",
+            title,
+            price: checkoutPrice,
+            originalSlug,
+            isTestProduct,
+            quantity: 1,
+          }}
+        />
+      </div>
     </div>
   );
 }

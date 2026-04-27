@@ -4,6 +4,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { cormorant, lora } from '../fonts';
+import CartLink from './CartLink';
 
 export default function NavBar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -137,12 +138,16 @@ export default function NavBar() {
               </Link>
             </li>
           )}
-          {/* <li>
-            <Link href="/prints" className="relative group py-2 px-1 hover:text-olive transition-colors duration-300">
+          <li>
+            <Link
+              href="/prints"
+              onClick={() => setIsDesktopOriginalsOpen(false)}
+              className="relative group inline-flex h-10 items-center px-1 hover:text-[var(--link-olive)] transition-colors duration-300"
+            >
               Prints
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-olive transition-all duration-300 group-hover:w-full"></span>
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[var(--link-olive)] transition-all duration-300 group-hover:w-full"></span>
             </Link>
-          </li> */}
+          </li>
           <li>
             <Link
               href="/commissions"
@@ -162,6 +167,12 @@ export default function NavBar() {
               Contact
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[var(--link-olive)] transition-all duration-300 group-hover:w-full"></span>
             </Link>
+          </li>
+          <li>
+            <CartLink
+              className="relative group inline-flex h-10 items-center px-1 hover:text-[var(--link-olive)] transition-colors duration-300"
+              onClick={() => setIsDesktopOriginalsOpen(false)}
+            />
           </li>
         </ul>
       </nav>
@@ -232,15 +243,15 @@ export default function NavBar() {
                 </Link>
               </li>
             )}
-            {/* <li>
+            <li>
               <Link 
                 href="/prints" 
-                onClick={() => setIsOpen(false)} 
+                onClick={closeMenus} 
                 className="block py-3 px-4 rounded-lg hover:bg-[var(--link-olive-hover-bg)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
               >
                 Prints
               </Link>
-            </li> */}
+            </li>
             <li>
               <Link 
                 href="/commissions" 
@@ -258,6 +269,12 @@ export default function NavBar() {
               >
                 Contact
               </Link>
+            </li>
+            <li>
+              <CartLink
+                onClick={closeMenus}
+                className="block py-3 px-4 rounded-lg hover:bg-[var(--link-olive-hover-bg)] hover:text-[var(--link-olive)] transition-all duration-200 border-l-4 border-transparent hover:border-[var(--link-olive)]"
+              />
             </li>
           </ul>
         </div>

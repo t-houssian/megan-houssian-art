@@ -16,6 +16,15 @@ const getStripe = () => {
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+const getOriginalSlugsFromMetadata = (metadata: Stripe.Metadata | null | undefined) => {
+  const slugs = metadata?.original_slugs
+    ? metadata.original_slugs.split(',').map((slug) => slug.trim()).filter(Boolean)
+    : [];
+
+  if (slugs.length > 0) return slugs;
+  return metadata?.original_slug ? [metadata.original_slug] : [];
+};
+
 export async function POST(request: NextRequest) {
   try {
     // Check if Stripe is configured
@@ -57,7 +66,9 @@ export async function POST(request: NextRequest) {
         console.log('Amount paid:', session.amount_total);
 
         try {
-          const soldResult = await markOriginalSoldBySlug(session.metadata?.original_slug);
+          const soldResult = await Promise.all(
+            getOriginalSlugsFromMetadata(session.metadata).map((slug) => markOriginalSoldBySlug(slug))
+          );
           console.log('Stripe original sold update:', soldResult);
         } catch (soldError) {
           console.error('Failed to mark Stripe original as sold:', soldError);

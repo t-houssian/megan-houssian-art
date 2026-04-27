@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { cormorant, lora } from '../fonts';
+import ClearCartOnSuccess from '../components/ClearCartOnSuccess';
 
 export default function SuccessPage() {
   return (
     <section className="flex flex-col items-center justify-center min-h-screen bg-ivory px-4">
+      <ClearCartOnSuccess />
       <h1 className={`${cormorant.className} text-4xl font-bold text-brown mb-4`}>Payment Successful!</h1>
       <p className={`${lora.className} text-brown mb-8 text-center max-w-2xl`}>
         Thank you for your purchase! 🎨 Your payment has been processed successfully. 
