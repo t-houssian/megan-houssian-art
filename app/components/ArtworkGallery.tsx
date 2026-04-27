@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import ImageUrlBuilder from "@sanity/image-url";
 import { sanityClient } from "../../lib/sanity"; // Adjust the path as needed
@@ -13,21 +13,20 @@ type GalleryImage = {
   asset: { _ref: string };
 };
 
-function getImageDimensions(image?: GalleryImage) {
-  const match = image?.asset?._ref?.match(/-(\d+)x(\d+)-/);
-  const width = match ? Number(match[1]) : 1200;
-  const height = match ? Number(match[2]) : 1500;
-
-  return {
-    width: Number.isFinite(width) && width > 0 ? width : 1200,
-    height: Number.isFinite(height) && height > 0 ? height : 1500,
-  };
-}
-
 type ArtworkGalleryProps = {
   mainImage?: GalleryImage;
   gallery?: GalleryImage[];
   title: string;
+};
+
+type DragState = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  lastX: number;
+  lastTime: number;
+  velocityX: number;
+  hasDragged: boolean;
 };
 
 export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGalleryProps) {
@@ -35,65 +34,188 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
   const images: GalleryImage[] = mainImage ? [mainImage, ...(gallery || [])] : (gallery || []);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const mainViewerRef = useRef<HTMLDivElement>(null);
+  const modalViewerRef = useRef<HTMLDivElement>(null);
+  const dragStateRef = useRef<DragState | null>(null);
+  const suppressClickRef = useRef(false);
 
-  const selectedImage = images[selectedIndex];
-  const selectedDimensions = getImageDimensions(selectedImage);
+  const slideBasis = images.length > 0 ? 100 / images.length : 100;
+  const trackTransform =
+    images.length > 1
+      ? `translate3d(calc(${-selectedIndex * slideBasis}% + ${dragOffset}px), 0, 0)`
+      : "translate3d(0, 0, 0)";
 
   const openModal = () => {
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false;
+      return;
+    }
+
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
+    suppressClickRef.current = false;
     setIsModalOpen(false);
   };
 
-  const prevImage = (e?: React.MouseEvent) => {
+  const prevImage = useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation(); // Prevent triggering openModal
     setSelectedIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : images.length - 1));
-  };
+  }, [images.length]);
 
-  const nextImage = (e?: React.MouseEvent) => {
+  const nextImage = useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation();
     setSelectedIndex((prevIndex) => (prevIndex < images.length - 1 ? prevIndex + 1 : 0));
-  };
+  }, [images.length]);
 
-  const handleTouchEnd = (touchEndX: number) => {
-    if (touchStartX === null || images.length < 2) return;
+  const finishDrag = useCallback((viewer: HTMLDivElement | null) => {
+    const dragState = dragStateRef.current;
+    if (!dragState) return;
 
-    const distance = touchStartX - touchEndX;
-    if (Math.abs(distance) > 40) {
-      if (distance > 0) {
-        nextImage();
-      } else {
-        prevImage();
-      }
+    const distance = dragState.lastX - dragState.startX;
+    const viewerWidth = viewer?.clientWidth ?? 0;
+    const distanceThreshold = Math.max(48, viewerWidth * 0.16);
+    const velocityThreshold = 0.45;
+    const shouldAdvance =
+      Math.abs(distance) > distanceThreshold || Math.abs(dragState.velocityX) > velocityThreshold;
+
+    if (dragState.hasDragged) {
+      suppressClickRef.current = true;
     }
 
-    setTouchStartX(null);
+    dragStateRef.current = null;
+    setIsDragging(false);
+    setDragOffset(0);
+
+    if (shouldAdvance && images.length > 1) {
+      if (distance < 0) {
+        setSelectedIndex((prevIndex) => (prevIndex < images.length - 1 ? prevIndex + 1 : 0));
+      } else {
+        setSelectedIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : images.length - 1));
+      }
+    }
+  }, [images.length]);
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (images.length < 2) return;
+
+    dragStateRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      lastX: event.clientX,
+      lastTime: performance.now(),
+      velocityX: 0,
+      hasDragged: false,
+    };
+
+    setIsDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
   };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const dragState = dragStateRef.current;
+    if (!dragState || dragState.pointerId !== event.pointerId) return;
+
+    const deltaX = event.clientX - dragState.startX;
+    const deltaY = event.clientY - dragState.startY;
+
+    if (!dragState.hasDragged && Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 8) {
+      dragStateRef.current = null;
+      setIsDragging(false);
+      setDragOffset(0);
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      return;
+    }
+
+    if (Math.abs(deltaX) > 6) {
+      dragState.hasDragged = true;
+    }
+
+    const now = performance.now();
+    const elapsed = Math.max(1, now - dragState.lastTime);
+    dragState.velocityX = (event.clientX - dragState.lastX) / elapsed;
+    dragState.lastX = event.clientX;
+    dragState.lastTime = now;
+
+    if (dragState.hasDragged) {
+      setDragOffset(deltaX);
+    }
+  };
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    const viewer = event.currentTarget;
+    finishDrag(viewer);
+  };
+
+  const handlePointerCancel = () => {
+    dragStateRef.current = null;
+    setIsDragging(false);
+    setDragOffset(0);
+  };
+
+  const renderImageTrack = (variant: "page" | "modal") => (
+    <div
+      className={`flex h-full ${isDragging ? "transition-none" : "transition-transform duration-300 ease-out"}`}
+      style={{
+        width: `${images.length * 100}%`,
+        transform: trackTransform,
+        willChange: "transform",
+      }}
+    >
+      {images.map((image, index) => (
+        <div
+          key={`${image.asset._ref}-${index}`}
+          className="relative h-full min-w-0"
+          style={{ flex: `0 0 ${slideBasis}%` }}
+        >
+          <Image
+            src={urlFor(image)
+              .width(variant === "modal" ? 2400 : 1600)
+              .fit("max")
+              .quality(variant === "modal" ? 95 : 90)
+              .url()}
+            alt={`${title} image ${index + 1}`}
+            fill
+            draggable={false}
+            className="select-none object-contain"
+            sizes={
+              variant === "modal"
+                ? "92vw"
+                : "(min-width: 1280px) 40vw, (min-width: 1024px) 45vw, (min-width: 768px) 60vw, 90vw"
+            }
+            priority={index === 0}
+          />
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="space-y-6">
       {/* Main image */}
       <div
-        className="relative w-full cursor-pointer overflow-hidden bg-ivory min-h-[420px] sm:min-h-[560px] lg:min-h-[720px]"
+        ref={mainViewerRef}
+        className={`relative w-full cursor-pointer overflow-hidden bg-ivory min-h-[420px] sm:min-h-[560px] lg:min-h-[720px] [touch-action:pan-y] ${
+          isDragging ? "cursor-grabbing" : "cursor-grab"
+        }`}
         onClick={openModal}
-        onTouchStart={(event) => setTouchStartX(event.touches[0]?.clientX ?? null)}
-        onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
+        onPointerLeave={(event) => {
+          if (dragStateRef.current?.pointerId === event.pointerId) {
+            finishDrag(mainViewerRef.current);
+          }
+        }}
       >
-        <div className="absolute inset-0">
-          {selectedImage && (
-            <Image
-              src={urlFor(selectedImage).width(1600).fit("max").quality(90).url()}
-              alt={`${title} image ${selectedIndex + 1}`}
-              fill
-              className="object-contain"
-              sizes="(min-width: 1280px) 40vw, (min-width: 1024px) 45vw, (min-width: 768px) 60vw, 90vw"
-              priority
-            />
-          )}
-        </div>
+        {images.length > 0 && renderImageTrack("page")}
       </div>
 
       {/* Gallery navigation */}
@@ -147,20 +269,20 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
           onClick={closeModal}
         >
           <div
-            className="relative inline-block"
+            ref={modalViewerRef}
+            className="relative h-[88vh] w-[92vw] overflow-hidden [touch-action:pan-y]"
             onClick={(event) => event.stopPropagation()}
-            onTouchStart={(event) => setTouchStartX(event.touches[0]?.clientX ?? null)}
-            onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerCancel}
+            onPointerLeave={(event) => {
+              if (dragStateRef.current?.pointerId === event.pointerId) {
+                finishDrag(modalViewerRef.current);
+              }
+            }}
           >
-            {selectedImage && (
-              <Image
-                src={urlFor(selectedImage).width(2400).fit("max").quality(95).url()}
-                alt={`${title} enlarged image`}
-                width={selectedDimensions.width}
-                height={selectedDimensions.height}
-                className="block h-auto max-h-[88vh] w-auto max-w-[92vw] object-contain"
-              />
-            )}
+            {images.length > 0 && renderImageTrack("modal")}
             {/* Left and Right Navigation Arrows in modal */}
             <button
               onClick={prevImage}
