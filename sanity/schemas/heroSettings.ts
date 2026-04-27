@@ -10,6 +10,7 @@ const DEFAULT_HERO_CTA = {
   href: '/originals',
   placement: 'middle',
   colorScheme: DEFAULT_HERO_CTA_COLOR_SCHEME,
+  transparentBackground: false,
 }
 
 export default defineType({
@@ -220,6 +221,14 @@ export default defineType({
             list: HERO_CTA_COLOR_SCHEME_OPTIONS,
           },
           validation: (rule) => rule.required(),
+        }),
+        defineField({
+          name: 'transparentBackground',
+          title: 'Transparent Background',
+          type: 'boolean',
+          initialValue: DEFAULT_HERO_CTA.transparentBackground,
+          description: 'Turn this on to remove the button fill and keep the button as an outline until hover.',
+          hidden: ({ parent }) => parent?.enabled === false,
         }),
       ],
     })

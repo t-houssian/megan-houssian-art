@@ -192,6 +192,7 @@ type HeroCtaSettings = {
   href?: string;
   placement?: HeroCtaPlacement | null;
   colorScheme?: HeroCtaColorSchemeKey | null;
+  transparentBackground?: boolean | null;
 };
 
 type HeroSettings = {
@@ -210,6 +211,7 @@ const DEFAULT_HERO_CTA = {
   href: '/originals',
   placement: 'middle' as HeroCtaPlacement,
   colorScheme: DEFAULT_HERO_CTA_COLOR_SCHEME,
+  transparentBackground: false,
 };
 
 const HERO_CTA_PLACEMENT_CLASSES: Record<HeroCtaPlacement, string> = {
@@ -292,7 +294,10 @@ export default async function Hero() {
   const ctaLabel = normalizeString(cta?.label, DEFAULT_HERO_CTA.label);
   const ctaHref = normalizeInternalHref(cta?.href, DEFAULT_HERO_CTA.href);
   const ctaPlacement = normalizePlacement(cta?.placement);
-  const ctaColorScheme = HERO_CTA_COLOR_SCHEMES[normalizeCtaColorScheme(cta?.colorScheme)];
+  const ctaColorSchemeKey = normalizeCtaColorScheme(cta?.colorScheme);
+  const ctaColorScheme = HERO_CTA_COLOR_SCHEMES[ctaColorSchemeKey];
+  const isDefaultCtaColorScheme = ctaColorSchemeKey === DEFAULT_HERO_CTA_COLOR_SCHEME;
+  const hasTransparentCtaBackground = cta?.transparentBackground === true;
   const ctaStyle = {
     '--hero-cta-bg': ctaColorScheme.backgroundColor,
     '--hero-cta-text': ctaColorScheme.textColor,
@@ -300,6 +305,13 @@ export default async function Hero() {
     '--hero-cta-hover-bg': ctaColorScheme.hoverBackgroundColor,
     '--hero-cta-hover-text': ctaColorScheme.hoverTextColor,
   } as CSSProperties;
+  const ctaColorClasses = hasTransparentCtaBackground
+    ? isDefaultCtaColorScheme
+      ? 'border-black/80 bg-transparent text-paper hover:bg-gradient-to-r hover:from-btn-brown hover:to-btn-brown-hover hover:text-paper'
+      : 'border-[var(--hero-cta-border)] bg-transparent text-[var(--hero-cta-text)] hover:[background:var(--hero-cta-hover-bg)] hover:text-[var(--hero-cta-hover-text)]'
+    : isDefaultCtaColorScheme
+      ? 'border-black/80 bg-gradient-to-r from-btn-brown to-btn-brown-hover text-paper'
+      : 'border-[var(--hero-cta-border)] [background:var(--hero-cta-bg)] text-[var(--hero-cta-text)] hover:[background:var(--hero-cta-hover-bg)] hover:text-[var(--hero-cta-hover-text)]';
 
   return (
     <section className="relative w-full h-[80vh] overflow-hidden">
@@ -321,8 +333,8 @@ export default async function Hero() {
         >
           <Link
             href={ctaHref}
-            style={ctaStyle}
-            className={`group relative inline-block overflow-hidden rounded-full border-2 border-[var(--hero-cta-border)] [background:var(--hero-cta-bg)] px-8 py-3 text-[var(--hero-cta-text)] shadow-vintage transition-all duration-500 hover:-translate-y-0.5 hover:[background:var(--hero-cta-hover-bg)] hover:text-[var(--hero-cta-hover-text)] hover:shadow-vintage-lg ${lora.className} font-medium`}
+            style={isDefaultCtaColorScheme ? undefined : ctaStyle}
+            className={`group relative inline-block overflow-hidden rounded-full border-2 px-8 py-3 shadow-vintage transition-all duration-500 hover:-translate-y-0.5 hover:shadow-vintage-lg ${lora.className} font-medium ${ctaColorClasses}`}
           >
             <span className="relative z-10">{ctaLabel}</span>
             <span className="pointer-events-none absolute inset-0 -translate-x-full -skew-x-12 bg-gradient-to-r from-transparent via-paper to-transparent opacity-0 transition-all duration-700 group-hover:translate-x-full group-hover:opacity-10" />

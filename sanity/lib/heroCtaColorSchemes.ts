@@ -3,11 +3,11 @@ import { DEFAULT_SITE_THEME } from './siteTheme';
 export const HERO_CTA_COLOR_SCHEMES = {
   default: {
     title: 'Default - matches site buttons',
-    backgroundColor: `linear-gradient(to right, ${DEFAULT_SITE_THEME.buttonColor}, ${DEFAULT_SITE_THEME.buttonHoverColor})`,
-    textColor: DEFAULT_SITE_THEME.secondaryBackgroundColor,
+    backgroundColor: 'linear-gradient(to right, var(--btn-brown), var(--btn-brown-hover))',
+    textColor: 'var(--bg-paper)',
     borderColor: '#000000CC',
-    hoverBackgroundColor: `linear-gradient(to right, ${DEFAULT_SITE_THEME.buttonColor}, ${DEFAULT_SITE_THEME.buttonHoverColor})`,
-    hoverTextColor: DEFAULT_SITE_THEME.secondaryBackgroundColor,
+    hoverBackgroundColor: 'linear-gradient(to right, var(--btn-brown), var(--btn-brown-hover))',
+    hoverTextColor: 'var(--bg-paper)',
   },
   white: {
     title: 'White',
