@@ -1,7 +1,10 @@
 // components/Hero.tsx
+import type { CSSProperties } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { sanityClient } from '../../lib/sanity';
 import { urlFor } from '../../sanity/lib/image';
+import { lora } from '../fonts';
 
 const HERO_COLOR_PRESETS = {
   classic: {
@@ -176,6 +179,20 @@ const HERO_COLOR_PRESETS = {
 
 type HeroStylePresetKey = keyof typeof HERO_COLOR_PRESETS;
 
+type HeroCtaPlacement = 'higher' | 'middle' | 'lower';
+
+type HeroCtaSettings = {
+  enabled?: boolean;
+  label?: string;
+  href?: string;
+  placement?: HeroCtaPlacement | null;
+  backgroundColor?: string;
+  textColor?: string;
+  borderColor?: string;
+  hoverBackgroundColor?: string;
+  hoverTextColor?: string;
+};
+
 type HeroSettings = {
   backgroundImage?: {
     asset?: {
@@ -184,14 +201,56 @@ type HeroSettings = {
     alt?: string;
   };
   stylePreset?: HeroStylePresetKey | null;
+  cta?: HeroCtaSettings | null;
 };
+
+const DEFAULT_HERO_CTA = {
+  label: 'Browse Originals',
+  href: '/originals',
+  placement: 'middle' as HeroCtaPlacement,
+  backgroundColor: '#4D5853',
+  textColor: '#E7E1D4',
+  borderColor: '#000000',
+  hoverBackgroundColor: '#2F342F',
+  hoverTextColor: '#E7E1D4',
+};
+
+const HERO_CTA_PLACEMENT_CLASSES: Record<HeroCtaPlacement, string> = {
+  higher: 'top-[38%]',
+  middle: 'top-1/2',
+  lower: 'top-[62%]',
+};
+
+const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{6})$/;
+
+const normalizeString = (value: unknown, fallback: string) => {
+  if (typeof value !== 'string') return fallback;
+  const normalized = value.trim();
+  return normalized || fallback;
+};
+
+const normalizeInternalHref = (value: unknown, fallback: string) => {
+  const normalized = normalizeString(value, fallback);
+  return normalized.startsWith('/') && !normalized.startsWith('//') ? normalized : fallback;
+};
+
+const normalizeHexColor = (value: unknown, fallback: string) => {
+  const normalized = normalizeString(value, fallback);
+  return HEX_COLOR_PATTERN.test(normalized) ? normalized : fallback;
+};
+
+const normalizePlacement = (value: unknown): HeroCtaPlacement =>
+  value === 'higher' || value === 'lower' || value === 'middle'
+    ? value
+    : DEFAULT_HERO_CTA.placement;
 
 const heroProjection = `{
   backgroundImage{
     asset,
     alt
   },
-  stylePreset
+  stylePreset,
+  cta
 }`;
 
 const heroSingletonQuery = `*[
@@ -233,6 +292,18 @@ export default async function Hero() {
     : '/images/blueBG.jpg';
 
   const heroAlt = heroSettings?.backgroundImage?.alt?.trim() || 'Hero Image';
+  const cta = heroSettings?.cta;
+  const shouldShowCta = Boolean(cta?.enabled);
+  const ctaLabel = normalizeString(cta?.label, DEFAULT_HERO_CTA.label);
+  const ctaHref = normalizeInternalHref(cta?.href, DEFAULT_HERO_CTA.href);
+  const ctaPlacement = normalizePlacement(cta?.placement);
+  const ctaStyle = {
+    '--hero-cta-bg': normalizeHexColor(cta?.backgroundColor, DEFAULT_HERO_CTA.backgroundColor),
+    '--hero-cta-text': normalizeHexColor(cta?.textColor, DEFAULT_HERO_CTA.textColor),
+    '--hero-cta-border': normalizeHexColor(cta?.borderColor, DEFAULT_HERO_CTA.borderColor),
+    '--hero-cta-hover-bg': normalizeHexColor(cta?.hoverBackgroundColor, DEFAULT_HERO_CTA.hoverBackgroundColor),
+    '--hero-cta-hover-text': normalizeHexColor(cta?.hoverTextColor, DEFAULT_HERO_CTA.hoverTextColor),
+  } as CSSProperties;
 
   return (
     <section className="relative w-full h-[80vh] overflow-hidden">
@@ -248,6 +319,20 @@ export default async function Hero() {
         priority
       />
       <div className="absolute inset-0 bg-hero-overlay/40"></div>
+      {shouldShowCta && (
+        <div
+          className={`absolute left-0 right-0 z-10 flex -translate-y-1/2 justify-center px-6 ${HERO_CTA_PLACEMENT_CLASSES[ctaPlacement]}`}
+        >
+          <Link
+            href={ctaHref}
+            style={ctaStyle}
+            className={`group relative inline-block overflow-hidden rounded-full border-2 border-[var(--hero-cta-border)] bg-[var(--hero-cta-bg)] px-8 py-3 text-[var(--hero-cta-text)] shadow-vintage transition-all duration-500 hover:-translate-y-0.5 hover:bg-[var(--hero-cta-hover-bg)] hover:text-[var(--hero-cta-hover-text)] hover:shadow-vintage-lg ${lora.className} font-medium`}
+          >
+            <span className="relative z-10">{ctaLabel}</span>
+            <span className="pointer-events-none absolute inset-0 -translate-x-full -skew-x-12 bg-gradient-to-r from-transparent via-paper to-transparent opacity-0 transition-all duration-700 group-hover:translate-x-full group-hover:opacity-10" />
+          </Link>
+        </div>
+      )}
     </section>
   );
 }
