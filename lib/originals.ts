@@ -48,14 +48,6 @@ export type OriginalArtworkSummary = {
 export type OriginalArtwork = OriginalArtworkSummary & {
   gallery?: Array<{ asset: { _ref: string } }>;
   description?: string;
-  shipping?: {
-    weight?: number;
-    dimensions?: {
-      length?: number;
-      width?: number;
-      height?: number;
-    };
-  };
 };
 
 export type OriginalCollection = OriginalCollectionSummary & {
@@ -153,8 +145,7 @@ const ORIGINAL_BY_SLUG_QUERY = `
   *[_type == "original" && slug.current == $slug][0]{
     ${ORIGINAL_SUMMARY_PROJECTION},
     gallery,
-    description,
-    shipping
+    description
   }
 `;
 
