@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense, useEffect } from "react";
+import React, { useState, Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
@@ -75,6 +75,17 @@ type CheckoutDraft = {
 };
 
 const isValidEmail = (value: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+const getEmailValidationMessage = (paymentMethodLabel: string, email: string) => {
+  if (!email.trim()) {
+    return `Please enter your email above before continuing with ${paymentMethodLabel}.`;
+  }
+
+  if (!isValidEmail(email.trim())) {
+    return `Please enter a valid email address above before continuing with ${paymentMethodLabel}.`;
+  }
+
+  return null;
+};
 
 const CheckoutContent = () => {
   const router = useRouter();
@@ -112,6 +123,7 @@ const CheckoutContent = () => {
   const [returnToPath, setReturnToPath] = useState<string>(normalizedReturnToFromQuery);
   const [isDraftInitialized, setIsDraftInitialized] = useState<boolean>(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const checkoutEmailRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isCartCheckout || typeof window === "undefined") return;
@@ -251,19 +263,31 @@ const CheckoutContent = () => {
     setShippingCost(0);
   };
 
-  // Handler for Stripe checkout: call your API route that creates a Stripe Checkout session.
-  const handleStripeCheckout = async (): Promise<void> => {
-    // Validate address only for shipping option
-    if (!isValidEmail(checkoutEmail)) {
-      setErrorMessage("Please enter a valid email address.");
-      return;
-    }
+  const focusCheckoutEmail = () => {
+    checkoutEmailRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    checkoutEmailRef.current?.focus({ preventScroll: true });
+  };
+
+  const getCheckoutValidationMessage = (paymentMethodLabel: string) => {
+    const emailValidationMessage = getEmailValidationMessage(paymentMethodLabel, checkoutEmail);
+    if (emailValidationMessage) return emailValidationMessage;
 
     if (shippingOption === "shipping") {
       if (!shippingAddress.name || !shippingAddress.addressLine1 || !shippingAddress.city) {
-        setErrorMessage("Please fill in all required shipping fields.");
-        return;
+        return "Please fill in all required shipping fields.";
       }
+    }
+
+    return null;
+  };
+
+  // Handler for Stripe checkout: call your API route that creates a Stripe Checkout session.
+  const handleStripeCheckout = async (): Promise<void> => {
+    const validationMessage = getCheckoutValidationMessage("Stripe/Card");
+    if (validationMessage) {
+      setErrorMessage(validationMessage);
+      if (validationMessage.toLowerCase().includes("email")) focusCheckoutEmail();
+      return;
     }
 
     setIsProcessing(true);
@@ -523,9 +547,15 @@ const CheckoutContent = () => {
                 </label>
                 <input
                   id="checkout-email"
+                  ref={checkoutEmailRef}
                   type="email"
                   value={checkoutEmail}
-                  onChange={(event) => setCheckoutEmail(event.target.value)}
+                  onChange={(event) => {
+                    setCheckoutEmail(event.target.value);
+                    if (errorMessage?.toLowerCase().includes("email")) {
+                      setErrorMessage(null);
+                    }
+                  }}
                   placeholder="you@example.com"
                   className="block w-full border-0 border-b border-tan/60 bg-transparent px-0 py-3 text-brown placeholder-warm-gray/60 focus:border-olive focus:outline-none focus:ring-0 transition-all duration-200"
                   required
@@ -614,15 +644,11 @@ const CheckoutContent = () => {
                         style={{ layout: "vertical", color: "gold", shape: "rect", label: "paypal", height: 55 }}
                         createOrder={async (): Promise<string> => {
                           try {
-                            if (!isValidEmail(checkoutEmail)) {
-                              setErrorMessage("Please enter a valid email address.");
-                              throw new Error("Please enter a valid email address.");
-                            }
-                            if (shippingOption === "shipping") {
-                              if (!shippingAddress.name || !shippingAddress.addressLine1 || !shippingAddress.city) {
-                                setErrorMessage("Please fill in all required shipping fields.");
-                                throw new Error("Please fill in all required shipping fields.");
-                              }
+                            const validationMessage = getCheckoutValidationMessage("PayPal");
+                            if (validationMessage) {
+                              setErrorMessage(validationMessage);
+                              if (validationMessage.toLowerCase().includes("email")) focusCheckoutEmail();
+                              throw new Error(validationMessage);
                             }
                             const orderId = await createPayPalOrder();
                             return orderId;
@@ -635,6 +661,13 @@ const CheckoutContent = () => {
                         onApprove={onPayPalApprove}
                         onError={(err: unknown) => {
                           console.error("PayPal Error:", err);
+                          if (
+                            err instanceof Error &&
+                            (err.message.includes("email above") || err.message.includes("required shipping fields"))
+                          ) {
+                            setErrorMessage(err.message);
+                            return;
+                          }
                           setErrorMessage("PayPal payment failed. Please try again or use card payment.");
                         }}
                       />
