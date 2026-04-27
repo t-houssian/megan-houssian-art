@@ -102,6 +102,14 @@ type RawOriginalCollection = OriginalCollectionSummary & {
   originals?: RawOriginalArtworkSummary[];
 };
 
+type RawOriginalsOrderedResult = {
+  orderDoc?: {
+    items?: RawOriginalArtworkSummary[];
+    orderedIds?: string[];
+  } | null;
+  all?: RawOriginalArtworkSummary[];
+};
+
 const COLLECTION_SUMMARY_PROJECTION = `
   _id,
   title,
@@ -135,10 +143,17 @@ const ORIGINAL_SUMMARY_PROJECTION = `
   }
 `;
 
-const ORIGINALS_LIST_QUERY = `
-  *[_type == "original" && defined(slug.current)]{
+const ORIGINALS_LIST_QUERY = `{
+  "orderDoc": *[_type == "originalOrder"][0]{
+    "items": items[]->{
+      ${ORIGINAL_SUMMARY_PROJECTION}
+    },
+    "orderedIds": items[]._ref
+  },
+  "all": *[_type == "original" && defined(slug.current)] | order(coalesce(sold, false) asc, _createdAt desc){
     ${ORIGINAL_SUMMARY_PROJECTION}
-  } | order(coalesce(sold, false) asc, _createdAt desc)
+  }
+}
 `;
 
 const ORIGINAL_BY_SLUG_QUERY = `
@@ -444,13 +459,17 @@ function normalizeCollection(collection: RawOriginalCollection): OriginalCollect
 }
 
 export async function fetchOriginals(): Promise<OriginalArtworkSummary[]> {
-  const originals = await sanityClient.withConfig({ useCdn: false }).fetch<RawOriginalArtworkSummary[]>(
+  const result = await sanityClient.withConfig({ useCdn: false }).fetch<RawOriginalsOrderedResult>(
     ORIGINALS_LIST_QUERY,
     {},
     { cache: 'no-store' }
   );
 
-  return originals.map(normalizeOriginal);
+  const orderedIds = new Set(result.orderDoc?.orderedIds ?? []);
+  const orderedOriginals = (result.orderDoc?.items ?? []).filter((original) => original?._id);
+  const unorderedOriginals = (result.all ?? []).filter((original) => !orderedIds.has(original._id));
+
+  return [...orderedOriginals, ...unorderedOriginals].map(normalizeOriginal);
 }
 
 export async function fetchOriginalBySlug(slug: string): Promise<OriginalArtwork | null> {

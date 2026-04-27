@@ -5,6 +5,7 @@ const singletonTypes = new Set([
   'heroSettings',
   'aboutPageSettings',
   'originalsPageSettings',
+  'originalOrder',
   'commissionsPageSettings',
   'emailSettings',
 ])
@@ -49,6 +50,14 @@ export const structure: StructureResolver = (S) =>
           S.document()
             .schemaType('originalsPageSettings')
             .documentId('originalsPageSettings')
+        ),
+      S.listItem()
+        .title('Originals Order')
+        .id('originalOrder')
+        .child(
+          S.document()
+            .schemaType('originalOrder')
+            .documentId('originalOrder')
         ),
       S.listItem()
         .title('About Page Settings')
