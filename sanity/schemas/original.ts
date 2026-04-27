@@ -75,6 +75,9 @@ export default defineType({
       title: 'Sold',
       type: 'boolean',
       initialValue: false,
+      readOnly: false,
+      description:
+        'Manual sale status. Turn this off and publish the document if a piece needs to be made available again.',
     },
     {
       name: 'releaseAt',
