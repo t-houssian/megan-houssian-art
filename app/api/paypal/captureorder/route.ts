@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendOrderConfirmationEmail } from '../../../../lib/order-confirmation-email';
-import { markOriginalSoldBySlug } from '../../../../lib/originals';
+import { fetchOriginalCheckoutPricing, markOriginalSoldBySlug } from '../../../../lib/originals';
 
 type PayPalPurchaseUnit = {
   reference_id?: unknown;
@@ -22,6 +22,10 @@ type PayPalPurchaseUnit = {
       country_code?: string;
     };
   };
+};
+
+type PayPalOrderDetails = {
+  purchase_units?: PayPalPurchaseUnit[];
 };
 
 const parseCheckoutEmailFromCustomId = (value: unknown): string | null => {
@@ -94,8 +98,63 @@ export async function POST(request: NextRequest) {
       body: 'grant_type=client_credentials',
     });
 
+    if (!tokenResponse.ok) {
+      console.error('PayPal token request failed:', await tokenResponse.text());
+      return NextResponse.json(
+        { error: 'Failed to authenticate with PayPal', success: false },
+        { status: 500 }
+      );
+    }
+
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
+
+    if (!accessToken) {
+      console.error('No access token received from PayPal');
+      return NextResponse.json(
+        { error: 'Failed to get PayPal access token', success: false },
+        { status: 500 }
+      );
+    }
+
+    const orderDetailsResponse = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders/${encodeURIComponent(orderId)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+
+    const orderDetails = await orderDetailsResponse.json() as PayPalOrderDetails;
+
+    if (!orderDetailsResponse.ok) {
+      console.error('PayPal order lookup failed:', orderDetails);
+      return NextResponse.json(
+        { error: 'Failed to verify PayPal order before capture', success: false },
+        { status: 500 }
+      );
+    }
+
+    const orderPurchaseUnit = orderDetails.purchase_units?.[0];
+    const originalSlug = parseOriginalSlugFromReferenceId(orderPurchaseUnit?.reference_id);
+
+    if (originalSlug) {
+      const originalPricing = await fetchOriginalCheckoutPricing(originalSlug);
+
+      if (!originalPricing) {
+        return NextResponse.json(
+          { error: 'Original artwork not found', success: false },
+          { status: 404 }
+        );
+      }
+
+      if (originalPricing.sold) {
+        return NextResponse.json(
+          { error: 'This original artwork has already sold', success: false },
+          { status: 409 }
+        );
+      }
+    }
 
     // Capture the PayPal order
     const captureResponse = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders/${orderId}/capture`, {
@@ -125,11 +184,11 @@ export async function POST(request: NextRequest) {
       // - Update your database
       // - Fulfill the order
       console.log('PayPal payment captured successfully:', captureData.id);
-      const purchaseUnit = captureData.purchase_units?.[0] as PayPalPurchaseUnit | undefined;
+      const purchaseUnit = (captureData.purchase_units?.[0] as PayPalPurchaseUnit | undefined) ?? orderPurchaseUnit;
 
       try {
         const soldResult = await markOriginalSoldBySlug(
-          parseOriginalSlugFromReferenceId(purchaseUnit?.reference_id)
+          parseOriginalSlugFromReferenceId(purchaseUnit?.reference_id) ?? originalSlug
         );
         console.log('PayPal original sold update:', soldResult);
       } catch (soldError) {

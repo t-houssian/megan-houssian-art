@@ -744,10 +744,29 @@ export async function markOriginalSoldBySlug(slug: unknown): Promise<MarkOrigina
     return { status: 'already_sold', id: original._id, title: original.title };
   }
 
-  await writeClient
-    .patch(original._id)
-    .set({ sold: true })
-    .commit({ visibility: 'sync' });
+  try {
+    await writeClient
+      .patch(original._id)
+      .ifRevisionId(original._rev)
+      .set({ sold: true })
+      .commit({ visibility: 'sync' });
+  } catch (error) {
+    const latestOriginal = await writeClient.fetch<{
+      _id: string;
+      title?: string;
+      sold?: boolean;
+    } | null>(
+      ORIGINAL_FOR_SALE_BY_SLUG_QUERY,
+      { slug: normalizedSlug },
+      { cache: 'no-store' }
+    );
+
+    if (latestOriginal?.sold) {
+      return { status: 'already_sold', id: latestOriginal._id, title: latestOriginal.title };
+    }
+
+    throw error;
+  }
 
   revalidateOriginalSoldPaths(normalizedSlug);
 

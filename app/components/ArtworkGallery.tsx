@@ -161,7 +161,7 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
 
   const renderImageTrack = (variant: "page" | "modal") => (
     <div
-      className={`flex h-full ${isDragging ? "transition-none" : "transition-transform duration-300 ease-out"}`}
+      className={`absolute inset-0 flex h-full ${isDragging ? "transition-none" : "transition-transform duration-300 ease-out"}`}
       style={{
         width: `${images.length * 100}%`,
         transform: trackTransform,
