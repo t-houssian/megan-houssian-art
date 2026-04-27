@@ -3,6 +3,11 @@ import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { sanityClient } from '../../lib/sanity';
+import {
+  DEFAULT_HERO_CTA_COLOR_SCHEME,
+  HERO_CTA_COLOR_SCHEMES,
+  type HeroCtaColorSchemeKey,
+} from '../../sanity/lib/heroCtaColorSchemes';
 import { urlFor } from '../../sanity/lib/image';
 import { lora } from '../fonts';
 
@@ -186,11 +191,7 @@ type HeroCtaSettings = {
   label?: string;
   href?: string;
   placement?: HeroCtaPlacement | null;
-  backgroundColor?: string;
-  textColor?: string;
-  borderColor?: string;
-  hoverBackgroundColor?: string;
-  hoverTextColor?: string;
+  colorScheme?: HeroCtaColorSchemeKey | null;
 };
 
 type HeroSettings = {
@@ -208,11 +209,7 @@ const DEFAULT_HERO_CTA = {
   label: 'Browse Originals',
   href: '/originals',
   placement: 'middle' as HeroCtaPlacement,
-  backgroundColor: '#4D5853',
-  textColor: '#E7E1D4',
-  borderColor: '#000000',
-  hoverBackgroundColor: '#2F342F',
-  hoverTextColor: '#E7E1D4',
+  colorScheme: DEFAULT_HERO_CTA_COLOR_SCHEME,
 };
 
 const HERO_CTA_PLACEMENT_CLASSES: Record<HeroCtaPlacement, string> = {
@@ -220,8 +217,6 @@ const HERO_CTA_PLACEMENT_CLASSES: Record<HeroCtaPlacement, string> = {
   middle: 'top-1/2',
   lower: 'top-[62%]',
 };
-
-const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{6})$/;
 
 const normalizeString = (value: unknown, fallback: string) => {
   if (typeof value !== 'string') return fallback;
@@ -234,15 +229,15 @@ const normalizeInternalHref = (value: unknown, fallback: string) => {
   return normalized.startsWith('/') && !normalized.startsWith('//') ? normalized : fallback;
 };
 
-const normalizeHexColor = (value: unknown, fallback: string) => {
-  const normalized = normalizeString(value, fallback);
-  return HEX_COLOR_PATTERN.test(normalized) ? normalized : fallback;
-};
-
 const normalizePlacement = (value: unknown): HeroCtaPlacement =>
   value === 'higher' || value === 'lower' || value === 'middle'
     ? value
     : DEFAULT_HERO_CTA.placement;
+
+const normalizeCtaColorScheme = (value: unknown): HeroCtaColorSchemeKey =>
+  typeof value === 'string' && value in HERO_CTA_COLOR_SCHEMES
+    ? (value as HeroCtaColorSchemeKey)
+    : DEFAULT_HERO_CTA.colorScheme;
 
 const heroProjection = `{
   backgroundImage{
@@ -297,12 +292,13 @@ export default async function Hero() {
   const ctaLabel = normalizeString(cta?.label, DEFAULT_HERO_CTA.label);
   const ctaHref = normalizeInternalHref(cta?.href, DEFAULT_HERO_CTA.href);
   const ctaPlacement = normalizePlacement(cta?.placement);
+  const ctaColorScheme = HERO_CTA_COLOR_SCHEMES[normalizeCtaColorScheme(cta?.colorScheme)];
   const ctaStyle = {
-    '--hero-cta-bg': normalizeHexColor(cta?.backgroundColor, DEFAULT_HERO_CTA.backgroundColor),
-    '--hero-cta-text': normalizeHexColor(cta?.textColor, DEFAULT_HERO_CTA.textColor),
-    '--hero-cta-border': normalizeHexColor(cta?.borderColor, DEFAULT_HERO_CTA.borderColor),
-    '--hero-cta-hover-bg': normalizeHexColor(cta?.hoverBackgroundColor, DEFAULT_HERO_CTA.hoverBackgroundColor),
-    '--hero-cta-hover-text': normalizeHexColor(cta?.hoverTextColor, DEFAULT_HERO_CTA.hoverTextColor),
+    '--hero-cta-bg': ctaColorScheme.backgroundColor,
+    '--hero-cta-text': ctaColorScheme.textColor,
+    '--hero-cta-border': ctaColorScheme.borderColor,
+    '--hero-cta-hover-bg': ctaColorScheme.hoverBackgroundColor,
+    '--hero-cta-hover-text': ctaColorScheme.hoverTextColor,
   } as CSSProperties;
 
   return (

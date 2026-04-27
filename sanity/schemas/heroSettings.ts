@@ -1,28 +1,16 @@
 import { defineField, defineType } from 'sanity'
-import { DEFAULT_SITE_THEME, HEX_COLOR_PATTERN, SITE_THEME_PALETTE } from '../lib/siteTheme'
+import {
+  DEFAULT_HERO_CTA_COLOR_SCHEME,
+  HERO_CTA_COLOR_SCHEME_OPTIONS,
+} from '../lib/heroCtaColorSchemes'
 
 const DEFAULT_HERO_CTA = {
   enabled: false,
   label: 'Browse Originals',
   href: '/originals',
   placement: 'middle',
-  backgroundColor: DEFAULT_SITE_THEME.buttonColor,
-  textColor: DEFAULT_SITE_THEME.secondaryBackgroundColor,
-  borderColor: '#000000',
-  hoverBackgroundColor: DEFAULT_SITE_THEME.buttonHoverColor,
-  hoverTextColor: DEFAULT_SITE_THEME.secondaryBackgroundColor,
+  colorScheme: DEFAULT_HERO_CTA_COLOR_SCHEME,
 }
-
-const colorField = (name: string, title: string, initialValue: string) =>
-  defineField({
-    name,
-    title,
-    type: 'string',
-    initialValue,
-    description: `Use a hex color. Suggested palette: ${SITE_THEME_PALETTE.join(', ')}`,
-    hidden: ({ parent }) => parent?.enabled === false,
-    validation: (rule) => rule.required().regex(HEX_COLOR_PATTERN, { name: 'hex color' })
-  })
 
 export default defineType({
   name: 'heroSettings',
@@ -220,11 +208,19 @@ export default defineType({
             ],
           },
         }),
-        colorField('backgroundColor', 'Button Background Color', DEFAULT_HERO_CTA.backgroundColor),
-        colorField('textColor', 'Button Text Color', DEFAULT_HERO_CTA.textColor),
-        colorField('borderColor', 'Button Border Color', DEFAULT_HERO_CTA.borderColor),
-        colorField('hoverBackgroundColor', 'Button Hover Background Color', DEFAULT_HERO_CTA.hoverBackgroundColor),
-        colorField('hoverTextColor', 'Button Hover Text Color', DEFAULT_HERO_CTA.hoverTextColor),
+        defineField({
+          name: 'colorScheme',
+          title: 'Button Color Scheme',
+          type: 'string',
+          initialValue: DEFAULT_HERO_CTA.colorScheme,
+          description: 'Choose one of the premade button styles. No hex values needed.',
+          hidden: ({ parent }) => parent?.enabled === false,
+          options: {
+            layout: 'dropdown',
+            list: HERO_CTA_COLOR_SCHEME_OPTIONS,
+          },
+          validation: (rule) => rule.required(),
+        }),
       ],
     })
   ],
