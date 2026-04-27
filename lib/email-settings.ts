@@ -11,6 +11,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DEFAULT_SUPPORT_EMAIL = 'meganhoussianart@gmail.com';
 const DEFAULT_CONTACT_RECIPIENT = 'meganhoussianart@gmail.com';
 const DEFAULT_COMMISSION_RECIPIENT = 'tylerhoussian@gmail.com';
+const DEFAULT_INSTAGRAM_URL = 'https://www.instagram.com/meganhoussianart/';
 const DEFAULT_PINTEREST_URL = 'https://pin.it/1Scq2kp48';
 const DEFAULT_FACEBOOK_URL =
   'https://www.facebook.com/marketplace/profile/61550348800548/?ref=permalink&mibextid=6ojiHh';
@@ -160,7 +161,7 @@ const getDefaultEmailSettings = (): EmailSettings => ({
       { label: 'Contact', href: '/contact' },
     ],
     socialLinks: [
-      { platform: 'instagram', label: 'Instagram', href: process.env.EMAIL_SOCIAL_INSTAGRAM_URL?.trim() || '' },
+      { platform: 'instagram', label: 'Instagram', href: process.env.EMAIL_SOCIAL_INSTAGRAM_URL?.trim() || DEFAULT_INSTAGRAM_URL },
       { platform: 'pinterest', label: 'Pinterest', href: process.env.EMAIL_SOCIAL_PINTEREST_URL?.trim() || DEFAULT_PINTEREST_URL },
       { platform: 'facebook', label: 'Facebook', href: process.env.EMAIL_SOCIAL_FACEBOOK_URL?.trim() || DEFAULT_FACEBOOK_URL },
     ].filter((item): item is EmailSocialLink => Boolean(item.href)),
@@ -454,7 +455,13 @@ function normalizeEmailSocialLinkList(value: unknown, fallback: EmailSocialLink[
         )
     : [];
 
-  return links.length > 0 ? links : fallback;
+  if (links.length === 0) {
+    return fallback;
+  }
+
+  return fallback.map(
+    (defaultLink) => links.find((link) => link.platform === defaultLink.platform) || defaultLink
+  );
 }
 
 function normalizeEmailBrandingColors(value: unknown, fallback: EmailBrandingColors): EmailBrandingColors {

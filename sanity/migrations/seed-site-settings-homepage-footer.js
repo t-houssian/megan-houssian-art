@@ -27,6 +27,7 @@ const footerContent = {
   commissionsLabel: 'Commissions',
   aboutLabel: 'About the Artist',
   connectHeading: 'Connect',
+  instagramLabel: 'Instagram',
   pinterestLabel: 'Pinterest',
   facebookLabel: 'Facebook',
   contactLabel: 'Get in Touch',

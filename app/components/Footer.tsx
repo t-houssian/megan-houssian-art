@@ -7,6 +7,8 @@ type FooterProps = {
   content: FooterContent;
 };
 
+const INSTAGRAM_URL = 'https://www.instagram.com/meganhoussianart/';
+
 export default function Footer({ content }: FooterProps) {
     return (
       <footer className="bg-gradient-to-r from-paper via-ivory to-paper border-t border-tan/30">
@@ -50,15 +52,19 @@ export default function Footer({ content }: FooterProps) {
               </h4>
               <div className="space-y-3">
                 <div className="flex flex-col space-y-2">
-                  {/* <a
-                    href="https://instagram.com"
+                  <a
+                    href={INSTAGRAM_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`text-warm-gray hover:text-olive transition-colors duration-200 ${lora.className} text-sm flex items-center justify-center md:justify-end space-x-2`}
                   >
-                    <span>📸</span>
-                    <span>Instagram</span>
-                  </a> */}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <rect x="3" y="3" width="18" height="18" rx="5" strokeWidth="2" />
+                      <circle cx="12" cy="12" r="4" strokeWidth="2" />
+                      <circle cx="17.5" cy="6.5" r="1.25" fill="currentColor" stroke="none" />
+                    </svg>
+                    <span>{content.instagramLabel}</span>
+                  </a>
                   <a
                     href="https://pin.it/1Scq2kp48"
                     target="_blank"

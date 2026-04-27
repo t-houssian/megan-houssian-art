@@ -21,6 +21,7 @@ export type FooterContent = {
   commissionsLabel: string;
   aboutLabel: string;
   connectHeading: string;
+  instagramLabel: string;
   pinterestLabel: string;
   facebookLabel: string;
   contactLabel: string;
@@ -53,6 +54,7 @@ export const DEFAULT_FOOTER_CONTENT: FooterContent = {
   commissionsLabel: 'Commissions',
   aboutLabel: 'About the Artist',
   connectHeading: 'Connect',
+  instagramLabel: 'Instagram',
   pinterestLabel: 'Pinterest',
   facebookLabel: 'Facebook',
   contactLabel: 'Get in Touch',

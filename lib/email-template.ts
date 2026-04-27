@@ -71,6 +71,7 @@ type EmailLinks = {
 };
 
 const DEFAULT_SITE_URL = 'https://meganhoussianart.com';
+const DEFAULT_INSTAGRAM_URL = 'https://www.instagram.com/meganhoussianart/';
 const DEFAULT_PINTEREST_URL = 'https://pin.it/1Scq2kp48';
 const DEFAULT_FACEBOOK_URL =
   'https://www.facebook.com/marketplace/profile/61550348800548/?ref=permalink&mibextid=6ojiHh';
@@ -137,7 +138,7 @@ const getDefaultFooterLinks = (baseUrl: string): EmailLinkItem[] => [
 const getDefaultSocialLinks = (): EmailSocialLink[] => {
   const pinterestUrl = process.env.EMAIL_SOCIAL_PINTEREST_URL?.trim() || DEFAULT_PINTEREST_URL;
   const facebookUrl = process.env.EMAIL_SOCIAL_FACEBOOK_URL?.trim() || DEFAULT_FACEBOOK_URL;
-  const instagramUrl = process.env.EMAIL_SOCIAL_INSTAGRAM_URL?.trim() || undefined;
+  const instagramUrl = process.env.EMAIL_SOCIAL_INSTAGRAM_URL?.trim() || DEFAULT_INSTAGRAM_URL;
 
   return [
     instagramUrl
@@ -194,7 +195,13 @@ const normalizeSocialLinks = (baseUrl: string, links?: EmailSocialLink[]) => {
     }))
     .filter((link) => link.label.length > 0 && link.href.length > 0);
 
-  return normalized.length > 0 ? normalized : defaults;
+  if (normalized.length === 0) {
+    return defaults;
+  }
+
+  return defaults.map(
+    (defaultLink) => normalized.find((link) => link.platform === defaultLink.platform) || defaultLink
+  );
 };
 
 export const getEmailLinks = (branding?: Pick<EmailBranding, 'footerLinks' | 'socialLinks'>): EmailLinks => {

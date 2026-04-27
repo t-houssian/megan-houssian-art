@@ -194,6 +194,7 @@ export default defineType({
             }),
           ],
           initialValue: [
+            { platform: 'instagram', label: 'Instagram', href: 'https://www.instagram.com/meganhoussianart/' },
             { platform: 'pinterest', label: 'Pinterest', href: 'https://pin.it/1Scq2kp48' },
             {
               platform: 'facebook',

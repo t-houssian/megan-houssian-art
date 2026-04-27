@@ -53,7 +53,7 @@ KIT_API_KEY=your_kit_api_key_here
 # Optional: route signups to one specific Kit form
 KIT_FORM_ID=1234567
 # Optional: social links included in transactional email footer
-EMAIL_SOCIAL_INSTAGRAM_URL=https://instagram.com/your_handle
+EMAIL_SOCIAL_INSTAGRAM_URL=https://www.instagram.com/meganhoussianart/
 EMAIL_SOCIAL_PINTEREST_URL=https://pin.it/1Scq2kp48
 EMAIL_SOCIAL_FACEBOOK_URL=https://www.facebook.com/marketplace/profile/61550348800548/?ref=permalink&mibextid=6ojiHh
 # Use your production domain here so email CTA links point to your live site

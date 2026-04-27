@@ -13,6 +13,7 @@
       { "_key": "contact", "label": "Contact", "href": "/contact" }
     ],
     "socialLinks": [
+      { "_key": "instagram", "platform": "instagram", "label": "Instagram", "href": "https://www.instagram.com/meganhoussianart/" },
       { "_key": "pinterest", "platform": "pinterest", "label": "Pinterest", "href": "https://pin.it/1Scq2kp48" },
       { "_key": "facebook", "platform": "facebook", "label": "Facebook", "href": "https://www.facebook.com/marketplace/profile/61550348800548/?ref=permalink&mibextid=6ojiHh" }
     ],

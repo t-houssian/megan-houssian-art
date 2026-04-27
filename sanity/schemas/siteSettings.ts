@@ -296,6 +296,13 @@ export default defineType({
           validation: (rule) => rule.required()
         }),
         defineField({
+          name: 'instagramLabel',
+          title: 'Instagram Label',
+          type: 'string',
+          initialValue: DEFAULT_FOOTER_CONTENT.instagramLabel,
+          validation: (rule) => rule.required()
+        }),
+        defineField({
           name: 'pinterestLabel',
           title: 'Pinterest Label',
           type: 'string',
