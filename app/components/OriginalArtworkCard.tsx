@@ -68,26 +68,28 @@ export default function OriginalArtworkCard({
                   sizes="(min-width: 1280px) 28vw, (min-width: 640px) 44vw, 92vw"
                 />
               )}
-              {item.sold && (
-                <div className={`${lora.className} absolute left-0 top-0 bg-ivory/90 pr-4 pb-2 text-xs font-semibold uppercase tracking-[0.2em] text-warm-gray`}>
-                  Sold
-                </div>
-              )}
             </div>
           </Link>
         )}
 
         <div className="flex min-h-36 flex-col pt-4">
-          <Link href={detailHref} className="block">
-            <h2 className={`${cormorant.className} text-2xl font-medium mb-3 text-brown`}>
-              {titleWithSize}
-            </h2>
-          </Link>
+          <div className="mb-3 flex items-start justify-between gap-4">
+            <Link href={detailHref} className="block min-w-0">
+              <h2 className={`${cormorant.className} text-2xl font-medium text-brown`}>
+                {titleWithSize}
+              </h2>
+            </Link>
+            {item.sold && (
+              <span className={`${cormorant.className} shrink-0 text-2xl font-medium text-warm-gray`}>
+                Sold
+              </span>
+            )}
+          </div>
 
           <div className="flex items-end justify-between gap-4 pt-1">
             <div>
               <p className={`${lora.className} text-lg font-medium text-brown`}>
-                {item.sold ? 'Unavailable' : formatPrice(item.price)}
+                {formatPrice(item.price)}
               </p>
             </div>
 

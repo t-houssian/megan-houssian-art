@@ -11,6 +11,7 @@ type PurchaseSectionProps = {
   originalSlug: string;
   isTestProduct?: boolean;
   earlyAccess?: OriginalEarlyAccessState;
+  isSold?: boolean;
 };
 
 export default function PurchaseSection({
@@ -19,6 +20,7 @@ export default function PurchaseSection({
   originalSlug,
   isTestProduct = false,
   earlyAccess,
+  isSold = false,
 }: PurchaseSectionProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -30,6 +32,10 @@ export default function PurchaseSection({
 
   const handlePurchase = () => {
     setAccessError(null);
+
+    if (isSold) {
+      return;
+    }
 
     if (isUpcoming) {
       setAccessError(earlyAccess?.message || "This piece is not available for purchase yet.");
@@ -114,10 +120,14 @@ export default function PurchaseSection({
       </p>
       <button
         onClick={handlePurchase}
-        disabled={isUpcoming}
-        className={`w-full border border-btn-brown bg-btn-brown px-8 py-4 text-paper transition-colors duration-300 hover:bg-btn-brown-hover disabled:cursor-not-allowed disabled:opacity-60 ${lora.className} text-lg font-medium`}
+        disabled={isUpcoming || isSold}
+        className={`w-full border px-8 py-4 text-paper transition-colors duration-300 disabled:cursor-not-allowed ${lora.className} text-lg font-medium ${
+          isSold
+            ? "border-warm-gray bg-warm-gray text-paper"
+            : "border-btn-brown bg-btn-brown hover:bg-btn-brown-hover disabled:opacity-60"
+        }`}
       >
-        Purchase This Piece
+        {isSold ? "Sold" : "Purchase This Piece"}
       </button>
     </div>
   );

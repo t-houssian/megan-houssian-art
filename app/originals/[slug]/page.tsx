@@ -75,26 +75,14 @@ export default async function OriginalDetailPage({
               </h1>
               <div className="w-16 h-0.5 bg-olive mb-6"></div>
               
-              {artwork.sold ? (
-                <div className="border-y border-tan/50 py-5">
-                  <div className="flex items-center gap-3">
-                    <span className="inline-flex items-center text-xs font-semibold uppercase tracking-[0.2em] text-warm-gray">
-                      Sold
-                    </span>
-                    <span className={`${lora.className} text-warm-gray text-sm`}>
-                      This artwork is no longer available for purchase
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <PurchaseSection 
-                  title={artwork.title} 
-                  basePrice={artwork.price || 0}
-                  originalSlug={artwork.slug.current}
-                  isTestProduct={artwork.testProduct}
-                  earlyAccess={artwork.earlyAccess}
-                />
-              )}
+              <PurchaseSection 
+                title={artwork.title} 
+                basePrice={artwork.price || 0}
+                originalSlug={artwork.slug.current}
+                isTestProduct={artwork.testProduct}
+                earlyAccess={artwork.earlyAccess}
+                isSold={artwork.sold}
+              />
             </div>
 
             {/* Description Section */}

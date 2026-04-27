@@ -444,34 +444,38 @@ function normalizeCollection(collection: RawOriginalCollection): OriginalCollect
 }
 
 export async function fetchOriginals(): Promise<OriginalArtworkSummary[]> {
-  const originals = await sanityClient.fetch<RawOriginalArtworkSummary[]>(
+  const originals = await sanityClient.withConfig({ useCdn: false }).fetch<RawOriginalArtworkSummary[]>(
     ORIGINALS_LIST_QUERY,
     {},
-    { next: { revalidate: 60 } }
+    { cache: 'no-store' }
   );
 
   return originals.map(normalizeOriginal);
 }
 
 export async function fetchOriginalBySlug(slug: string): Promise<OriginalArtwork | null> {
-  const original = await sanityClient.fetch<RawOriginalArtwork | null>(ORIGINAL_BY_SLUG_QUERY, { slug });
+  const original = await sanityClient.withConfig({ useCdn: false }).fetch<RawOriginalArtwork | null>(
+    ORIGINAL_BY_SLUG_QUERY,
+    { slug },
+    { cache: 'no-store' }
+  );
 
   return original ? normalizeOriginal(original) : null;
 }
 
 export async function fetchOriginalCollections(): Promise<OriginalCollectionSummary[]> {
-  return sanityClient.fetch<OriginalCollectionSummary[]>(
+  return sanityClient.withConfig({ useCdn: false }).fetch<OriginalCollectionSummary[]>(
     ORIGINAL_COLLECTIONS_LIST_QUERY,
     {},
-    { next: { revalidate: 60 } }
+    { cache: 'no-store' }
   );
 }
 
 export async function fetchOriginalCollectionBySlug(slug: string): Promise<OriginalCollection | null> {
-  const collection = await sanityClient.fetch<RawOriginalCollection | null>(
+  const collection = await sanityClient.withConfig({ useCdn: false }).fetch<RawOriginalCollection | null>(
     ORIGINAL_COLLECTION_BY_SLUG_QUERY,
     { slug },
-    { next: { revalidate: 60 } }
+    { cache: 'no-store' }
   );
 
   return collection ? normalizeCollection(collection) : null;
