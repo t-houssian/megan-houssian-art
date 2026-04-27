@@ -322,7 +322,7 @@ export default async function Hero() {
           <Link
             href={ctaHref}
             style={ctaStyle}
-            className={`group relative inline-block overflow-hidden rounded-full border-2 border-[var(--hero-cta-border)] bg-[var(--hero-cta-bg)] px-8 py-3 text-[var(--hero-cta-text)] shadow-vintage transition-all duration-500 hover:-translate-y-0.5 hover:bg-[var(--hero-cta-hover-bg)] hover:text-[var(--hero-cta-hover-text)] hover:shadow-vintage-lg ${lora.className} font-medium`}
+            className={`group relative inline-block overflow-hidden rounded-full border-2 border-[var(--hero-cta-border)] [background:var(--hero-cta-bg)] px-8 py-3 text-[var(--hero-cta-text)] shadow-vintage transition-all duration-500 hover:-translate-y-0.5 hover:[background:var(--hero-cta-hover-bg)] hover:text-[var(--hero-cta-hover-text)] hover:shadow-vintage-lg ${lora.className} font-medium`}
           >
             <span className="relative z-10">{ctaLabel}</span>
             <span className="pointer-events-none absolute inset-0 -translate-x-full -skew-x-12 bg-gradient-to-r from-transparent via-paper to-transparent opacity-0 transition-all duration-700 group-hover:translate-x-full group-hover:opacity-10" />

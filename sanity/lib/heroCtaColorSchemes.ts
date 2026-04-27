@@ -3,10 +3,10 @@ import { DEFAULT_SITE_THEME } from './siteTheme';
 export const HERO_CTA_COLOR_SCHEMES = {
   default: {
     title: 'Default - matches site buttons',
-    backgroundColor: DEFAULT_SITE_THEME.buttonColor,
+    backgroundColor: `linear-gradient(to right, ${DEFAULT_SITE_THEME.buttonColor}, ${DEFAULT_SITE_THEME.buttonHoverColor})`,
     textColor: DEFAULT_SITE_THEME.secondaryBackgroundColor,
-    borderColor: DEFAULT_SITE_THEME.buttonColor,
-    hoverBackgroundColor: DEFAULT_SITE_THEME.buttonHoverColor,
+    borderColor: '#000000CC',
+    hoverBackgroundColor: `linear-gradient(to right, ${DEFAULT_SITE_THEME.buttonColor}, ${DEFAULT_SITE_THEME.buttonHoverColor})`,
     hoverTextColor: DEFAULT_SITE_THEME.secondaryBackgroundColor,
   },
   white: {
