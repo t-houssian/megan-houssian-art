@@ -39,6 +39,7 @@ export default function OriginalArtworkCard({
 }: OriginalArtworkCardProps) {
   const mainDimensions = getImageDimensions(item.mainImage);
   const hoverImage = item.hoverImage?.asset ? item.hoverImage : null;
+  const titleWithSize = item.artworkSize ? `${item.title}, ${item.artworkSize}` : item.title;
 
   return (
     <article className="group h-full">
@@ -79,15 +80,12 @@ export default function OriginalArtworkCard({
         <div className="flex min-h-36 flex-col pt-4">
           <Link href={detailHref} className="block">
             <h2 className={`${cormorant.className} text-2xl font-medium mb-3 text-brown`}>
-              {item.title}
+              {titleWithSize}
             </h2>
           </Link>
 
           <div className="flex items-end justify-between gap-4 pt-1">
             <div>
-              <p className={`${lora.className} text-sm text-warm-gray mb-1`}>
-                {item.artworkSize || 'Size available on request'}
-              </p>
               <p className={`${lora.className} text-lg font-medium text-brown`}>
                 {item.sold ? 'Unavailable' : formatPrice(item.price)}
               </p>
@@ -95,7 +93,7 @@ export default function OriginalArtworkCard({
 
             <Link
               href={detailHref}
-              className={`${lora.className} shrink-0 text-sm font-medium text-olive opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+              className={`${lora.className} shrink-0 text-sm font-medium text-olive opacity-100 transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100`}
             >
               View piece
             </Link>

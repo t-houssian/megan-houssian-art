@@ -23,11 +23,19 @@ type DragState = {
   pointerId: number;
   startX: number;
   startY: number;
+  startTime: number;
   lastX: number;
   lastTime: number;
   velocityX: number;
   hasDragged: boolean;
 };
+
+const DRAG_START_THRESHOLD = 4;
+const VERTICAL_SCROLL_THRESHOLD = 10;
+const SWIPE_DISTANCE_RATIO = 0.09;
+const MIN_SWIPE_DISTANCE = 26;
+const MAX_SWIPE_DISTANCE = 42;
+const SWIPE_VELOCITY_THRESHOLD = 0.24;
 
 export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGalleryProps) {
   // Combine the main image and additional gallery images into one array.
@@ -39,6 +47,8 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
   const mainViewerRef = useRef<HTMLDivElement>(null);
   const modalViewerRef = useRef<HTMLDivElement>(null);
   const dragStateRef = useRef<DragState | null>(null);
+  const dragOffsetRef = useRef(0);
+  const dragFrameRef = useRef<number | null>(null);
   const suppressClickRef = useRef(false);
 
   const slideBasis = images.length > 0 ? 100 / images.length : 100;
@@ -71,16 +81,46 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
     setSelectedIndex((prevIndex) => (prevIndex < images.length - 1 ? prevIndex + 1 : 0));
   }, [images.length]);
 
+  const updateDragOffset = (offset: number) => {
+    dragOffsetRef.current = offset;
+
+    if (dragFrameRef.current !== null) return;
+
+    dragFrameRef.current = window.requestAnimationFrame(() => {
+      dragFrameRef.current = null;
+      setDragOffset(dragOffsetRef.current);
+    });
+  };
+
+  const resetDragOffset = () => {
+    dragOffsetRef.current = 0;
+
+    if (dragFrameRef.current !== null) {
+      window.cancelAnimationFrame(dragFrameRef.current);
+      dragFrameRef.current = null;
+    }
+
+    setDragOffset(0);
+  };
+
   const finishDrag = useCallback((viewer: HTMLDivElement | null) => {
     const dragState = dragStateRef.current;
     if (!dragState) return;
 
     const distance = dragState.lastX - dragState.startX;
     const viewerWidth = viewer?.clientWidth ?? 0;
-    const distanceThreshold = Math.max(48, viewerWidth * 0.16);
-    const velocityThreshold = 0.45;
+    const distanceThreshold = Math.min(
+      MAX_SWIPE_DISTANCE,
+      Math.max(MIN_SWIPE_DISTANCE, viewerWidth * SWIPE_DISTANCE_RATIO)
+    );
+    const elapsed = Math.max(1, dragState.lastTime - dragState.startTime);
+    const averageVelocityX = distance / elapsed;
+    const effectiveVelocityX =
+      Math.abs(dragState.velocityX) > Math.abs(averageVelocityX)
+        ? dragState.velocityX
+        : averageVelocityX;
     const shouldAdvance =
-      Math.abs(distance) > distanceThreshold || Math.abs(dragState.velocityX) > velocityThreshold;
+      Math.abs(distance) > distanceThreshold || Math.abs(effectiveVelocityX) > SWIPE_VELOCITY_THRESHOLD;
 
     if (dragState.hasDragged) {
       suppressClickRef.current = true;
@@ -88,7 +128,7 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
 
     dragStateRef.current = null;
     setIsDragging(false);
-    setDragOffset(0);
+    resetDragOffset();
 
     if (shouldAdvance && images.length > 1) {
       if (distance < 0) {
@@ -102,12 +142,14 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (images.length < 2) return;
 
+    const now = performance.now();
     dragStateRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
+      startTime: now,
       lastX: event.clientX,
-      lastTime: performance.now(),
+      lastTime: now,
       velocityX: 0,
       hasDragged: false,
     };
@@ -123,17 +165,21 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
     const deltaX = event.clientX - dragState.startX;
     const deltaY = event.clientY - dragState.startY;
 
-    if (!dragState.hasDragged && Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 8) {
+    if (
+      !dragState.hasDragged &&
+      Math.abs(deltaY) > Math.abs(deltaX) &&
+      Math.abs(deltaY) > VERTICAL_SCROLL_THRESHOLD
+    ) {
       dragStateRef.current = null;
       setIsDragging(false);
-      setDragOffset(0);
+      resetDragOffset();
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
       return;
     }
 
-    if (Math.abs(deltaX) > 6) {
+    if (Math.abs(deltaX) > DRAG_START_THRESHOLD) {
       dragState.hasDragged = true;
     }
 
@@ -144,7 +190,7 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
     dragState.lastTime = now;
 
     if (dragState.hasDragged) {
-      setDragOffset(deltaX);
+      updateDragOffset(deltaX);
     }
   };
 
@@ -156,12 +202,12 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
   const handlePointerCancel = () => {
     dragStateRef.current = null;
     setIsDragging(false);
-    setDragOffset(0);
+    resetDragOffset();
   };
 
   const renderImageTrack = (variant: "page" | "modal") => (
     <div
-      className={`absolute inset-0 flex h-full ${isDragging ? "transition-none" : "transition-transform duration-300 ease-out"}`}
+      className={`absolute inset-0 flex h-full ${isDragging ? "transition-none" : "transition-transform duration-[260ms] ease-out"}`}
       style={{
         width: `${images.length * 100}%`,
         transform: trackTransform,
