@@ -4,6 +4,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { cormorant, lora } from '../fonts';
+import CartLink from './CartLink';
 
 export default function NavBar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,29 +34,35 @@ export default function NavBar() {
           </Link>
         </div>
         
-        <button
-          className="md:hidden focus:outline-none p-2 rounded-lg hover:bg-[var(--link-olive-hover-bg)] transition-colors duration-200"
-          onClick={() => {
-            setIsOpen((prev) => {
-              const next = !prev;
-              if (!next) {
-                setIsMobileOriginalsOpen(false);
-              }
-              return next;
-            });
-          }}
-          aria-label="Toggle Menu"
-        >
-          {isOpen ? (
-            <svg className="h-6 w-6 text-[var(--text-brown)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg className="h-6 w-6 text-[var(--text-brown)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          )}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          <CartLink
+            label="Cart"
+            className={`${lora.className} inline-flex h-10 items-center rounded-md border border-[color:var(--border-tan-medium)] px-3 text-sm font-medium text-[var(--text-brown)] transition-colors duration-200 hover:border-[var(--link-olive)] hover:bg-[var(--link-olive-hover-bg)] hover:text-[var(--link-olive)]`}
+          />
+          <button
+            className="focus:outline-none p-2 rounded-lg hover:bg-[var(--link-olive-hover-bg)] transition-colors duration-200"
+            onClick={() => {
+              setIsOpen((prev) => {
+                const next = !prev;
+                if (!next) {
+                  setIsMobileOriginalsOpen(false);
+                }
+                return next;
+              });
+            }}
+            aria-label="Toggle Menu"
+          >
+            {isOpen ? (
+              <svg className="h-6 w-6 text-[var(--text-brown)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="h-6 w-6 text-[var(--text-brown)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
+        </div>
         
         <ul className={`hidden md:flex space-x-8 text-[var(--text-brown)] font-medium ${lora.className}`}>
           <li>
@@ -162,6 +169,12 @@ export default function NavBar() {
               Contact
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[var(--link-olive)] transition-all duration-300 group-hover:w-full"></span>
             </Link>
+          </li>
+          <li>
+            <CartLink
+              onClick={() => setIsDesktopOriginalsOpen(false)}
+              className="relative group inline-flex h-10 items-center px-1 hover:text-[var(--link-olive)] transition-colors duration-300"
+            />
           </li>
         </ul>
       </nav>
