@@ -7,6 +7,10 @@ import {
   validateOriginalEarlyAccessForCheckout,
 } from '../../../lib/originals';
 import { cartToStripeLineItems, validateCartForCheckout } from '../../../lib/cart-checkout';
+import {
+  calculateTexasSalesTaxCents,
+  TEXAS_SALES_TAX_PERCENT_LABEL,
+} from '../../../lib/sales-tax';
 
 // Initialize Stripe only when the secret key is available
 const getStripe = () => {
@@ -27,6 +31,21 @@ const getSafeReturnPath = (value: unknown): string | null => {
 
 const isValidEmail = (value: unknown): value is string =>
   typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+
+const hasRequiredShippingAddress = (value: unknown): boolean => {
+  if (!value || typeof value !== 'object') return false;
+  const address = value as {
+    name?: unknown;
+    addressLine1?: unknown;
+    city?: unknown;
+    state?: unknown;
+    postalCode?: unknown;
+    country?: unknown;
+  };
+
+  return [address.name, address.addressLine1, address.city, address.state, address.postalCode, address.country]
+    .every((field) => typeof field === 'string' && field.trim().length > 0);
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -92,15 +111,20 @@ export async function POST(request: NextRequest) {
       : typeof amount === 'number'
         ? amount
         : Number(amount);
-    const checkoutAmount = validatedCart?.totalCents ?? (originalPricing?.testProduct
+    const checkoutSubtotalAmount = validatedCart?.totalCents ?? (originalPricing?.testProduct
       ? rawAmount
       : roundUpCentsToNearestTenDollars(rawAmount));
+    const salesTaxAmount = calculateTexasSalesTaxCents(
+      checkoutSubtotalAmount,
+      shippingOption || 'shipping',
+      shippingOption === 'pickup' ? null : shippingAddress
+    );
     const productName = validatedCart?.productSummary || originalPricing?.title || product || 'Artwork Purchase';
     const originalReferenceSlug = originalPricing?.slug.current || originalSlug || null;
     const originalSlugsForSale = validatedCart?.originalSlugs ?? (originalReferenceSlug ? [originalReferenceSlug] : []);
 
     // Validate required fields
-    if (!checkoutAmount || checkoutAmount <= 0) {
+    if (!checkoutSubtotalAmount || checkoutSubtotalAmount <= 0) {
       return NextResponse.json(
         { error: 'Invalid amount' },
         { status: 400 }
@@ -110,6 +134,13 @@ export async function POST(request: NextRequest) {
     if (!normalizedCheckoutEmail) {
       return NextResponse.json(
         { error: 'Valid checkout email is required' },
+        { status: 400 }
+      );
+    }
+
+    if ((shippingOption || 'shipping') === 'shipping' && !hasRequiredShippingAddress(shippingAddress)) {
+      return NextResponse.json(
+        { error: 'A complete shipping address is required' },
         { status: 400 }
       );
     }
@@ -128,21 +159,36 @@ export async function POST(request: NextRequest) {
     const stripe = getStripe();
 
     // Create session configuration
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = validatedCart ? cartToStripeLineItems(validatedCart) : [
+      {
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: productName,
+            description: `Original artwork by Megan Houssian${shippingOption === 'pickup' ? ' - Local Pickup in Marble Falls, TX' : ''}`,
+          },
+          unit_amount: checkoutSubtotalAmount,
+        },
+        quantity: 1,
+      },
+    ];
+
+    if (salesTaxAmount > 0) {
+      lineItems.push({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: `Texas Sales Tax (${TEXAS_SALES_TAX_PERCENT_LABEL})`,
+          },
+          unit_amount: salesTaxAmount,
+        },
+        quantity: 1,
+      });
+    }
+
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ['card'],
-      line_items: validatedCart ? cartToStripeLineItems(validatedCart) : [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: productName,
-              description: `Original artwork by Megan Houssian${shippingOption === 'pickup' ? ' - Local Pickup in Marble Falls, TX' : ''}`,
-            },
-            unit_amount: checkoutAmount,
-          },
-          quantity: 1,
-        },
-      ],
+      line_items: lineItems,
       mode: 'payment',
       customer_email: normalizedCheckoutEmail,
       success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -157,6 +203,9 @@ export async function POST(request: NextRequest) {
         test_product: originalPricing?.testProduct ? 'true' : 'false',
         checkout_email: normalizedCheckoutEmail,
         shipping_option: shippingOption || 'shipping',
+        taxable_subtotal_cents: checkoutSubtotalAmount.toString(),
+        sales_tax_cents: salesTaxAmount.toString(),
+        sales_tax_rate: salesTaxAmount > 0 ? TEXAS_SALES_TAX_PERCENT_LABEL : '0%',
         ...(shippingOption === 'shipping' && shippingAddress ? {
           shipping_name: shippingAddress.name,
           shipping_address: shippingAddress.addressLine1,
@@ -167,13 +216,6 @@ export async function POST(request: NextRequest) {
         } : {}),
       },
     };
-
-    // Only collect shipping address if shipping is selected
-    if (shippingOption === 'shipping') {
-      sessionConfig.shipping_address_collection = {
-        allowed_countries: ['US', 'CA'], // Add more countries as needed
-      };
-    }
 
     // Create a Stripe Checkout session
     const session = await stripe.checkout.sessions.create(sessionConfig);

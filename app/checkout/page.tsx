@@ -17,6 +17,11 @@ import {
 } from "../../lib/money";
 import type { CartItem, CartPayloadItem } from "../../lib/cart-types";
 import { clearCart, readCart } from "../components/cart-storage";
+import {
+  calculateTexasSalesTaxCents,
+  shouldCollectTexasSalesTax,
+  TEXAS_SALES_TAX_PERCENT_LABEL,
+} from "../../lib/sales-tax";
 
 let stripePromise: ReturnType<typeof loadStripe> | null = null;
 
@@ -252,7 +257,10 @@ const CheckoutContent = () => {
     (total, item) => total + dollarsToCents(item.price * (item.quantity ?? 1)),
     0
   );
-  const totalPrice = isCartCheckout ? cartTotalPrice : BASE_PRICE;
+  const subtotalPrice = isCartCheckout ? cartTotalPrice : BASE_PRICE;
+  const collectsSalesTax = shouldCollectTexasSalesTax(shippingOption, shippingAddress);
+  const salesTaxPrice = calculateTexasSalesTaxCents(subtotalPrice, shippingOption, shippingAddress);
+  const totalPrice = subtotalPrice + salesTaxPrice;
   const productDisplayName = isCartCheckout
     ? cartItems.length === 1
       ? cartItems[0].title
@@ -274,7 +282,14 @@ const CheckoutContent = () => {
     if (emailValidationMessage) return emailValidationMessage;
 
     if (shippingOption === "shipping") {
-      if (!shippingAddress.name || !shippingAddress.addressLine1 || !shippingAddress.city) {
+      if (
+        !shippingAddress.name ||
+        !shippingAddress.addressLine1 ||
+        !shippingAddress.city ||
+        !shippingAddress.state ||
+        !shippingAddress.postalCode ||
+        !shippingAddress.country
+      ) {
         return "Please fill in all required shipping fields.";
       }
     }
@@ -295,7 +310,7 @@ const CheckoutContent = () => {
     setErrorMessage(null);
     try {
       const response = await axios.post("/api/create-stripe-checkout-session", {
-        amount: totalPrice,
+        amount: subtotalPrice,
         product: productDisplayName,
         originalSlug: isCartCheckout ? "" : originalSlug,
         earlyAccessPassword: isCartCheckout ? "" : earlyAccessPassword,
@@ -333,13 +348,13 @@ const CheckoutContent = () => {
   const createPayPalOrder = async (): Promise<string> => {
     try {
       console.log('Creating PayPal order with:', {
-        amount: formatCents(totalPrice),
+        amount: formatCents(subtotalPrice),
         shippingOption,
         hasShippingAddress: !!shippingAddress.name,
       });
       
       const response = await axios.post("/api/paypal/createorder", {
-        amount: formatCents(totalPrice),
+        amount: formatCents(subtotalPrice),
         product: productDisplayName,
         originalSlug: isCartCheckout ? "" : originalSlug,
         earlyAccessPassword: isCartCheckout ? "" : earlyAccessPassword,
@@ -610,7 +625,7 @@ const CheckoutContent = () => {
               {paymentMethod === "stripe" ? (
                 <button
                   onClick={handleStripeCheckout}
-                  disabled={isProcessing || totalPrice <= 0}
+                  disabled={isProcessing || subtotalPrice <= 0}
                   className={`w-full border border-btn-brown bg-btn-brown px-8 py-4 text-lg text-paper transition-colors duration-300 hover:bg-btn-brown-hover disabled:cursor-not-allowed disabled:opacity-60 ${lora.className} font-medium`}
                 >
                   <span className="flex items-center justify-center text-paper">
@@ -722,6 +737,12 @@ const CheckoutContent = () => {
                     <span className={`${lora.className} font-medium text-olive`}>Free</span>
                   </div>
                 )}
+                <div className="flex justify-between items-center py-3 border-b border-tan/30">
+                  <span className={`${lora.className} text-warm-gray`}>Texas Sales Tax ({TEXAS_SALES_TAX_PERCENT_LABEL})</span>
+                  <span className={`${lora.className} font-medium text-brown`}>
+                    {collectsSalesTax ? formatCurrencyFromCents(salesTaxPrice) : "$0.00"}
+                  </span>
+                </div>
               </div>
               
               <div className="border-y border-tan/40 py-4 mb-6">
