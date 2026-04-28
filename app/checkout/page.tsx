@@ -408,9 +408,6 @@ const CheckoutContent = () => {
             Complete Your Purchase
           </h1>
           <div className="w-24 h-px bg-olive/70 mx-auto mb-6"></div>
-          <p className={`${lora.className} text-lg text-warm-gray max-w-2xl mx-auto leading-relaxed`}>
-            Acquiring <span className="italic font-medium text-brown">&ldquo;{productDisplayName}&rdquo;</span> - A unique piece from the curated collection
-          </p>
         </div>
 
         {isCartCheckout && cartItems.length === 0 && (
