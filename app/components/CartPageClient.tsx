@@ -217,7 +217,6 @@ export default function CartPageClient() {
                 <span className={`${lora.className} text-warm-gray`}>Subtotal</span>
                 <span className={`${lora.className} font-medium text-brown`}>{formatCurrency(total)}</span>
               </div>
-              <p className={`${lora.className} mb-6 text-sm text-warm-gray`}>Shipping or pickup is selected at checkout.</p>
               <Link
                 href="/checkout?cart=1"
                 className={`${lora.className} block w-full border border-btn-brown bg-btn-brown px-8 py-4 text-center text-lg font-medium text-paper transition-colors duration-300 hover:bg-btn-brown-hover`}
