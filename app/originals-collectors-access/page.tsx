@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import OriginalsGalleryPage from '../components/OriginalsGalleryPage';
 import { cormorant, lora } from '../fonts';
+import CollectorPasswordInput from './CollectorPasswordInput';
 
 const ACCESS_COOKIE_NAME = 'mha-collectors-access';
 
@@ -47,19 +48,7 @@ export default async function OriginalsCollectorsAccessPage({
           </p>
 
           <form action="/originals-collectors-access/unlock" method="post" className="space-y-4">
-            <div>
-              <label htmlFor="collector-password" className={`${lora.className} block text-brown font-medium mb-2`}>
-                Password
-              </label>
-              <input
-                id="collector-password"
-                name="password"
-                type="password"
-                required
-                className="w-full rounded-xl border border-tan/50 bg-white px-4 py-3 text-brown focus:outline-none focus:ring-2 focus:ring-olive/20 focus:border-olive transition-all duration-200"
-                placeholder="Enter password"
-              />
-            </div>
+            <CollectorPasswordInput />
 
             {showError && (
               <p className={`${lora.className} text-sm text-red-700`}>

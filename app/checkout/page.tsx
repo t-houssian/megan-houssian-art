@@ -608,7 +608,7 @@ const CheckoutContent = () => {
                         className="h-5 w-5 text-olive focus:ring-olive border-tan"
                       />
                       <SiPaypal className="w-8 h-8 ml-4 mr-3 text-brown" />
-                      <span className={`${lora.className} font-medium text-brown`}>PayPal</span>
+                      <span className={`${lora.className} font-medium text-brown`}>PayPal/Card</span>
                     </div>
                   </div>
                 </label>
@@ -658,7 +658,7 @@ const CheckoutContent = () => {
                         style={{ layout: "vertical", color: "gold", shape: "rect", label: "paypal", height: 55 }}
                         createOrder={async (): Promise<string> => {
                           try {
-                            const validationMessage = getCheckoutValidationMessage("PayPal");
+                            const validationMessage = getCheckoutValidationMessage("PayPal/Card");
                             if (validationMessage) {
                               setErrorMessage(validationMessage);
                               if (validationMessage.toLowerCase().includes("email")) focusCheckoutEmail();

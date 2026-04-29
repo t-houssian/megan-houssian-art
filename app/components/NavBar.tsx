@@ -28,9 +28,9 @@ export default function NavBar() {
   return (
     <header className="relative z-50 border-b border-[color:var(--border-tan-soft)] bg-[var(--nav-bg)]">
       <nav className="relative max-w-7xl mx-auto px-6 py-4 flex items-center justify-between overflow-visible">
-        <div className={`${cormorant.className} text-3xl font-light text-[var(--text-brown)] tracking-wide hover:text-[var(--link-olive)] transition-colors duration-300`}>
+        <div className={`${cormorant.className} shrink-0 text-2xl font-light text-[var(--text-brown)] tracking-wide hover:text-[var(--link-olive)] transition-colors duration-300 sm:text-3xl`}>
           <Link href="/" className="flex items-center space-x-2">
-            <span>Megan Houssian Art</span>
+            <span className="whitespace-nowrap">Megan Houssian Art</span>
           </Link>
         </div>
         
