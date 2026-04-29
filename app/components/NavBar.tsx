@@ -37,7 +37,7 @@ export default function NavBar() {
         <div className="flex items-center gap-2 md:hidden">
           <CartLink
             label="Cart"
-            className={`${lora.className} inline-flex h-10 items-center rounded-md border border-[color:var(--border-tan-medium)] px-3 text-sm font-medium text-[var(--text-brown)] transition-colors duration-200 hover:border-[var(--link-olive)] hover:bg-[var(--link-olive-hover-bg)] hover:text-[var(--link-olive)]`}
+            className={`${lora.className} inline-flex h-10 w-10 items-center justify-center rounded-full border border-transparent text-[var(--text-brown)]/80 transition-colors duration-200 hover:bg-[var(--link-olive-hover-bg)]/70 hover:text-[var(--link-olive)]`}
           />
           <button
             className="focus:outline-none p-2 rounded-lg hover:bg-[var(--link-olive-hover-bg)] transition-colors duration-200"

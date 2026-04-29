@@ -36,7 +36,7 @@ export default function CartLink({ className, onClick, label = "Cart" }: CartLin
       </span>
       <FaShoppingCart aria-hidden="true" className="h-5 w-5" />
       {count > 0 && (
-        <span className="absolute -right-2 -top-2 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-olive px-1.5 text-xs font-semibold leading-none text-paper">
+        <span className="absolute -right-2 -top-2 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-olive/85 px-1.5 text-xs font-semibold leading-none text-paper">
           {count}
         </span>
       )}
