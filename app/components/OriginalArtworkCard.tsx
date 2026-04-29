@@ -5,10 +5,6 @@ import type { OriginalArtworkSummary } from '../../lib/originals';
 import { urlFor } from '../../sanity/lib/image';
 import { cormorant, lora } from '../fonts';
 
-type SanityImage = {
-  asset: { _ref: string };
-};
-
 type OriginalArtworkCardProps = {
   item: OriginalArtworkSummary;
   detailHref: string;
@@ -22,22 +18,10 @@ function formatPrice(price?: number) {
   return formatCurrency(price);
 }
 
-function getImageDimensions(image?: SanityImage) {
-  const match = image?.asset?._ref?.match(/-(\d+)x(\d+)-/);
-  const width = match ? Number(match[1]) : 1200;
-  const height = match ? Number(match[2]) : 1500;
-
-  return {
-    width: Number.isFinite(width) && width > 0 ? width : 1200,
-    height: Number.isFinite(height) && height > 0 ? height : 1500,
-  };
-}
-
 export default function OriginalArtworkCard({
   item,
   detailHref,
 }: OriginalArtworkCardProps) {
-  const mainDimensions = getImageDimensions(item.mainImage);
   const hoverImage = item.hoverImage?.asset ? item.hoverImage : null;
   const titleWithSize = item.artworkSize ? `${item.title}, ${item.artworkSize}` : item.title;
 
@@ -45,10 +29,7 @@ export default function OriginalArtworkCard({
     <Link href={detailHref} className="group block h-full">
       <article className="h-full">
         {item.mainImage?.asset && (
-          <div
-            className="relative w-full overflow-hidden bg-ivory"
-            style={{ aspectRatio: `${mainDimensions.width} / ${mainDimensions.height}` }}
-          >
+          <div className="relative flex h-80 w-full items-center justify-center overflow-hidden bg-ivory sm:h-96 lg:h-[26rem]">
             <Image
               src={urlFor(item.mainImage).width(1200).fit('max').quality(92).url()}
               alt={item.title}
