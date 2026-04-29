@@ -21,7 +21,7 @@ export default async function Home() {
       <Hero />
       <section className="px-4 py-10 bg-paper text-center border-t border-tan/60">
         <p className={`${lora.className} mx-auto max-w-3xl text-lg md:text-xl leading-relaxed text-brown italic`}>
-          {settings.homeCollectorIntro}
+          {siteSettings.homepageContent.homeCollectorIntro}
         </p>
       </section>
       <CollectorEarlyAccess

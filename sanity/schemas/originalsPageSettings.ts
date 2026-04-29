@@ -177,16 +177,6 @@ export default defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
-      name: 'homeCollectorIntro',
-      title: 'Homepage Collector Intro',
-      type: 'text',
-      rows: 2,
-      description: 'Italic statement shown above the collector signup section on the homepage.',
-      initialValue:
-        'Timeless landscapes collected in homes across the Texas Hill Country and featured in local shops.',
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
       name: 'homeCollectorSubhead',
       title: 'Homepage Collector Subhead',
       type: 'text',

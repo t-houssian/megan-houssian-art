@@ -40,6 +40,7 @@ const siteSettingsProjection = `{
     surfaceAccentColor
   },
   homepageContent{
+    homeCollectorIntro,
     aboutHeading,
     aboutLocation,
     aboutDescription,
@@ -113,6 +114,10 @@ function normalizeHomepageContent(value: Partial<HomepageContent> | null | undef
   const content = value || {};
 
   return {
+    homeCollectorIntro: normalizeNonEmptyString(
+      content.homeCollectorIntro,
+      DEFAULT_HOMEPAGE_CONTENT.homeCollectorIntro
+    ),
     aboutHeading: normalizeNonEmptyString(content.aboutHeading, DEFAULT_HOMEPAGE_CONTENT.aboutHeading),
     aboutLocation: normalizeNonEmptyString(content.aboutLocation, DEFAULT_HOMEPAGE_CONTENT.aboutLocation),
     aboutDescription: normalizeNonEmptyString(content.aboutDescription, DEFAULT_HOMEPAGE_CONTENT.aboutDescription),

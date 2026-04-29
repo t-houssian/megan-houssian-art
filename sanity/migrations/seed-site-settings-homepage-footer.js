@@ -3,6 +3,8 @@ const { getCliClient } = require('@sanity/cli')
 const client = getCliClient({ apiVersion: '2026-04-01' })
 
 const homepageContent = {
+  homeCollectorIntro:
+    'Timeless landscapes collected in homes across the Texas Hill Country and featured in local shops.',
   aboutHeading: 'Megan Houssian',
   aboutLocation: 'Marble Falls, Texas.',
   aboutDescription:

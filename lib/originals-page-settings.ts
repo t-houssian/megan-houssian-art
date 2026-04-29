@@ -35,7 +35,6 @@ export type OriginalsPageSettings = {
   printsLabel: string;
   printsDescription: string;
   earlyAccessHeading: string;
-  homeCollectorIntro: string;
   homeCollectorSubhead: string;
   earlyAccessSubhead: string;
   earlyAccessButtonLabel: string;
@@ -67,8 +66,6 @@ const DEFAULT_ORIGINALS_PAGE_SETTINGS: OriginalsPageSettings = {
   printsLabel: 'Prints',
   printsDescription: 'Museum-quality prints of select works.',
   earlyAccessHeading: 'Collector Early Access',
-  homeCollectorIntro:
-    'Timeless landscapes collected in homes across the Texas Hill Country and featured in local shops.',
   homeCollectorSubhead:
     "Join my Collector List and I'll email you a private early access link 24 hours before new originals go live.",
   earlyAccessSubhead:
@@ -104,7 +101,6 @@ const originalsPageSettingsProjection = `{
   printsLabel,
   printsDescription,
   earlyAccessHeading,
-  homeCollectorIntro,
   homeCollectorSubhead,
   earlyAccessSubhead,
   earlyAccessButtonLabel,
@@ -199,10 +195,6 @@ export async function fetchOriginalsPageSettings(): Promise<OriginalsPageSetting
       earlyAccessHeading: normalizeNonEmptyString(
         settings?.earlyAccessHeading,
         DEFAULT_ORIGINALS_PAGE_SETTINGS.earlyAccessHeading
-      ),
-      homeCollectorIntro: normalizeNonEmptyString(
-        settings?.homeCollectorIntro,
-        DEFAULT_ORIGINALS_PAGE_SETTINGS.homeCollectorIntro
       ),
       homeCollectorSubhead: normalizeNonEmptyString(
         settings?.homeCollectorSubhead,

@@ -1,4 +1,5 @@
 export type HomepageContent = {
+  homeCollectorIntro: string;
   aboutHeading: string;
   aboutLocation: string;
   aboutDescription: string;
@@ -30,6 +31,8 @@ export type FooterContent = {
 };
 
 export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
+  homeCollectorIntro:
+    'Timeless landscapes collected in homes across the Texas Hill Country and featured in local shops.',
   aboutHeading: 'Megan Houssian',
   aboutLocation: 'Marble Falls, Texas.',
   aboutDescription:

@@ -144,10 +144,19 @@ export default defineType({
       name: 'homepageContent',
       title: 'Homepage Copy',
       type: 'object',
-      description: 'Text used in the About, Commission, and Contact sections on the homepage.',
+      description: 'Text used across homepage sections.',
       initialValue: DEFAULT_HOMEPAGE_CONTENT,
       options: { collapsible: true, collapsed: false },
       fields: [
+        defineField({
+          name: 'homeCollectorIntro',
+          title: 'Homepage Collector Intro',
+          type: 'text',
+          rows: 2,
+          description: 'Italic statement shown above the collector signup section on the homepage.',
+          initialValue: DEFAULT_HOMEPAGE_CONTENT.homeCollectorIntro,
+          validation: (rule) => rule.required()
+        }),
         defineField({
           name: 'aboutHeading',
           title: 'About Section Heading',
