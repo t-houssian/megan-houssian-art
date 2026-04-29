@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { FaShoppingCart } from "react-icons/fa";
 import { CART_UPDATED_EVENT, readCart } from "./cart-storage";
 
 type CartLinkProps = {
@@ -28,9 +29,17 @@ export default function CartLink({ className, onClick, label = "Cart" }: CartLin
   }, []);
 
   return (
-    <Link href="/cart" onClick={onClick} className={className}>
-      {label}
-      {count > 0 ? ` (${count})` : ""}
+    <Link href="/cart" onClick={onClick} className={`${className} relative`}>
+      <span className="sr-only">
+        {label}
+        {count > 0 ? `, ${count} item${count === 1 ? "" : "s"}` : ""}
+      </span>
+      <FaShoppingCart aria-hidden="true" className="h-5 w-5" />
+      {count > 0 && (
+        <span className="absolute -right-2 -top-2 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-olive px-1.5 text-xs font-semibold leading-none text-paper">
+          {count}
+        </span>
+      )}
     </Link>
   );
 }
