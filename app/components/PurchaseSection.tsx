@@ -130,7 +130,7 @@ export default function PurchaseSection({
             : "border-btn-brown bg-btn-brown hover:bg-btn-brown-hover disabled:opacity-60"
         }`}
       >
-        {isSold ? "Sold" : "Purchase This Piece"}
+        {isSold ? "Sold" : "Purchase Now"}
       </button>
       <div className="mt-4">
         <AddToCartButton
