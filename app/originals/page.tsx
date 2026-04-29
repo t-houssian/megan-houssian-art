@@ -39,11 +39,7 @@ export default async function OriginalsPage({ searchParams }: OriginalsPageProps
             Originals
           </h1>
           <p className={`${lora.className} max-w-3xl mx-auto text-xl md:text-2xl text-warm-gray leading-relaxed`}>
-            The Evening Light Collection is in early access. Collectors have received the password via email, or you can join the{' '}
-            <a href="/#collector-early-access" className="text-olive underline underline-offset-4 hover:text-brown">
-              Collector List
-            </a>{' '}
-            to receive it.
+            The Evening Light Collection is in early access.
           </p>
         </div>
 

@@ -18,11 +18,11 @@ export default function CollectorAccessGate({ formAction = "/originals/unlock", 
         Collector Access
       </h2>
       <p className={`${lora.className} text-warm-gray mb-6`}>
-        Collectors have received the password via email. Need the password? Join the{' '}
+        Collector List members have received the password by email. If you&apos;re not on the list yet, join the{' '}
         <a href="/#collector-early-access" className="text-olive underline underline-offset-4 hover:text-brown">
           Collector List
         </a>{' '}
-        to receive it, then enter it below to open the private originals gallery.
+        to receive it.
       </p>
 
       <form action={formAction} method="post" className="space-y-4">
