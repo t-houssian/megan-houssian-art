@@ -17,6 +17,13 @@ import {
 const KIT_API_BASE_URL = "https://api.kit.com/v4";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAILGUN_FALLBACK_DOMAIN = "sandboxa69135ee3d8a4b649d035d06cc9f7ac1.mailgun.org";
+const CURRENT_COLLECTION_EARLY_ACCESS: CollectorSignupEarlyAccessContext = {
+  sourceType: "collection",
+  sourceTitle: "Evening Light Collection",
+  password: "HillCountry26",
+  message: "The Evening Light Collection is in early access now.",
+  accessHref: "/originals",
+};
 
 const mailgun = new Mailgun(FormData);
 
@@ -108,6 +115,20 @@ const buildEarlyAccessHtml = (contexts: CollectorSignupEarlyAccessContext[], col
       ${renderDetailTable(rows)}
     </div>
   `;
+};
+
+const getCollectorWelcomeEarlyAccessContexts = async (referrer?: string) => {
+  const contexts = await fetchCollectorSignupEarlyAccessContexts(referrer);
+  const hasCurrentCollectionPassword = contexts.some(
+    (context) =>
+      context.sourceType === CURRENT_COLLECTION_EARLY_ACCESS.sourceType &&
+      context.sourceTitle.toLowerCase() === CURRENT_COLLECTION_EARLY_ACCESS.sourceTitle.toLowerCase() &&
+      context.password === CURRENT_COLLECTION_EARLY_ACCESS.password
+  );
+
+  return hasCurrentCollectionPassword
+    ? contexts
+    : [CURRENT_COLLECTION_EARLY_ACCESS, ...contexts];
 };
 
 const sendCollectorWelcomeEmail = async (params: {
@@ -261,7 +282,7 @@ export async function POST(request: Request) {
     }
 
     try {
-      const earlyAccessContexts = await fetchCollectorSignupEarlyAccessContexts(referrer);
+      const earlyAccessContexts = await getCollectorWelcomeEarlyAccessContexts(referrer);
       await sendCollectorWelcomeEmail({ email, firstName, earlyAccessContexts });
     } catch (error) {
       console.error("Failed to send collector welcome email:", error);
@@ -269,7 +290,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: "You're in. Watch your inbox for early access updates.",
+      message: "You're in. Check your inbox for the Evening Light Collection password.",
     });
   } catch (error) {
     console.error("Kit subscribe error:", error);
