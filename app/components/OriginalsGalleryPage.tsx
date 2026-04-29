@@ -3,7 +3,7 @@ import { fetchOriginals } from '../../lib/originals';
 import OriginalArtworkCard from './OriginalArtworkCard';
 
 type OriginalsGalleryPageProps = {
-  sourcePath: '/hidden-originals' | '/originals-collectors-access';
+  sourcePath: '/originals' | '/hidden-originals' | '/originals-collectors-access';
 };
 
 function buildDetailHref(slug: string, sourcePath: OriginalsGalleryPageProps['sourcePath']) {

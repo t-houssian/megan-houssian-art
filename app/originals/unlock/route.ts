@@ -8,13 +8,10 @@ export async function POST(request: Request) {
   const password = String(formData.get('password') || '').trim();
 
   if (password !== ACCESS_PASSWORD) {
-    return NextResponse.redirect(
-      new URL('/originals-collectors-access?error=invalid-password#collector-access', request.url),
-      303
-    );
+    return NextResponse.redirect(new URL('/originals?error=invalid-password#collector-access', request.url), 303);
   }
 
-  const response = NextResponse.redirect(new URL('/originals-collectors-access', request.url), 303);
+  const response = NextResponse.redirect(new URL('/originals', request.url), 303);
   response.cookies.set({
     name: COLLECTOR_ACCESS_COOKIE_NAME,
     value: 'granted',

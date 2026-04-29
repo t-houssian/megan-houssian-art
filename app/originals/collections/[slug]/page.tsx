@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 
 const ALLOWED_SOURCE_PATHS = new Set([
+  '/originals',
   '/hidden-originals',
   '/originals-collectors-access',
 ]);

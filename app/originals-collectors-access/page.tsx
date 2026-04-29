@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import OriginalsGalleryPage from '../components/OriginalsGalleryPage';
+import CollectorAccessGate from '../components/CollectorAccessGate';
 import { cormorant, lora } from '../fonts';
-import CollectorPasswordInput from './CollectorPasswordInput';
-
-const ACCESS_COOKIE_NAME = 'mha-collectors-access';
+import { COLLECTOR_ACCESS_COOKIE_NAME } from '../../lib/collector-access';
 
 export const metadata: Metadata = {
   title: 'Collectors Access | Megan Houssian Art',
@@ -24,46 +23,31 @@ export default async function OriginalsCollectorsAccessPage({
   searchParams,
 }: CollectorsAccessPageProps) {
   const cookieStore = await cookies();
-  const hasAccess = cookieStore.get(ACCESS_COOKIE_NAME)?.value === 'granted';
+  const hasAccess = cookieStore.get(COLLECTOR_ACCESS_COOKIE_NAME)?.value === 'granted';
   const params = await searchParams;
 
   if (hasAccess) {
     return <OriginalsGalleryPage sourcePath="/originals-collectors-access" />;
   }
 
-  const showError = params.error === 'invalid-password';
+  const gateError = params.error === 'invalid-password' ? params.error : undefined;
 
   return (
     <section className="min-h-screen bg-gradient-to-br from-ivory via-paper to-accent-cream">
       <div className="max-w-2xl mx-auto px-6 py-20">
-        <div className="rounded-3xl border border-tan/30 bg-white/85 p-8 md:p-10 shadow-vintage-lg backdrop-blur-sm">
+        <div className="mb-8 text-center">
           <p className={`${lora.className} text-sm uppercase tracking-[0.22em] text-olive mb-4`}>
-            Private collector preview
+            The Evening Light Collection is in early access
           </p>
-          <h1 className={`${cormorant.className} text-4xl md:text-5xl font-light text-brown mb-4`}>
+          <h1 className={`${cormorant.className} text-4xl md:text-5xl font-light text-brown`}>
             Originals Collector Access
           </h1>
-          <p className={`${lora.className} text-warm-gray mb-8`}>
-            Enter the collector password to open the private originals gallery.
-          </p>
-
-          <form action="/originals-collectors-access/unlock" method="post" className="space-y-4">
-            <CollectorPasswordInput />
-
-            {showError && (
-              <p className={`${lora.className} text-sm text-red-700`}>
-                That password was incorrect. Please try again.
-              </p>
-            )}
-
-            <button
-              type="submit"
-              className={`inline-flex items-center justify-center rounded-full border-2 border-black/80 bg-gradient-to-r from-btn-brown to-btn-brown-hover px-8 py-3 text-paper shadow-vintage transition-all duration-500 hover:-translate-y-0.5 hover:shadow-vintage-lg ${lora.className}`}
-            >
-              Open collector gallery
-            </button>
-          </form>
         </div>
+
+        <CollectorAccessGate
+          formAction="/originals-collectors-access/unlock"
+          error={gateError}
+        />
       </div>
     </section>
   );

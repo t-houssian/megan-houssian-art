@@ -656,7 +656,7 @@ const contextFromCandidate = (candidate: EarlyAccessCandidate): CollectorSignupE
     sourceTitle: candidate.sourceTitle,
     password,
     message: candidate.earlyAccessEmailMessage || candidate.earlyAccessMessage,
-    accessHref: candidate.sourceType === 'piece' && candidate.slug ? `/originals/${candidate.slug}` : '/hidden-originals',
+    accessHref: candidate.sourceType === 'piece' && candidate.slug ? `/originals/${candidate.slug}` : '/originals',
   };
 };
 
