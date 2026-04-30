@@ -3,7 +3,6 @@ import { dollarsToCents, roundUpCentsToNearestTenDollars } from '../../../../lib
 import {
   fetchOriginalCheckoutPricing,
   validateOriginalSoldWriteAccess,
-  validateOriginalEarlyAccessForCheckout,
 } from '../../../../lib/originals';
 import { cartToPayPalItems, validateCartForCheckout } from '../../../../lib/cart-checkout';
 import {
@@ -38,15 +37,13 @@ export async function POST(request: NextRequest) {
       shippingAddress,
       shippingOption,
       checkoutEmail,
-      earlyAccessPassword,
-      earlyAccessPasswords,
       cartItems,
     } = await request.json();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
     const normalizedCheckoutEmail = isValidEmail(checkoutEmail) ? checkoutEmail.trim().toLowerCase() : null;
     const isCartCheckout = Array.isArray(cartItems) && cartItems.length > 0;
     const validatedCart = isCartCheckout
-      ? await validateCartForCheckout(cartItems, earlyAccessPasswords)
+      ? await validateCartForCheckout(cartItems)
       : null;
     const originalPricing = !isCartCheckout && typeof originalSlug === 'string' && originalSlug
       ? await fetchOriginalCheckoutPricing(originalSlug)
@@ -63,19 +60,6 @@ export async function POST(request: NextRequest) {
         { error: 'This original artwork has already sold' },
         { status: 409 }
       );
-    }
-
-    if (!isCartCheckout) {
-      const earlyAccessValidation = await validateOriginalEarlyAccessForCheckout(
-        originalSlug,
-        earlyAccessPassword
-      );
-      if (!earlyAccessValidation.ok) {
-        return NextResponse.json(
-          { error: earlyAccessValidation.message },
-          { status: 403 }
-        );
-      }
     }
 
     const parsedAmount = typeof originalPricing?.price === 'number'

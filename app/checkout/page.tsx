@@ -74,7 +74,6 @@ type CheckoutDraft = {
   returnTo: string;
   shippingOption: "shipping" | "pickup";
   checkoutEmail: string;
-  earlyAccessPassword: string;
   shippingAddress: ShippingAddress;
   shippingCost: number;
 };
@@ -121,7 +120,6 @@ const CheckoutContent = () => {
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>(defaultShippingAddress);
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [checkoutEmail, setCheckoutEmail] = useState<string>("");
-  const [earlyAccessPassword, setEarlyAccessPassword] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<"stripe" | "paypal">("stripe");
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -151,13 +149,6 @@ const CheckoutContent = () => {
     quantity: item.quantity ?? 1,
   }));
 
-  const earlyAccessPasswordsForCart = cartItems.reduce<Record<string, string>>((passwords, item) => {
-    if (item.type === "original" && item.originalSlug && typeof window !== "undefined") {
-      passwords[item.originalSlug] = window.sessionStorage.getItem(`mha-early-access-password:${item.originalSlug}`) || "";
-    }
-    return passwords;
-  }, {});
-
   useEffect(() => {
     if (typeof window === "undefined" || isDraftInitialized) return;
 
@@ -172,14 +163,6 @@ const CheckoutContent = () => {
 
     const resolvedReturnTo = normalizedReturnToFromQuery || parsedDraft?.returnTo || "";
     if (resolvedReturnTo) setReturnToPath(resolvedReturnTo);
-
-    const storedEarlyAccessPassword =
-      originalSlug && typeof window !== "undefined"
-        ? window.sessionStorage.getItem(`mha-early-access-password:${originalSlug}`) || ""
-        : "";
-    if (storedEarlyAccessPassword) {
-      setEarlyAccessPassword(storedEarlyAccessPassword);
-    }
 
     const hasCheckoutParams = Boolean(product && priceParam) || isCartCheckout;
 
@@ -199,7 +182,6 @@ const CheckoutContent = () => {
     ) {
       setShippingOption(parsedDraft.shippingOption);
       setCheckoutEmail(parsedDraft.checkoutEmail || "");
-      setEarlyAccessPassword(storedEarlyAccessPassword || parsedDraft.earlyAccessPassword || "");
       setShippingAddress({ ...defaultShippingAddress, ...parsedDraft.shippingAddress });
       setShippingCost(0);
     }
@@ -230,7 +212,6 @@ const CheckoutContent = () => {
       returnTo: returnToPath,
       shippingOption,
       checkoutEmail,
-      earlyAccessPassword,
       shippingAddress,
       shippingCost,
     };
@@ -246,7 +227,6 @@ const CheckoutContent = () => {
     returnToPath,
     shippingOption,
     checkoutEmail,
-    earlyAccessPassword,
     shippingAddress,
     shippingCost,
     isCartCheckout,
@@ -313,8 +293,6 @@ const CheckoutContent = () => {
         amount: subtotalPrice,
         product: productDisplayName,
         originalSlug: isCartCheckout ? "" : originalSlug,
-        earlyAccessPassword: isCartCheckout ? "" : earlyAccessPassword,
-        earlyAccessPasswords: isCartCheckout ? earlyAccessPasswordsForCart : undefined,
         cartItems: isCartCheckout ? cartPayloadItems : undefined,
         checkoutEmail: checkoutEmail.trim(),
         shippingAddress: shippingOption === "pickup" ? null : shippingAddress,
@@ -357,8 +335,6 @@ const CheckoutContent = () => {
         amount: formatCents(subtotalPrice),
         product: productDisplayName,
         originalSlug: isCartCheckout ? "" : originalSlug,
-        earlyAccessPassword: isCartCheckout ? "" : earlyAccessPassword,
-        earlyAccessPasswords: isCartCheckout ? earlyAccessPasswordsForCart : undefined,
         cartItems: isCartCheckout ? cartPayloadItems : undefined,
         checkoutEmail: checkoutEmail.trim(),
         shippingAddress: shippingOption === "pickup" ? null : shippingAddress,

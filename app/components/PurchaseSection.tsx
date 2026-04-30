@@ -28,9 +28,7 @@ export default function PurchaseSection({
   const router = useRouter();
   const pathname = usePathname();
   const checkoutPrice = isTestProduct ? basePrice : roundUpToNearestTenDollars(basePrice);
-  const [accessPassword, setAccessPassword] = React.useState("");
   const [accessError, setAccessError] = React.useState<string | null>(null);
-  const isEarlyAccess = earlyAccess?.status === "early_access";
   const isUpcoming = earlyAccess?.status === "upcoming";
 
   const handlePurchase = () => {
@@ -43,18 +41,6 @@ export default function PurchaseSection({
     if (isUpcoming) {
       setAccessError(earlyAccess?.message || "This piece is not available for purchase yet.");
       return;
-    }
-
-    if (isEarlyAccess && !accessPassword.trim()) {
-      setAccessError("Enter the collector password to purchase during early access.");
-      return;
-    }
-
-    if (isEarlyAccess && typeof window !== "undefined") {
-      window.sessionStorage.setItem(
-        `mha-early-access-password:${originalSlug}`,
-        accessPassword.trim()
-      );
     }
 
     // Build the checkout URL with product details
@@ -74,10 +60,10 @@ export default function PurchaseSection({
 
   return (
     <div>
-      {earlyAccess?.status !== "open" && (
+      {isUpcoming && (
         <div className="mb-6 border-y border-tan/50 py-5">
           <p className={`${lora.className} text-sm uppercase tracking-[0.18em] text-olive mb-2`}>
-            {isEarlyAccess ? "Collector early access" : "Coming soon"}
+            Coming soon
           </p>
           <p className={`${lora.className} text-warm-gray leading-relaxed`}>
             {earlyAccess?.message}
@@ -87,27 +73,6 @@ export default function PurchaseSection({
               {earlyAccess.sourceType === "collection" ? "Collection" : "Piece"}:{" "}
               <span className="text-brown">{earlyAccess.sourceTitle}</span>
             </p>
-          )}
-          {isEarlyAccess && (
-            <div className="mt-5">
-              <label htmlFor="collector-access-password" className={`${lora.className} block text-brown font-medium mb-2`}>
-                Collector Password
-              </label>
-              <input
-                id="collector-access-password"
-                type="password"
-                value={accessPassword}
-                onChange={(event) => setAccessPassword(event.target.value)}
-                className="block w-full border-0 border-b border-tan/60 bg-transparent px-0 py-3 text-brown placeholder-warm-gray/60 focus:border-olive focus:outline-none focus:ring-0 transition-all duration-200"
-                placeholder="Enter password"
-              />
-              <a
-                href="/#collector-early-access"
-                className={`${lora.className} mt-3 inline-block text-sm text-olive underline underline-offset-4`}
-              >
-                Join the Collector List to receive the password
-              </a>
-            </div>
           )}
           {accessError && (
             <p className={`${lora.className} mt-4 text-sm text-red-700`}>{accessError}</p>

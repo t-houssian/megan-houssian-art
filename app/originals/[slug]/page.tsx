@@ -2,11 +2,8 @@
 import ArtworkGallery from "../../components/ArtworkGallery";
 import PurchaseSection from "../../components/PurchaseSection";
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { cormorant, lora } from "../../fonts";
 import { fetchOriginalBySlug } from "../../../lib/originals";
-import { COLLECTOR_ACCESS_COOKIE_NAME } from "../../../lib/collector-access";
 import { urlFor } from "../../../sanity/lib/image";
 
 export const revalidate = 0;
@@ -29,13 +26,6 @@ export default async function OriginalDetailPage({
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ from?: string | string[] }>;
 }) {
-  const cookieStore = await cookies();
-  const hasAccess = cookieStore.get(COLLECTOR_ACCESS_COOKIE_NAME)?.value === 'granted';
-
-  if (!hasAccess) {
-    redirect('/originals');
-  }
-
   const { slug: rawSlug } = await params;
   const resolvedSearchParams = await searchParams;
   const slugParam = rawSlug;

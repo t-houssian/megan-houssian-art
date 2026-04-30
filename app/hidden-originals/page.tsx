@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
+import OriginalsGalleryPage from '../components/OriginalsGalleryPage';
 
 export const metadata: Metadata = {
   title: 'Hidden Originals | Megan Houssian Art',
@@ -12,5 +12,5 @@ export const metadata: Metadata = {
 export const revalidate = 0;
 
 export default function HiddenOriginalsPage() {
-  redirect('/originals');
+  return <OriginalsGalleryPage sourcePath="/hidden-originals" />;
 }

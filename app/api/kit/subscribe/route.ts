@@ -1,29 +1,17 @@
 import { NextResponse } from "next/server";
 import FormData from "form-data";
 import Mailgun from "mailgun.js";
-import { getEmailLinks, renderBrandEmail, renderDetailTable } from "../../../../lib/email-template";
+import { getEmailLinks, renderBrandEmail } from "../../../../lib/email-template";
 import {
   applyTemplate,
-  escapeHtml,
   fetchEmailSettings,
   renderHtmlParagraphs,
   resolveHref,
 } from "../../../../lib/email-settings";
-import {
-  type CollectorSignupEarlyAccessContext,
-  fetchCollectorSignupEarlyAccessContexts,
-} from "../../../../lib/originals";
 
 const KIT_API_BASE_URL = "https://api.kit.com/v4";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAILGUN_FALLBACK_DOMAIN = "sandboxa69135ee3d8a4b649d035d06cc9f7ac1.mailgun.org";
-const CURRENT_COLLECTION_EARLY_ACCESS: CollectorSignupEarlyAccessContext = {
-  sourceType: "collection",
-  sourceTitle: "Evening Light Collection",
-  password: "HillCountry26",
-  message: "The Evening Light Collection is in early access now.",
-  accessHref: "/originals",
-};
 
 const mailgun = new Mailgun(FormData);
 
@@ -72,69 +60,9 @@ const isValidReferrer = (value: unknown): value is string => {
   }
 };
 
-const buildEarlyAccessText = (contexts: CollectorSignupEarlyAccessContext[]) => {
-  if (contexts.length === 0) return "";
-
-  return [
-    "Collector early access:",
-    ...contexts.flatMap((context) => [
-      `- ${context.sourceTitle}: password ${context.password}`,
-      context.message ? `  ${context.message}` : "",
-      `  Open: ${resolveHref(context.accessHref, getEmailLinks().homeUrl, getEmailLinks().originalsUrl)}`,
-    ]),
-  ]
-    .filter(Boolean)
-    .join("\n");
-};
-
-const buildEarlyAccessHtml = (contexts: CollectorSignupEarlyAccessContext[], colors: { bodyTextColor: string }) => {
-  if (contexts.length === 0) return "";
-
-  const rows = contexts.flatMap((context) => [
-    { label: context.sourceType === "collection" ? "Collection" : "Piece", value: context.sourceTitle },
-    { label: "Password", value: context.password },
-  ]);
-
-  const messages = contexts
-    .map((context) => context.message?.trim())
-    .filter((message): message is string => Boolean(message));
-
-  return `
-    <div style="margin:24px 0 0;">
-      <h2 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:${colors.bodyTextColor};">Collector early access</h2>
-      ${
-        messages.length > 0
-          ? messages
-              .map(
-                (message) =>
-                  `<p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:${colors.bodyTextColor};">${escapeHtml(message)}</p>`
-              )
-              .join("")
-          : `<p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:${colors.bodyTextColor};">Your collector password is below. Use it on the artwork page to purchase during the early access window.</p>`
-      }
-      ${renderDetailTable(rows)}
-    </div>
-  `;
-};
-
-const getCollectorWelcomeEarlyAccessContexts = async (referrer?: string) => {
-  const contexts = await fetchCollectorSignupEarlyAccessContexts(referrer);
-  const hasCurrentCollectionPassword = contexts.some(
-    (context) =>
-      context.sourceType === CURRENT_COLLECTION_EARLY_ACCESS.sourceType &&
-      context.sourceTitle.toLowerCase() === CURRENT_COLLECTION_EARLY_ACCESS.sourceTitle.toLowerCase() &&
-      context.password === CURRENT_COLLECTION_EARLY_ACCESS.password
-  );
-
-  return hasCurrentCollectionPassword
-    ? contexts
-    : [CURRENT_COLLECTION_EARLY_ACCESS, ...contexts];
-};
-
 const sendCollectorWelcomeEmail = async (params: {
   email: string;
   firstName: string;
-  earlyAccessContexts: CollectorSignupEarlyAccessContext[];
 }) => {
   const mailgunApiKey = process.env.MAILGUN_API_KEY;
   if (!mailgunApiKey) {
@@ -157,14 +85,9 @@ const sendCollectorWelcomeEmail = async (params: {
     firstName: collectorName,
   };
   const body = applyTemplate(welcomeSettings.body, templateValues).trim();
-  const earlyAccessText = buildEarlyAccessText(params.earlyAccessContexts);
-  const earlyAccessHtml = buildEarlyAccessHtml(params.earlyAccessContexts, {
-    bodyTextColor: emailSettings.brandTemplate.colors.bodyTextColor,
-  });
   const ctaHref = resolveHref(welcomeSettings.ctaHref, links.homeUrl, links.originalsUrl);
   const text = [
     body,
-    earlyAccessText ? "\n" + earlyAccessText : "",
     "",
     "Explore:",
     ...links.footerLinks
@@ -181,7 +104,7 @@ const sendCollectorWelcomeEmail = async (params: {
   const html = renderBrandEmail({
     preheader: applyTemplate(welcomeSettings.preheader, templateValues),
     title: applyTemplate(welcomeSettings.title, templateValues),
-    bodyHtml: `${body ? renderHtmlParagraphs(body, emailSettings.brandTemplate.colors.bodyTextColor) : ''}${earlyAccessHtml}`,
+    bodyHtml: body ? renderHtmlParagraphs(body, emailSettings.brandTemplate.colors.bodyTextColor) : '',
     cta: {
       label: applyTemplate(welcomeSettings.ctaLabel, templateValues),
       href: ctaHref,
@@ -282,15 +205,14 @@ export async function POST(request: Request) {
     }
 
     try {
-      const earlyAccessContexts = await getCollectorWelcomeEarlyAccessContexts(referrer);
-      await sendCollectorWelcomeEmail({ email, firstName, earlyAccessContexts });
+      await sendCollectorWelcomeEmail({ email, firstName });
     } catch (error) {
       console.error("Failed to send collector welcome email:", error);
     }
 
     return NextResponse.json({
       success: true,
-      message: "You're in. Check your inbox for the Evening Light Collection password.",
+      message: "You're in. Check your inbox for a welcome email.",
     });
   } catch (error) {
     console.error("Kit subscribe error:", error);

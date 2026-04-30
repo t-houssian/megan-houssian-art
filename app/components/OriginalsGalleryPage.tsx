@@ -12,7 +12,7 @@ function buildDetailHref(slug: string, sourcePath: OriginalsGalleryPageProps['so
 }
 
 export default async function OriginalsGalleryPage({ sourcePath }: OriginalsGalleryPageProps) {
-  const originals = await fetchOriginals();
+  const originals = await fetchOriginals(sourcePath === '/hidden-originals' ? 'hidden' : 'public');
 
   return (
     <section className="min-h-screen bg-ivory">
@@ -21,7 +21,9 @@ export default async function OriginalsGalleryPage({ sourcePath }: OriginalsGall
           <div className="max-w-3xl mx-auto border-y border-tan/40 py-10 text-center">
             <h2 className={`${cormorant.className} text-3xl text-brown mb-3`}>No originals are listed yet</h2>
             <p className={`${lora.className} text-warm-gray`}>
-              Add original artworks in Sanity and they will appear here automatically.
+              {sourcePath === '/hidden-originals'
+                ? 'Mark originals as hidden in Sanity and they will appear here automatically.'
+                : 'Add original artworks in Sanity and they will appear here automatically.'}
             </p>
           </div>
         ) : (

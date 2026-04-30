@@ -1,10 +1,8 @@
 import Stripe from 'stripe';
 import type { CartPayloadItem } from './cart-types';
 import { dollarsToCents, roundUpCentsToNearestTenDollars, roundUpToNearestTenDollars } from './money';
-import { fetchOriginalCheckoutPricing, validateOriginalEarlyAccessForCheckout } from './originals';
+import { fetchOriginalCheckoutPricing } from './originals';
 import { sanityClient } from './sanity';
-
-type EarlyAccessPasswords = Record<string, string | undefined>;
 
 type ValidatedCartLine = {
   title: string;
@@ -50,8 +48,7 @@ const getPrintBySlug = (slug: string) =>
   );
 
 export async function validateCartForCheckout(
-  rawItems: unknown,
-  earlyAccessPasswords: EarlyAccessPasswords = {}
+  rawItems: unknown
 ): Promise<ValidatedCart> {
   if (!Array.isArray(rawItems)) {
     throw new Error('Cart is empty.');
@@ -77,14 +74,6 @@ export async function validateCartForCheckout(
       }
       if (original.sold) {
         throw new Error(`"${original.title}" has already sold.`);
-      }
-
-      const earlyAccessValidation = await validateOriginalEarlyAccessForCheckout(
-        original.slug.current,
-        earlyAccessPasswords[original.slug.current]
-      );
-      if (!earlyAccessValidation.ok) {
-        throw new Error(earlyAccessValidation.message);
       }
 
       const rawAmountCents = dollarsToCents(original.price ?? 0);

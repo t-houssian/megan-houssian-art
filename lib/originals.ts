@@ -18,6 +18,7 @@ export type OriginalArtworkSample = {
   _id: string;
   title: string;
   slug: { current: string };
+  hiddenOriginal?: boolean;
   mainImage?: {
     asset: { _ref: string };
   };
@@ -37,6 +38,7 @@ export type OriginalArtworkSummary = {
   artworkSize?: string;
   sold?: boolean;
   testProduct?: boolean;
+  hiddenOriginal?: boolean;
   releaseAt?: string;
   earlyAccessStartsAt?: string;
   earlyAccessMessage?: string;
@@ -80,15 +82,6 @@ type EarlyAccessCandidate = {
   earlyAccessStartsAt?: string;
   earlyAccessMessage?: string;
   earlyAccessEmailMessage?: string;
-  earlyAccessPassword?: string;
-};
-
-export type CollectorSignupEarlyAccessContext = {
-  sourceType: 'piece' | 'collection';
-  sourceTitle: string;
-  password: string;
-  message?: string;
-  accessHref: string;
 };
 
 type RawOriginalArtworkSummary = Omit<OriginalArtworkSummary, 'collections'> & {
@@ -133,6 +126,7 @@ const ORIGINAL_SUMMARY_PROJECTION = `
   artworkSize,
   sold,
   testProduct,
+  hiddenOriginal,
   releaseAt,
   earlyAccessStartsAt,
   earlyAccessMessage,
@@ -171,6 +165,7 @@ const ORIGINAL_COLLECTIONS_LIST_QUERY = `
     ${COLLECTION_SUMMARY_PROJECTION},
     "pieceCount": count(*[
       _type == "original" &&
+      coalesce(hiddenOriginal, false) != true &&
       (
         _id in coalesce(^.pieces[]._ref, []) ||
         ^._id in coalesce(collections[]._ref, [])
@@ -179,6 +174,7 @@ const ORIGINAL_COLLECTIONS_LIST_QUERY = `
     "sampleOriginals": *[
       _type == "original" &&
       defined(mainImage.asset) &&
+      coalesce(hiddenOriginal, false) != true &&
       (
         _id in coalesce(^.pieces[]._ref, []) ||
         ^._id in coalesce(collections[]._ref, [])
@@ -189,6 +185,7 @@ const ORIGINAL_COLLECTIONS_LIST_QUERY = `
       "slug": {
         "current": coalesce(slug.current, _id)
       },
+      hiddenOriginal,
       mainImage
     }
   } | order(title asc)
@@ -199,6 +196,7 @@ const ORIGINAL_COLLECTION_BY_SLUG_QUERY = `
     ${COLLECTION_SUMMARY_PROJECTION},
     "originals": *[
       _type == "original" &&
+      coalesce(hiddenOriginal, false) != true &&
       (
         _id in coalesce(^.pieces[]._ref, []) ||
         ^._id in coalesce(collections[]._ref, [])
@@ -226,82 +224,8 @@ const ORIGINAL_CHECKOUT_PRICING_QUERY = `
   }
 `;
 
-const EARLY_ACCESS_ORIGINAL_BY_SLUG_QUERY = `
-  *[
-    _type == "original" &&
-    (slug.current == $slug || _id == $slug) &&
-    !(_id in path("drafts.**"))
-  ][0]{
-    _id,
-    title,
-    "slug": coalesce(slug.current, _id),
-    releaseAt,
-    earlyAccessStartsAt,
-    earlyAccessMessage,
-    earlyAccessEmailMessage,
-    earlyAccessPassword,
-    "directCollections": collections[]->{
-      _id,
-      title,
-      "slug": slug.current,
-      releaseAt,
-      earlyAccessStartsAt,
-      earlyAccessMessage,
-      earlyAccessEmailMessage,
-      earlyAccessPassword
-    },
-    "reverseCollections": *[_type == "originalCollection" && ^._id in pieces[]._ref]{
-      _id,
-      title,
-      "slug": slug.current,
-      releaseAt,
-      earlyAccessStartsAt,
-      earlyAccessMessage,
-      earlyAccessEmailMessage,
-      earlyAccessPassword
-    }
-  }
-`;
-
-const ACTIVE_EARLY_ACCESS_CONTEXTS_QUERY = `
-  {
-    "collections": *[
-      _type == "originalCollection" &&
-      defined(earlyAccessPassword) &&
-      defined(releaseAt) &&
-      dateTime($now) >= dateTime(earlyAccessStartsAt) &&
-      dateTime($now) < dateTime(releaseAt)
-    ]{
-      _id,
-      title,
-      "slug": slug.current,
-      releaseAt,
-      earlyAccessStartsAt,
-      earlyAccessMessage,
-      earlyAccessEmailMessage,
-      earlyAccessPassword
-    },
-    "pieces": *[
-      _type == "original" &&
-      defined(earlyAccessPassword) &&
-      defined(releaseAt) &&
-      dateTime($now) >= dateTime(earlyAccessStartsAt) &&
-      dateTime($now) < dateTime(releaseAt)
-    ]{
-      _id,
-      title,
-      "slug": coalesce(slug.current, _id),
-      releaseAt,
-      earlyAccessStartsAt,
-      earlyAccessMessage,
-      earlyAccessEmailMessage,
-      earlyAccessPassword
-    }
-  }
-`;
-
 const DEFAULT_EARLY_ACCESS_MESSAGE =
-  'This piece is currently in collector early access. To purchase during this preview window, join my Collector List and I will send you the password.';
+  'This piece is currently in collector early access.';
 
 const DEFAULT_UPCOMING_MESSAGE =
   'This piece is not available for purchase yet. Join my Collector List for early access updates.';
@@ -326,7 +250,6 @@ const normalizeAccessCandidate = (
     earlyAccessStartsAt: normalizeDateValue(candidate.earlyAccessStartsAt),
     earlyAccessMessage: normalizeString(candidate.earlyAccessMessage) || undefined,
     earlyAccessEmailMessage: normalizeString(candidate.earlyAccessEmailMessage) || undefined,
-    earlyAccessPassword: normalizeString(candidate.earlyAccessPassword) || undefined,
   };
 };
 
@@ -468,7 +391,21 @@ function normalizeCollection(collection: RawOriginalCollection): OriginalCollect
   };
 }
 
-export async function fetchOriginals(): Promise<OriginalArtworkSummary[]> {
+type OriginalsVisibility = 'public' | 'hidden' | 'all';
+
+function originalMatchesVisibility(
+  original: RawOriginalArtworkSummary | OriginalArtworkSummary,
+  visibility: OriginalsVisibility
+) {
+  if (visibility === 'all') return true;
+
+  const isHidden = original.hiddenOriginal === true;
+  return visibility === 'hidden' ? isHidden : !isHidden;
+}
+
+export async function fetchOriginals(
+  visibility: OriginalsVisibility = 'public'
+): Promise<OriginalArtworkSummary[]> {
   const result = await sanityClient.withConfig({ useCdn: false }).fetch<RawOriginalsOrderedResult>(
     ORIGINALS_LIST_QUERY,
     {},
@@ -476,8 +413,12 @@ export async function fetchOriginals(): Promise<OriginalArtworkSummary[]> {
   );
 
   const orderedIds = new Set(result.orderDoc?.orderedIds ?? []);
-  const orderedOriginals = (result.orderDoc?.items ?? []).filter((original) => original?._id);
-  const unorderedOriginals = (result.all ?? []).filter((original) => !orderedIds.has(original._id));
+  const orderedOriginals = (result.orderDoc?.items ?? []).filter(
+    (original) => original?._id && originalMatchesVisibility(original, visibility)
+  );
+  const unorderedOriginals = (result.all ?? []).filter(
+    (original) => !orderedIds.has(original._id) && originalMatchesVisibility(original, visibility)
+  );
 
   return [...orderedOriginals, ...unorderedOriginals].map(normalizeOriginal);
 }
@@ -516,197 +457,6 @@ export async function fetchOriginalCheckoutPricing(slug: string): Promise<Origin
     { slug },
     { cache: 'no-store' }
   );
-}
-
-type RawEarlyAccessOriginal = {
-  title: string;
-  slug?: string;
-  releaseAt?: string;
-  earlyAccessStartsAt?: string;
-  earlyAccessMessage?: string;
-  earlyAccessEmailMessage?: string;
-  earlyAccessPassword?: string;
-  directCollections?: Array<RawEarlyAccessSource | null> | null;
-  reverseCollections?: Array<RawEarlyAccessSource | null> | null;
-};
-
-type RawEarlyAccessSource = {
-  title?: string;
-  slug?: string;
-  releaseAt?: string;
-  earlyAccessStartsAt?: string;
-  earlyAccessMessage?: string;
-  earlyAccessEmailMessage?: string;
-  earlyAccessPassword?: string;
-};
-
-const collectionCandidateFromRaw = (collection: RawEarlyAccessSource | null): EarlyAccessCandidate | null =>
-  collection?.title
-    ? {
-        sourceType: 'collection',
-        sourceTitle: collection.title,
-        slug: collection.slug,
-        releaseAt: collection.releaseAt,
-        earlyAccessStartsAt: collection.earlyAccessStartsAt,
-        earlyAccessMessage: collection.earlyAccessMessage,
-        earlyAccessEmailMessage: collection.earlyAccessEmailMessage,
-        earlyAccessPassword: collection.earlyAccessPassword,
-      }
-    : null;
-
-const normalizePassword = (value: unknown) =>
-  typeof value === 'string' ? value.trim() : '';
-
-const getEarlyAccessSelectionForOriginal = (original: RawEarlyAccessOriginal | null) => {
-  if (!original) return null;
-
-  return pickRelevantEarlyAccessCandidate([
-    {
-      sourceType: 'piece',
-      sourceTitle: original.title,
-      slug: original.slug,
-      releaseAt: original.releaseAt,
-      earlyAccessStartsAt: original.earlyAccessStartsAt,
-      earlyAccessMessage: original.earlyAccessMessage,
-      earlyAccessEmailMessage: original.earlyAccessEmailMessage,
-      earlyAccessPassword: original.earlyAccessPassword,
-    },
-    ...(original.directCollections ?? []).map(collectionCandidateFromRaw),
-    ...(original.reverseCollections ?? []).map(collectionCandidateFromRaw),
-  ]);
-};
-
-export type EarlyAccessValidationResult =
-  | { ok: true }
-  | {
-      ok: false;
-      status: 'early_access_required' | 'upcoming';
-      message: string;
-      sourceTitle?: string;
-      releaseAt?: string;
-    };
-
-export async function validateOriginalEarlyAccessForCheckout(
-  slug: unknown,
-  password: unknown
-): Promise<EarlyAccessValidationResult> {
-  if (typeof slug !== 'string' || !slug.trim()) {
-    return { ok: true };
-  }
-
-  const original = await sanityClient.withConfig({ useCdn: false }).fetch<RawEarlyAccessOriginal | null>(
-    EARLY_ACCESS_ORIGINAL_BY_SLUG_QUERY,
-    { slug: slug.trim() },
-    { cache: 'no-store' }
-  );
-
-  const selection = getEarlyAccessSelectionForOriginal(original);
-  if (!selection) {
-    return { ok: true };
-  }
-
-  const message =
-    selection.candidate.earlyAccessMessage ||
-    (selection.status === 'early_access' ? DEFAULT_EARLY_ACCESS_MESSAGE : DEFAULT_UPCOMING_MESSAGE);
-
-  if (selection.status === 'upcoming') {
-    return {
-      ok: false,
-      status: 'upcoming',
-      message,
-      sourceTitle: selection.candidate.sourceTitle,
-      releaseAt: selection.candidate.releaseAt,
-    };
-  }
-
-  const expectedPassword = normalizePassword(selection.candidate.earlyAccessPassword);
-  const providedPassword = normalizePassword(password);
-
-  if (!expectedPassword || providedPassword.toLowerCase() !== expectedPassword.toLowerCase()) {
-    return {
-      ok: false,
-      status: 'early_access_required',
-      message,
-      sourceTitle: selection.candidate.sourceTitle,
-      releaseAt: selection.candidate.releaseAt,
-    };
-  }
-
-  return { ok: true };
-}
-
-const getOriginalSlugFromReferrer = (referrer?: string) => {
-  if (!referrer) return null;
-
-  try {
-    const url = new URL(referrer);
-    const match = url.pathname.match(/^\/originals\/([^/]+)$/);
-    return match?.[1] ? decodeURIComponent(match[1]) : null;
-  } catch {
-    return null;
-  }
-};
-
-const contextFromCandidate = (candidate: EarlyAccessCandidate): CollectorSignupEarlyAccessContext | null => {
-  const password = normalizePassword(candidate.earlyAccessPassword);
-  if (!password) return null;
-
-  return {
-    sourceType: candidate.sourceType,
-    sourceTitle: candidate.sourceTitle,
-    password,
-    message: candidate.earlyAccessEmailMessage || candidate.earlyAccessMessage,
-    accessHref: candidate.sourceType === 'piece' && candidate.slug ? `/originals/${candidate.slug}` : '/originals',
-  };
-};
-
-export async function fetchCollectorSignupEarlyAccessContexts(
-  referrer?: string
-): Promise<CollectorSignupEarlyAccessContext[]> {
-  const originalSlug = getOriginalSlugFromReferrer(referrer);
-
-  if (originalSlug) {
-    const original = await sanityClient.withConfig({ useCdn: false }).fetch<RawEarlyAccessOriginal | null>(
-      EARLY_ACCESS_ORIGINAL_BY_SLUG_QUERY,
-      { slug: originalSlug },
-      { cache: 'no-store' }
-    );
-    const selection = getEarlyAccessSelectionForOriginal(original);
-    const context =
-      selection?.status === 'early_access' ? contextFromCandidate(selection.candidate) : null;
-    return context ? [context] : [];
-  }
-
-  const activeContexts = await sanityClient.withConfig({ useCdn: false }).fetch<{
-    collections?: RawEarlyAccessSource[];
-    pieces?: RawEarlyAccessSource[];
-  }>(ACTIVE_EARLY_ACCESS_CONTEXTS_QUERY, { now: new Date().toISOString() }, { cache: 'no-store' });
-
-  const contextsByKey = new Map<string, CollectorSignupEarlyAccessContext>();
-
-  for (const collection of activeContexts.collections ?? []) {
-    const candidate = collectionCandidateFromRaw(collection);
-    const context = candidate ? contextFromCandidate(candidate) : null;
-    if (context) contextsByKey.set(`collection:${context.sourceTitle}`, context);
-  }
-
-  for (const piece of activeContexts.pieces ?? []) {
-    const context = piece.title
-      ? contextFromCandidate({
-          sourceType: 'piece',
-          sourceTitle: piece.title,
-          slug: piece.slug,
-          releaseAt: piece.releaseAt,
-          earlyAccessStartsAt: piece.earlyAccessStartsAt,
-          earlyAccessMessage: piece.earlyAccessMessage,
-          earlyAccessEmailMessage: piece.earlyAccessEmailMessage,
-          earlyAccessPassword: piece.earlyAccessPassword,
-        })
-      : null;
-    if (context) contextsByKey.set(`piece:${context.sourceTitle}`, context);
-  }
-
-  return Array.from(contextsByKey.values());
 }
 
 export type MarkOriginalSoldResult =

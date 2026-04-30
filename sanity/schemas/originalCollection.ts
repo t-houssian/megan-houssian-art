@@ -33,21 +33,14 @@ export default defineType({
       title: 'Public Release Date & Time',
       type: 'datetime',
       description:
-        'When this collection becomes publicly purchasable without a password.',
+        'When this collection becomes publicly purchasable.',
     }),
     defineField({
       name: 'earlyAccessStartsAt',
       title: 'Early Access Starts',
       type: 'datetime',
       description:
-        'When collectors can begin purchasing this collection with the password.',
-    }),
-    defineField({
-      name: 'earlyAccessPassword',
-      title: 'Early Access Password',
-      type: 'string',
-      description:
-        'Collectors must enter this password to purchase pieces in this collection during early access.',
+        'When collectors can begin purchasing this collection before the public release time.',
     }),
     defineField({
       name: 'earlyAccessMessage',
@@ -63,7 +56,7 @@ export default defineType({
       type: 'text',
       rows: 3,
       description:
-        'Optional message included with the password when someone joins the Collector List during early access.',
+        'Optional message included when someone joins the Collector List during early access.',
     }),
     defineField({
       name: 'pieces',
