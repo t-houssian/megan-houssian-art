@@ -314,6 +314,29 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
           onClick={closeModal}
         >
+          <button
+            onClick={(event) => {
+              event.stopPropagation();
+              closeModal();
+            }}
+            className="fixed right-4 top-4 z-[60] flex h-12 w-12 items-center justify-center rounded-full border border-white/70 bg-black/70 text-white shadow-lg backdrop-blur-sm transition-colors duration-200 hover:bg-black/90 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black sm:right-6 sm:top-6 [touch-action:manipulation]"
+            aria-label="Close enlarged image"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              className="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2.5"
+              viewBox="0 0 24 24"
+            >
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+
           <div
             ref={modalViewerRef}
             className="relative h-[88vh] w-[92vw] overflow-hidden [touch-action:pan-y_pinch-zoom]"
@@ -341,15 +364,6 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
               className="absolute top-1/2 right-4 z-10 hidden -translate-y-1/2 transform text-3xl text-white md:block"
             >
               ❯
-            </button>
-            {/* Close Button */}
-            <button
-              onClick={closeModal}
-              className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center bg-ivory/90 text-2xl text-brown shadow-sm transition-colors duration-200 hover:bg-paper"
-              aria-label="Close enlarged image"
-              type="button"
-            >
-              ✕
             </button>
           </div>
         </div>
