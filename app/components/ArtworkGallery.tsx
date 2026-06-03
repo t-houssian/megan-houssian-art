@@ -247,7 +247,7 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
       {/* Main image */}
       <div
         ref={mainViewerRef}
-        className={`relative w-full cursor-pointer overflow-hidden bg-ivory min-h-[420px] sm:min-h-[560px] lg:min-h-[720px] [touch-action:pan-y] ${
+        className={`relative w-full cursor-pointer overflow-hidden bg-ivory min-h-[420px] sm:min-h-[560px] lg:min-h-[720px] [touch-action:pan-y_pinch-zoom] ${
           isDragging ? "cursor-grabbing" : "cursor-grab"
         }`}
         onClick={openModal}
@@ -316,7 +316,7 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
         >
           <div
             ref={modalViewerRef}
-            className="relative h-[88vh] w-[92vw] overflow-hidden [touch-action:pan-y]"
+            className="relative h-[88vh] w-[92vw] overflow-hidden [touch-action:pan-y_pinch-zoom]"
             onClick={(event) => event.stopPropagation()}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
