@@ -5,11 +5,16 @@ import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { cormorant, lora } from "../fonts";
-import { ArtPiece, urlFor } from './Collections';
+import { bestQualityImageUrl } from '../../sanity/lib/image';
+import { ArtPiece } from './Collections';
 
 type CollectionsClientProps = {
   artPieces: ArtPiece[];
 };
+
+const GALLERY_IMAGE_WIDTH = 2200;
+const GALLERY_MODAL_IMAGE_WIDTH = 4200;
+const GALLERY_IMAGE_QUALITY = 100;
 
 function getImageDimensions(piece: ArtPiece) {
   const match = piece.mainImage?.asset?._ref?.match(/-(\d+)x(\d+)-/);
@@ -88,10 +93,12 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
               >
               {piece.mainImage?.asset && (
                 <Image
-                  src={urlFor(piece.mainImage).width(900).fit('max').quality(92).url()}
+                  src={bestQualityImageUrl(piece.mainImage, GALLERY_IMAGE_WIDTH, GALLERY_IMAGE_QUALITY)}
                   alt={piece.title || 'Gallery image'}
                   width={getImageDimensions(piece).width}
                   height={getImageDimensions(piece).height}
+                  quality={GALLERY_IMAGE_QUALITY}
+                  unoptimized
                   className="h-auto w-full object-contain"
                   sizes="(min-width: 1024px) 30vw, (min-width: 640px) 44vw, 92vw"
                 />
@@ -159,10 +166,16 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
             </button>
             {selectedImage.mainImage?.asset && (
               <Image
-                src={urlFor(selectedImage.mainImage).width(1800).fit('max').quality(95).url()}
+                src={bestQualityImageUrl(
+                  selectedImage.mainImage,
+                  GALLERY_MODAL_IMAGE_WIDTH,
+                  GALLERY_IMAGE_QUALITY
+                )}
                 alt={selectedImage.title || 'Gallery image enlarged'}
                 width={getImageDimensions(selectedImage).width}
                 height={getImageDimensions(selectedImage).height}
+                quality={GALLERY_IMAGE_QUALITY}
+                unoptimized
                 className="block h-auto max-h-[88vh] w-auto max-w-[92vw] object-contain"
               />
             )}

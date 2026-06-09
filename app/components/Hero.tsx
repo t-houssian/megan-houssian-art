@@ -8,7 +8,7 @@ import {
   HERO_CTA_COLOR_SCHEMES,
   type HeroCtaColorSchemeKey,
 } from '../../sanity/lib/heroCtaColorSchemes';
-import { urlFor } from '../../sanity/lib/image';
+import { getOriginalImageUrl, urlFor } from '../../sanity/lib/image';
 import { lora } from '../fonts';
 
 const HERO_COLOR_PRESETS = {
@@ -280,12 +280,8 @@ export default async function Hero() {
   const heroSettings = await fetchHeroSettings();
 
   const heroImageUrl = heroSettings?.backgroundImage?.asset
-    ? urlFor(heroSettings.backgroundImage)
-        // Request the original-size crop with minimal compression.
-        .fit('max')
-        .quality(100)
-        .format('jpg')
-        .url()
+    ? getOriginalImageUrl(heroSettings.backgroundImage) ??
+      urlFor(heroSettings.backgroundImage).fit('max').quality(100).format('jpg').url()
     : '/images/blueBG.jpg';
 
   const heroAlt = heroSettings?.backgroundImage?.alt?.trim() || 'Hero Image';
@@ -319,7 +315,7 @@ export default async function Hero() {
         src={heroImageUrl}
         alt={heroAlt}
         fill
-        quality={95}
+        quality={100}
         sizes="100vw"
         unoptimized
         style={{ objectFit: 'cover' }}

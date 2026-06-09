@@ -1,6 +1,6 @@
 // app/about/page.tsx
 import Image from 'next/image';
-import { urlFor } from '../../sanity/lib/image';
+import { getOriginalImageUrl, urlFor } from '../../sanity/lib/image';
 import { cormorant, lora } from "../fonts";
 import { fetchAboutPageSettings } from '../../lib/about-page-settings';
 import SanityRichText from '../components/SanityRichText';
@@ -13,7 +13,8 @@ export const metadata = {
 export default async function AboutPage() {
   const settings = await fetchAboutPageSettings();
   const aboutImageUrl = settings.aboutPageImage?.asset
-    ? urlFor(settings.aboutPageImage).fit('max').quality(95).format('jpg').url()
+    ? getOriginalImageUrl(settings.aboutPageImage) ??
+      urlFor(settings.aboutPageImage).width(3600).fit('max').quality(100).format('jpg').url()
     : '/images/about.JPEG';
   const aboutImageAlt = settings.aboutPageImage?.alt?.trim() || 'Megan Houssian';
 
@@ -37,6 +38,8 @@ export default async function AboutPage() {
                   src={aboutImageUrl}
                   alt={aboutImageAlt}
                   fill
+                  quality={100}
+                  unoptimized
                   className="object-cover transition-transform duration-[1600ms] ease-out group-hover:scale-[1.02]"
                   style={{ objectPosition: 'center top' }}
                   sizes="(min-width: 1024px) 40vw, (min-width: 768px) 45vw, 90vw"

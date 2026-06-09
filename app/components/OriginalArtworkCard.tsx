@@ -2,13 +2,16 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { formatCurrency } from '../../lib/money';
 import type { OriginalArtworkSummary } from '../../lib/originals';
-import { urlFor } from '../../sanity/lib/image';
+import { bestQualityImageUrl } from '../../sanity/lib/image';
 import { cormorant, lora } from '../fonts';
 
 type OriginalArtworkCardProps = {
   item: OriginalArtworkSummary;
   detailHref: string;
 };
+
+const CARD_IMAGE_WIDTH = 2400;
+const CARD_IMAGE_QUALITY = 100;
 
 function formatPrice(price?: number) {
   if (!Number.isFinite(price) || !price || price <= 0) {
@@ -31,9 +34,11 @@ export default function OriginalArtworkCard({
         {item.mainImage?.asset && (
           <div className="relative flex h-80 w-full items-center justify-center overflow-hidden bg-ivory sm:h-96 lg:h-[26rem]">
             <Image
-              src={urlFor(item.mainImage).width(1200).fit('max').quality(92).url()}
+              src={bestQualityImageUrl(item.mainImage, CARD_IMAGE_WIDTH, CARD_IMAGE_QUALITY)}
               alt={item.title}
               fill
+              quality={CARD_IMAGE_QUALITY}
+              unoptimized
               className={`object-contain transition-opacity duration-300 ${
                 hoverImage ? 'md:group-hover:opacity-0' : ''
               }`}
@@ -41,9 +46,11 @@ export default function OriginalArtworkCard({
             />
             {hoverImage && (
               <Image
-                src={urlFor(hoverImage).width(1200).fit('max').quality(92).url()}
+                src={bestQualityImageUrl(hoverImage, CARD_IMAGE_WIDTH, CARD_IMAGE_QUALITY)}
                 alt={`${item.title} alternate view`}
                 fill
+                quality={CARD_IMAGE_QUALITY}
+                unoptimized
                 className="hidden object-contain opacity-0 transition-opacity duration-300 md:block md:group-hover:opacity-100"
                 sizes="(min-width: 1280px) 28vw, (min-width: 640px) 44vw, 92vw"
               />

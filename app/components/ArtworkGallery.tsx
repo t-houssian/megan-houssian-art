@@ -1,13 +1,7 @@
 "use client";
 import React, { useCallback, useRef, useState } from "react";
 import Image from "next/image";
-import ImageUrlBuilder from "@sanity/image-url";
-import { sanityClient } from "../../lib/sanity"; // Adjust the path as needed
-
-const builder = ImageUrlBuilder(sanityClient);
-function urlFor(source: { asset: { _ref: string } }) {
-  return builder.image(source);
-}
+import { bestQualityImageUrl, urlFor } from "../../sanity/lib/image";
 
 type GalleryImage = {
   asset: { _ref: string };
@@ -36,6 +30,11 @@ const SWIPE_DISTANCE_RATIO = 0.09;
 const MIN_SWIPE_DISTANCE = 26;
 const MAX_SWIPE_DISTANCE = 42;
 const SWIPE_VELOCITY_THRESHOLD = 0.24;
+const PAGE_IMAGE_WIDTH = 3600;
+const MODAL_IMAGE_WIDTH = 4200;
+const PAGE_IMAGE_QUALITY = 100;
+const MODAL_IMAGE_QUALITY = 100;
+const THUMBNAIL_IMAGE_QUALITY = 90;
 
 export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGalleryProps) {
   // Combine the main image and additional gallery images into one array.
@@ -221,13 +220,14 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
           style={{ flex: `0 0 ${slideBasis}%` }}
         >
           <Image
-            src={urlFor(image)
-              .width(variant === "modal" ? 2400 : 1600)
-              .fit("max")
-              .quality(variant === "modal" ? 95 : 90)
-              .url()}
+            src={bestQualityImageUrl(
+              image,
+              variant === "modal" ? MODAL_IMAGE_WIDTH : PAGE_IMAGE_WIDTH,
+              variant === "modal" ? MODAL_IMAGE_QUALITY : PAGE_IMAGE_QUALITY
+            )}
             alt={`${title} image ${index + 1}`}
             fill
+            quality={variant === "modal" ? MODAL_IMAGE_QUALITY : PAGE_IMAGE_QUALITY}
             draggable={false}
             className="select-none object-contain"
             sizes={
@@ -235,7 +235,8 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
                 ? "92vw"
                 : "(min-width: 1280px) 40vw, (min-width: 1024px) 45vw, (min-width: 768px) 60vw, 90vw"
             }
-            priority={index === 0}
+            priority={variant === "page" && index === 0}
+            unoptimized
           />
         </div>
       ))}
@@ -299,10 +300,12 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
             onClick={() => setSelectedIndex(index)}
           >
             <Image
-              src={urlFor(img).width(400).fit("max").quality(80).url()}
+              src={urlFor(img).width(400).fit("max").quality(THUMBNAIL_IMAGE_QUALITY).url()}
               alt={`${title} thumbnail ${index + 1}`}
               fill
+              quality={THUMBNAIL_IMAGE_QUALITY}
               className="object-contain"
+              sizes="(min-width: 640px) 96px, 80px"
             />
           </div>
         ))}
