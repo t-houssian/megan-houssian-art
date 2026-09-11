@@ -283,7 +283,7 @@ export default defineType({
           'recipientEmails',
           'Recipient Emails',
           'These addresses receive commission requests.',
-          ['tylerhoussian@gmail.com']
+          ['meganhoussianart@gmail.com']
         ),
         defineField({
           name: 'subjectTemplate',

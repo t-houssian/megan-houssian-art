@@ -7,6 +7,10 @@ import { useRouter } from "next/navigation";
 import { cormorant, lora } from "../fonts";
 import { formatRoundedDollars, roundUpToNearestTenDollars } from "../../lib/money";
 import type { CommissionsPageSettings } from "../../lib/commissions-page-settings";
+import { MAX_ORIGINAL_REFERENCE_BYTES, MAX_REFERENCE_FILE_BYTES, MAX_REFERENCE_IMAGES, REFERENCE_CONTENT_TYPES } from "../../lib/inquiry";
+import { uploadReferenceImages, type ReferenceUploadBatch } from "../../lib/upload-reference-images";
+import { submitInquiry } from "../../lib/submit-inquiry";
+import { useFormReady } from "../../lib/use-form-ready";
 
 interface CanvasItem {
   id: number;
@@ -25,15 +29,21 @@ type CommissionsPageClientProps = {
   settings: CommissionsPageSettings;
 };
 
-const MAX_UPLOAD_TOTAL_BYTES = 25 * 1024 * 1024;
+const MAX_UPLOAD_TOTAL_BYTES = MAX_ORIGINAL_REFERENCE_BYTES;
 
 export default function CommissionsPageClient({ settings }: CommissionsPageClientProps) {
+  const isReady = useFormReady();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [description, setDescription] = useState("");
   const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const submissionInFlight = useRef(false);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  const uploadBatchRef = useRef<ReferenceUploadBatch | null>(null);
   const referenceInputRef = useRef<HTMLInputElement | null>(null);
   const referenceImagesCacheRef = useRef<ReferenceImage[]>([]);
 
@@ -48,6 +58,8 @@ export default function CommissionsPageClient({ settings }: CommissionsPageClien
   ]);
 
   const router = useRouter();
+  useEffect(() => { router.prefetch('/commissions/success'); }, [router]);
+  useEffect(() => { if (submitError) errorRef.current?.focus(); }, [submitError]);
 
   const parseDimensions = (option: string): { width: number; height: number } | null => {
     const parts = option.toLowerCase().split("x");
@@ -147,7 +159,12 @@ export default function CommissionsPageClient({ settings }: CommissionsPageClien
   };
 
   const appendReferenceImages = (files: File[]) => {
+    if (submissionInFlight.current) return;
     if (!files.length) return;
+    if (files.some((file) => file.size > MAX_REFERENCE_FILE_BYTES)) {
+      setUploadError("Please keep each reference image under 25 MB.");
+      return;
+    }
 
     setReferenceImages((prev) => {
       const signatures = new Set(
@@ -160,7 +177,7 @@ export default function CommissionsPageClient({ settings }: CommissionsPageClien
       let hasDuplicates = false;
 
       files.forEach((file) => {
-        if (!file.type.startsWith("image/")) {
+        if (!REFERENCE_CONTENT_TYPES.includes(file.type)) {
           hasNonImage = true;
           return;
         }
@@ -179,7 +196,7 @@ export default function CommissionsPageClient({ settings }: CommissionsPageClien
 
       if (!newItems.length) {
         if (hasNonImage) {
-          setUploadError("Only image files can be uploaded.");
+          setUploadError("Please use JPG, PNG, WEBP, GIF, or HEIC images.");
         } else if (hasDuplicates) {
           setUploadError("These files are already added.");
         }
@@ -187,9 +204,14 @@ export default function CommissionsPageClient({ settings }: CommissionsPageClien
       }
 
       const existingBytes = prev.reduce((sum, item) => sum + item.file.size, 0);
+      if (prev.length + newItems.length > MAX_REFERENCE_IMAGES) {
+        newItems.forEach((item) => URL.revokeObjectURL(item.preview));
+        setUploadError(`Please choose up to ${MAX_REFERENCE_IMAGES} reference images.`);
+        return prev;
+      }
       if (existingBytes + newBytes > MAX_UPLOAD_TOTAL_BYTES) {
         newItems.forEach((item) => URL.revokeObjectURL(item.preview));
-        setUploadError("Please keep reference images under 25MB in total.");
+        setUploadError("Please keep reference images under 100 MB in total.");
         return prev;
       }
 
@@ -280,11 +302,14 @@ export default function CommissionsPageClient({ settings }: CommissionsPageClien
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submissionInFlight.current) return;
     if (referenceImagesTotalSize > MAX_UPLOAD_TOTAL_BYTES) {
-      setUploadError("Please keep reference images under 25MB in total.");
+      setUploadError("Please keep reference images under 100 MB in total.");
       return;
     }
-
+    submissionInFlight.current = true;
+    setSubmissionStatus(referenceImages.length ? "Preparing upload…" : "Sending request…");
+    setSubmitError(null);
     const submission = new FormData();
     submission.append("formType", "commission");
     submission.append("name", name);
@@ -293,30 +318,17 @@ export default function CommissionsPageClient({ settings }: CommissionsPageClien
     submission.append("canvasItems", JSON.stringify(canvasItems));
     submission.append("effectiveTotal", effectiveTotal.toString());
     submission.append("upfrontCost", upfrontCost.toString());
-    submission.append("referenceImagesTotalBytes", referenceImagesTotalSize.toString());
-    referenceImages.forEach(({ file }) => {
-      submission.append("referenceImages", file);
-    });
-
     try {
-      const response = await fetch("/api/send-email", {
-        method: "POST",
-        body: submission,
-      });
-
-      if (!response.ok) {
-        const errorBody = await response.json().catch(() => null);
-        throw new Error(errorBody?.error || "Failed to send email");
-      }
-
-      router.push("/success");
+      const uploadSession = await uploadReferenceImages(referenceImages.map(({ file }) => file), uploadBatchRef, setSubmissionStatus);
+      if (uploadSession) submission.append("uploadSession", uploadSession);
+      setSubmissionStatus("Sending request…");
+      await submitInquiry(submission);
+      router.push("/commissions/success");
     } catch (error) {
-      console.error("Error sending email:", error);
-      if (error instanceof Error && error.message.includes("25MB")) {
-        setUploadError("Attachments exceed the 25MB limit. Please remove or compress your files.");
-      } else {
-        alert("There was an error sending your message. Please try again later.");
-      }
+      setSubmitError(error instanceof Error && !['TypeError', 'TimeoutError', 'AbortError'].includes(error.name)
+        ? error.message : "Your upload could not finish. Please check your connection and try again, or email meganhoussianart@gmail.com directly.");
+      submissionInFlight.current = false;
+      setSubmissionStatus(null);
     }
   };
 
@@ -347,7 +359,8 @@ export default function CommissionsPageClient({ settings }: CommissionsPageClien
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} aria-busy={!isReady || Boolean(submissionStatus)}>
+          <fieldset disabled={!isReady || Boolean(submissionStatus)} className="space-y-8 min-w-0">
           <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
             <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown flex items-center`}>
               {settings.informationSectionTitle}
@@ -360,6 +373,7 @@ export default function CommissionsPageClient({ settings }: CommissionsPageClien
                 <input
                   type="text"
                   id="name"
+                  maxLength={200}
                   placeholder={settings.namePlaceholder}
                   className="w-full border border-tan/50 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-olive/20 focus:border-olive bg-white/90 transition-all duration-200"
                   required
@@ -374,6 +388,7 @@ export default function CommissionsPageClient({ settings }: CommissionsPageClien
                 <input
                   type="email"
                   id="email"
+                  maxLength={254}
                   placeholder={settings.emailPlaceholder}
                   className="w-full border border-tan/50 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-olive/20 focus:border-olive bg-white/90 transition-all duration-200"
                   required
@@ -388,6 +403,7 @@ export default function CommissionsPageClient({ settings }: CommissionsPageClien
               </label>
               <textarea
                 id="description"
+                maxLength={10000}
                 rows={4}
                 placeholder={settings.descriptionPlaceholder}
                 className="w-full border border-tan/50 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-olive/20 focus:border-olive bg-white/90 transition-all duration-200"
@@ -409,6 +425,7 @@ export default function CommissionsPageClient({ settings }: CommissionsPageClien
                 type="file"
                 accept="image/*"
                 multiple
+                disabled={Boolean(submissionStatus)}
                 onChange={handleReferenceImagesChange}
                 className="sr-only"
               />
@@ -440,7 +457,8 @@ export default function CommissionsPageClient({ settings }: CommissionsPageClien
                 <p className={`${lora.className} text-brown font-medium`}>
                   {settings.referenceImagesDropzoneTitle}
                 </p>
-                <p className="text-sm text-warm-gray">{settings.referenceImagesDropzoneHint}</p>
+                <p className="text-sm text-warm-gray">JPG, PNG, WEBP, GIF, or HEIC. Up to 10 images, 25 MB each and 100 MB total.</p>
+                <p className="text-sm text-warm-gray">Photos are shared privately with Megan and deleted after 35 days.</p>
               </div>
               {uploadError && (
                 <p
@@ -652,14 +670,18 @@ export default function CommissionsPageClient({ settings }: CommissionsPageClien
           </div>
 
           <div className="text-center">
+            {submitError && <p ref={errorRef} tabIndex={-1} role="alert" className="mb-4 text-red-700 leading-relaxed">{submitError}</p>}
             <button
               type="submit"
-              className={`bg-gradient-to-r from-btn-brown to-btn-brown-hover text-paper px-8 py-4 rounded-lg hover:from-btn-brown-hover hover:to-brown transition-all duration-500 font-serif text-lg shadow-vintage hover:shadow-vintage-lg transform hover:-translate-y-1 border border-opacity-20 border-paper relative overflow-hidden group ${lora.className}`}
+              disabled={Boolean(submissionStatus)}
+              aria-live="polite"
+              className={`disabled:opacity-60 disabled:cursor-wait bg-gradient-to-r from-btn-brown to-btn-brown-hover text-paper px-8 py-4 rounded-lg hover:from-btn-brown-hover hover:to-brown transition-all duration-500 font-serif text-lg shadow-vintage hover:shadow-vintage-lg transform hover:-translate-y-1 border border-opacity-20 border-paper relative overflow-hidden group ${lora.className}`}
             >
-              <span className="relative z-10">{settings.submitButtonLabel}</span>
+              <span className="relative z-10">{submissionStatus || settings.submitButtonLabel}</span>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-paper to-transparent opacity-0 group-hover:opacity-10 transform -skew-x-12 group-hover:translate-x-full transition-all duration-700"></div>
             </button>
           </div>
+          </fieldset>
         </form>
       </div>
     </div>

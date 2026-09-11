@@ -1,39 +1,43 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { cormorant, lora } from '../fonts';
+import { submitInquiry } from '../../lib/submit-inquiry';
+import { useFormReady } from '../../lib/use-form-ready';
 
 export default function ContactPage() {
+  const isReady = useFormReady();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
-  
-  // Move useRouter here at the top-level of your component.
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const submissionInFlight = useRef(false);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+
   const router = useRouter();
+  useEffect(() => { router.prefetch('/contact/success'); }, [router]);
+  useEffect(() => { if (submitError) errorRef.current?.focus(); }, [submitError]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+    if (submissionInFlight.current) return;
+    submissionInFlight.current = true;
+    setIsSubmitting(true);
+    setSubmitError(null);
     const formData = { firstName, lastName, email, subject, message };
 
     try {
-      const res = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (!res.ok) {
-        throw new Error('Failed to send email');
-      }
-      console.log('Email sent successfully');
-      router.push('/success');
+      await submitInquiry(JSON.stringify(formData));
+      router.push('/contact/success');
     } catch (error) {
-      console.error('Error sending email:', error);
-      alert("There was an error sending your message. Please try again later.");
+      setSubmitError(error instanceof Error ? error.message : 'Please try again or email meganhoussianart@gmail.com directly.');
+      submissionInFlight.current = false;
+      setIsSubmitting(false);
     }
   };
 
@@ -63,7 +67,8 @@ export default function ContactPage() {
           </p>
         </div>
       
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} aria-busy={!isReady || isSubmitting}>
+        <fieldset disabled={!isReady || isSubmitting} className="space-y-8 min-w-0">
         <div className="bg-white/80 backdrop-blur-sm border border-tan/30 rounded-2xl p-8 shadow-vintage-lg">
           <h2 className={`${cormorant.className} text-2xl font-medium mb-6 text-brown flex items-center`}>
             Your Message
@@ -81,6 +86,7 @@ export default function ContactPage() {
               <input
                 type="text"
                 id="firstName"
+                maxLength={100}
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 className="w-full border border-tan/50 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-olive/20 focus:border-olive bg-white/90 transition-all duration-200"
@@ -99,6 +105,7 @@ export default function ContactPage() {
               <input
                 type="text"
                 id="lastName"
+                maxLength={100}
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 className="w-full border border-tan/50 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-olive/20 focus:border-olive bg-white/90 transition-all duration-200"
@@ -118,6 +125,7 @@ export default function ContactPage() {
             <input
               type="email"
               id="email"
+              maxLength={254}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full border border-tan/50 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-olive/20 focus:border-olive bg-white/90 transition-all duration-200"
@@ -136,6 +144,7 @@ export default function ContactPage() {
             <input
               type="text"
               id="subject"
+              maxLength={200}
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               className="w-full border border-tan/50 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-olive/20 focus:border-olive bg-white/90 transition-all duration-200"
@@ -153,6 +162,7 @@ export default function ContactPage() {
             </label>
             <textarea
               id="message"
+              maxLength={10000}
               rows={6}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -164,14 +174,18 @@ export default function ContactPage() {
 
         {/* Submit button */}
         <div className="text-center">
+          {submitError && <p ref={errorRef} tabIndex={-1} role="alert" className="mb-4 text-red-700 leading-relaxed">{submitError}</p>}
           <button
             type="submit"
-            className={`bg-gradient-to-r from-btn-brown to-btn-brown-hover text-paper px-8 py-4 rounded-lg hover:from-btn-brown-hover hover:to-brown transition-all duration-500 font-serif text-lg shadow-vintage hover:shadow-vintage-lg transform hover:-translate-y-1 border border-opacity-20 border-paper relative overflow-hidden group ${lora.className}`}
+            disabled={isSubmitting}
+            aria-live="polite"
+            className={`disabled:opacity-60 disabled:cursor-wait bg-gradient-to-r from-btn-brown to-btn-brown-hover text-paper px-8 py-4 rounded-lg hover:from-btn-brown-hover hover:to-brown transition-all duration-500 font-serif text-lg shadow-vintage hover:shadow-vintage-lg transform hover:-translate-y-1 border border-opacity-20 border-paper relative overflow-hidden group ${lora.className}`}
           >
-            <span className="relative z-10">Send Message</span>
+            <span className="relative z-10">{isSubmitting ? 'Sending message…' : 'Send Message'}</span>
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-paper to-transparent opacity-0 group-hover:opacity-10 transform -skew-x-12 group-hover:translate-x-full transition-all duration-700"></div>
           </button>
         </div>
+        </fieldset>
       </form>
       </div>
     </div>

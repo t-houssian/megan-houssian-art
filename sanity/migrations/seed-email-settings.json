@@ -42,7 +42,7 @@
     "footer": "Reply to {{email}} to continue the conversation."
   },
   "commissionNotification": {
-    "recipientEmails": ["tylerhoussian@gmail.com"],
+    "recipientEmails": ["meganhoussianart@gmail.com"],
     "subjectTemplate": "New Commission Request from {{name}}",
     "heading": "Commission Request",
     "intro": "A new commission inquiry was submitted through the website.",
