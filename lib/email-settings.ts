@@ -10,7 +10,7 @@ import { sanityClient } from './sanity';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DEFAULT_SUPPORT_EMAIL = 'meganhoussianart@gmail.com';
 const DEFAULT_CONTACT_RECIPIENT = 'meganhoussianart@gmail.com';
-const DEFAULT_COMMISSION_RECIPIENT = 'tylerhoussian@gmail.com';
+const DEFAULT_COMMISSION_RECIPIENT = 'meganhoussianart@gmail.com';
 const DEFAULT_INSTAGRAM_URL = 'https://www.instagram.com/meganhoussianart/';
 const DEFAULT_PINTEREST_URL = 'https://pin.it/1Scq2kp48';
 const DEFAULT_FACEBOOK_URL =
@@ -279,32 +279,24 @@ const emailSettingsProjection = `{
   }
 }`;
 
-const emailSettingsSingletonQuery = `*[
-  _type == "emailSettings" &&
-  _id in ["emailSettings", "drafts.emailSettings"]
-][0]${emailSettingsProjection}`;
+// Fetch the published singleton (or legacy document) in one bounded request.
+// Notification delivery must not wait through the CMS client's default retries.
+const emailSettingsQuery = `coalesce(
+  *[_type == "emailSettings" && _id == "emailSettings"][0],
+  *[_type == "emailSettings" && !(_id in path("drafts.**"))] | order(_updatedAt desc)[0]
+)${emailSettingsProjection}`;
 
-const emailSettingsFallbackQuery = `*[_type == "emailSettings"] | order(_updatedAt desc)[0]${emailSettingsProjection}`;
-
-const emailSettingsClient = sanityClient.withConfig({ useCdn: false });
+const emailSettingsClient = sanityClient.withConfig({ useCdn: false, timeout: 2000, maxRetries: 0 });
 
 export async function fetchEmailSettings(): Promise<EmailSettings> {
   const defaults = getDefaultEmailSettings();
 
   try {
-    const singletonSettings = await emailSettingsClient.fetch<PartialEmailSettings | null>(
-      emailSettingsSingletonQuery,
+    const settings = await emailSettingsClient.fetch<PartialEmailSettings | null>(
+      emailSettingsQuery,
       {},
-      { cache: 'no-store', next: { revalidate: 0 } }
+      { next: { revalidate: 60 }, signal: AbortSignal.timeout(2000) }
     );
-
-    const settings =
-      singletonSettings ??
-      (await emailSettingsClient.fetch<PartialEmailSettings | null>(
-        emailSettingsFallbackQuery,
-        {},
-        { cache: 'no-store', next: { revalidate: 0 } }
-      ));
 
     return {
       supportEmail: normalizeNonEmptyString(settings?.supportEmail, defaults.supportEmail),
@@ -406,7 +398,9 @@ export async function fetchEmailSettings(): Promise<EmailSettings> {
       },
     };
   } catch (error) {
-    console.error('Failed to load email settings from Sanity', error);
+    console.warn('Email settings unavailable; using defaults', {
+      name: error instanceof Error ? error.name : 'UnknownError',
+    });
     return defaults;
   }
 }
