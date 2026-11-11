@@ -40,6 +40,8 @@ html, body {
 @layer components {
   .artwork-frame {
     overflow: hidden;
+    /* Clip the image bleed without creating a nested scroll container. */
+    overflow: clip;
   }
 
   @media not all and (min-width: 640px) {

@@ -101,7 +101,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const themeVariables = buildThemeVariables(siteSettings.theme);
 
   return (
-    <html lang="en" style={themeVariables}>
+    <html lang="en" data-scroll-behavior="smooth" style={themeVariables}>
       <head>
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ANALYTICS_ID}`}
