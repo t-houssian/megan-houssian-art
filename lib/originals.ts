@@ -1,5 +1,6 @@
 import { revalidatePath } from 'next/cache';
 import { sanityClient } from './sanity';
+import { orderCollectionOriginals } from './original-collection-order';
 
 export type OriginalCollectionSummary = {
   _id: string;
@@ -8,6 +9,7 @@ export type OriginalCollectionSummary = {
   description?: string;
   pieceCount?: number;
   sampleOriginals?: OriginalArtworkSample[];
+  orderedOriginalIds?: string[];
   releaseAt?: string;
   earlyAccessStartsAt?: string;
   earlyAccessMessage?: string;
@@ -163,6 +165,7 @@ const ORIGINAL_BY_SLUG_QUERY = `
 const ORIGINAL_COLLECTIONS_LIST_QUERY = `
   *[_type == "originalCollection" && defined(slug.current)]{
     ${COLLECTION_SUMMARY_PROJECTION},
+    "orderedOriginalIds": coalesce(artworkOrder[]._ref, []),
     "pieceCount": count(*[
       _type == "original" &&
       coalesce(hiddenOriginal, false) != true &&
@@ -194,6 +197,7 @@ const ORIGINAL_COLLECTIONS_LIST_QUERY = `
 const ORIGINAL_COLLECTION_BY_SLUG_QUERY = `
   *[_type == "originalCollection" && slug.current == $slug][0]{
     ${COLLECTION_SUMMARY_PROJECTION},
+    "orderedOriginalIds": coalesce(artworkOrder[]._ref, []),
     "originals": *[
       _type == "original" &&
       coalesce(hiddenOriginal, false) != true &&
@@ -201,9 +205,9 @@ const ORIGINAL_COLLECTION_BY_SLUG_QUERY = `
         _id in coalesce(^.pieces[]._ref, []) ||
         ^._id in coalesce(collections[]._ref, [])
       )
-    ]{
+    ] | order(coalesce(sold, false) asc, _createdAt desc){
       ${ORIGINAL_SUMMARY_PROJECTION}
-    } | order(coalesce(sold, false) asc, _createdAt desc)
+    }
   }
 `;
 
@@ -387,7 +391,10 @@ function normalizeOriginal<T extends RawOriginalArtworkSummary>(
 function normalizeCollection(collection: RawOriginalCollection): OriginalCollection {
   return {
     ...collection,
-    originals: (collection.originals ?? []).map(normalizeOriginal),
+    originals: orderCollectionOriginals(
+      (collection.originals ?? []).map(normalizeOriginal),
+      collection.orderedOriginalIds
+    ),
   };
 }
 

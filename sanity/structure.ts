@@ -64,9 +64,9 @@ export const structure: StructureResolver = (S) =>
         .title('Originals Order')
         .id('originalOrder')
         .child(
-          S.document()
-            .schemaType('originalOrder')
-            .documentId('originalOrder')
+          S.documentTypeList('originalCollection')
+            .title('Choose a Collection')
+            .defaultOrdering([{field: 'title', direction: 'asc'}])
         ),
       S.listItem()
         .title('About Page Settings')

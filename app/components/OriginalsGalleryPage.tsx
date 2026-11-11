@@ -1,6 +1,7 @@
 import { cormorant, lora } from '../fonts';
 import { fetchOriginals, type OriginalCollectionSummary } from '../../lib/originals';
 import { originalDetailHref } from '../../lib/original-collections';
+import { orderCollectionOriginals } from '../../lib/original-collection-order';
 import OriginalArtworkCard from './OriginalArtworkCard';
 
 type OriginalsGalleryPageProps = {
@@ -14,7 +15,10 @@ export default async function OriginalsGalleryPage({
 }: OriginalsGalleryPageProps) {
   const allOriginals = await fetchOriginals(sourcePath === '/hidden-originals' ? 'hidden' : 'public');
   const originals = collection
-    ? allOriginals.filter((item) => item.collections.some((assigned) => assigned._id === collection._id))
+    ? orderCollectionOriginals(
+        allOriginals.filter((item) => item.collections.some((assigned) => assigned._id === collection._id)),
+        collection.orderedOriginalIds
+      )
     : allOriginals;
 
   return (

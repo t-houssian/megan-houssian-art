@@ -49,7 +49,7 @@ export default defineType({
         },
       ],
       description:
-        'Collections this original belongs to. Originals can also be added from the Original Collection document.',
+        'Choose the collections this artwork belongs to, then arrange its display order in each collection’s Artwork Order tab. Membership can also be assigned from the collection’s Collection Details tab.',
     },
     {
       name: 'price',
