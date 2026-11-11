@@ -2,11 +2,10 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 import { cormorant, lora } from "../fonts";
 import { bestQualityImageUrl } from '../../sanity/lib/image';
-import { ArtPiece } from './Collections';
+import type { ArtPiece } from './Collections';
 
 type CollectionsClientProps = {
   artPieces: ArtPiece[];
@@ -29,35 +28,9 @@ function getImageDimensions(piece: ArtPiece) {
 
 export default function CollectionsClient({ artPieces }: CollectionsClientProps) {
   const [selectedImage, setSelectedImage] = useState<ArtPiece | null>(null);
-  const PAGE_SIZE = 15;
-
-  // Pagination state with URL sync (?g=<page>)
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const initialPage = Math.max(1, Number(searchParams.get('g') || '1'));
-  const [currentPage, setCurrentPage] = useState<number>(initialPage);
-
-  useEffect(() => {
-    // Keep URL in sync without scrolling
-    const params = new URLSearchParams(searchParams?.toString());
-    if (currentPage > 1) {
-      params.set('g', String(currentPage));
-    } else {
-      params.delete('g');
-    }
-    router.replace(`${pathname}?${params.toString()}#gallery`, { scroll: false });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]);
-
-  const totalPages = Math.max(1, Math.ceil((artPieces?.length || 0) / PAGE_SIZE));
-  const pagedPieces = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return (artPieces || []).slice(start, start + PAGE_SIZE);
-  }, [artPieces, currentPage]);
 
   // Used to center only the final row in a 3-col grid
-  const remainder = pagedPieces.length % 3;
+  const remainder = artPieces.length % 3;
 
   const handleImageClick = (piece: ArtPiece) => {
     setSelectedImage(piece);
@@ -68,14 +41,14 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
   };
 
   return (
-    <section id="gallery" className="max-w-7xl mx-auto py-16 px-4 bg-ivory">
-  <h2 className={`${cormorant.className} text-3xl md:text-4xl font-light text-brown mb-8 text-center`}>
+    <section id="gallery" className="max-w-7xl mx-auto py-16 px-0 bg-ivory sm:px-4">
+  <h2 className={`${cormorant.className} px-4 text-3xl md:text-4xl font-light text-brown mb-8 text-center sm:px-0`}>
         Gallery
       </h2>
   <div className="grid grid-cols-1 sm:grid-cols-6 gap-8">
-        {pagedPieces && pagedPieces.length > 0 ? (
-          pagedPieces.map((piece, idx) => {
-            const lastIdx = pagedPieces.length - 1;
+        {artPieces.length > 0 ? (
+          artPieces.map((piece, idx) => {
+            const lastIdx = artPieces.length - 1;
             let positionClass = '';
             if (remainder === 1 && idx === lastIdx) {
               // Single item on last row -> center over columns 3-4 (since each card spans 2 cols)
@@ -88,7 +61,7 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
             return (
               <div 
                 key={piece._id} 
-                className={`group cursor-pointer sm:col-span-2 ${positionClass}`}
+                className={`artwork-frame group cursor-pointer sm:col-span-2 ${positionClass}`}
                 onClick={() => handleImageClick(piece)}
               >
               {piece.mainImage?.asset && (
@@ -99,8 +72,8 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
                   height={getImageDimensions(piece).height}
                   quality={GALLERY_IMAGE_QUALITY}
                   unoptimized
-                  className="h-auto w-full object-contain"
-                  sizes="(min-width: 1024px) 30vw, (min-width: 640px) 44vw, 92vw"
+                  className="artwork-image h-auto w-full"
+                  sizes="(min-width: 1024px) 30vw, (min-width: 640px) 44vw, 100vw"
                 />
               )}
               {/* Title removed per request; images only */}
@@ -108,40 +81,11 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
             );
           })
         ) : (
-          <p className={`${lora.className} col-span-full text-center text-brown`}>
+          <p className={`${lora.className} col-span-full px-4 text-center text-brown sm:px-0`}>
             No art pieces found.
           </p>
         )}
       </div>
-
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="mt-10 flex items-center justify-center gap-4">
-          <button
-            type="button"
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className={`border-b px-2 py-1 text-sm ${lora.className} transition-colors
-                       ${currentPage === 1 ? 'border-tan/40 text-warm-gray/60 cursor-not-allowed' : 'border-tan text-brown hover:border-olive'}`}
-            aria-label="Previous page"
-          >
-            ← Previous
-          </button>
-          <span className={`${lora.className} text-warm-gray text-sm`}>
-            Page <span className="text-brown font-medium">{currentPage}</span> of <span className="text-brown font-medium">{totalPages}</span>
-          </span>
-          <button
-            type="button"
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className={`border-b px-2 py-1 text-sm ${lora.className} transition-colors
-                       ${currentPage === totalPages ? 'border-tan/40 text-warm-gray/60 cursor-not-allowed' : 'border-tan text-brown hover:border-olive'}`}
-            aria-label="Next page"
-          >
-            Next →
-          </button>
-        </div>
-      )}
 
       {/* Modal for enlarged image */}
       {selectedImage && (

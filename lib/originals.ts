@@ -225,10 +225,10 @@ const ORIGINAL_CHECKOUT_PRICING_QUERY = `
 `;
 
 const DEFAULT_EARLY_ACCESS_MESSAGE =
-  'This piece is currently in collector early access.';
+  'This piece is available to collect.';
 
 const DEFAULT_UPCOMING_MESSAGE =
-  'This piece is not available for purchase yet. Join my Collector List for early access updates.';
+  'This piece is not available for purchase yet. Join my Collector List to be notified when new collections are released.';
 
 const normalizeString = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
 

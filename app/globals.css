@@ -32,11 +32,26 @@ html, body {
   background-color: var(--bg-ivory);
   color: var(--text-brown);
   scroll-behavior: smooth;
+  overscroll-behavior-x: none;
   line-height: 1.6;
 }
 
 /* Add some vintage styling for forms */
 @layer components {
+  .artwork-frame {
+    overflow: hidden;
+  }
+
+  @media not all and (min-width: 640px) {
+    /* Paint past fractional pixel edges; the frame keeps the bleed inside the layout. */
+    .artwork-frame > .artwork-image {
+      width: calc(100% + 2px);
+      max-width: none;
+      margin-inline: -1px;
+      transform: translateZ(0);
+    }
+  }
+
   .vintage-input {
     @apply border border-tan rounded-md px-4 py-3 bg-paper text-brown;
     @apply focus:outline-none focus:ring-2 focus:ring-btn-brown focus:border-btn-brown;

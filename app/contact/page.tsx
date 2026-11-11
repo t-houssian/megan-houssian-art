@@ -60,8 +60,8 @@ export default function ContactPage() {
             </a>
           </p>
           <p className={`${lora.className} text-sm text-warm-gray mt-3`}>
-            Want first access to new originals and studio updates?{" "}
-            <Link href="/#collector-early-access" className="underline text-olive hover:text-brown transition-colors duration-200 font-medium">
+            Want an email when new collections are released?{" "}
+            <Link href="/#collector-list" className="underline text-olive hover:text-brown transition-colors duration-200 font-medium">
               Join my Collector List.
             </Link>
           </p>

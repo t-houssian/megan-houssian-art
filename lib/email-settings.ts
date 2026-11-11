@@ -186,7 +186,7 @@ const getDefaultEmailSettings = (): EmailSettings => ({
     preheader: "Welcome, and thank you for joining my Collector Circle.",
     title: 'Welcome to the Collector Circle',
     body:
-      "Welcome, and thank you for joining my Collector Circle. I'm so happy to have you!\n\nThis is where I'll share new work, first looks at upcoming paintings, and notes from the studio along the way. You'll be the first to hear about new collections, available pieces, and the ongoing process behind my journey.\n\nI'm so glad you're here, and I look forward to sharing my work with you!",
+      "Welcome, and thank you for joining my Collector Circle. I'm so happy to have you!\n\nThis is where I'll share new collections, available paintings, and occasional notes from the studio. When a new collection is released, I'll email you a link so you can explore the new work.\n\nI'm so glad you're here, and I look forward to sharing my work with you!",
     ctaLabel: 'Browse Originals',
     ctaHref: '/originals',
   },

@@ -132,7 +132,7 @@ export default defineType({
           children: [
             {
               _type: 'span',
-              text: "Whether you are drawn to the reverent landscapes, atmospheric skies, or the story of a happy mom who has found meaning in creation, welcome. If you'd like first access to new work, studio updates, and shop restocks, ",
+              text: "Whether you are drawn to the reverent landscapes, atmospheric skies, or the story of a happy mom who has found meaning in creation, welcome. If you'd like an email when new collections are released and occasional studio updates, ",
             },
             {
               _type: 'span',
@@ -144,7 +144,7 @@ export default defineType({
               text: ' so we can stay in touch.',
             },
           ],
-          markDefs: [{ _key: 'collector-link', _type: 'link', href: '/#collector-early-access' }],
+          markDefs: [{ _key: 'collector-link', _type: 'link', href: '/#collector-list' }],
         },
       ],
       validation: (rule) => rule.required().min(1),

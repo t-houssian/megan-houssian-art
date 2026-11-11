@@ -1,19 +1,19 @@
 // app/page.tsx
 import { Suspense } from 'react';
 import Hero from './components/Hero';
-import CollectorEarlyAccess from './components/CollectorEarlyAccess';
+import CollectorSignup from './components/CollectorSignup';
 import AboutSection from './components/AboutSection';
 import Collections from './components/Collections';
 import CommisionsLink from './commissions/CommissionsLink';
 import ContactLink from './contact/ContactLink';
-import { fetchOriginalsPageSettings } from '../lib/originals-page-settings';
+import { fetchCollectorSignupSettings } from '../lib/collector-signup-settings';
 import { fetchSiteSettings } from '../lib/site-settings';
 import { lora } from './fonts';
 
 export const revalidate = 60;
 
 export default async function Home() {
-  const settings = await fetchOriginalsPageSettings();
+  const collectorSettings = await fetchCollectorSignupSettings();
   const siteSettings = await fetchSiteSettings();
 
   return (
@@ -24,13 +24,7 @@ export default async function Home() {
           {siteSettings.homepageContent.homeCollectorIntro}
         </p>
       </section>
-      <CollectorEarlyAccess
-        heading={settings.earlyAccessHeading}
-        subhead={settings.homeCollectorSubhead}
-        buttonLabel={settings.earlyAccessButtonLabel}
-        finePrint={settings.earlyAccessFinePrint}
-      />
-      {/* Wrap Collections in Suspense because its client subtree uses useSearchParams */}
+      <CollectorSignup settings={collectorSettings} />
       <Suspense fallback={<div className="text-brown text-center py-8">Loading gallery…</div>}>
         <Collections />
       </Suspense>

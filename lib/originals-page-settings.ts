@@ -43,11 +43,11 @@ export type OriginalsPageSettings = {
 
 const DEFAULT_ORIGINALS_PAGE_SETTINGS: OriginalsPageSettings = {
   pageTitle: 'Originals',
-  pageIntro: 'Explore what is available now, what is coming next, and how to get first access.',
+  pageIntro: 'Explore available originals and find out when new collections are released.',
   availableOriginalsLabel: 'Available Originals',
   availableOriginalsAnnouncement: 'Texas Hill Country Landscapes Collection coming soon',
   availableOriginalsDescription:
-    'Join the Collector List below to get early access before this collection is released.',
+    'Join the Collector List to be notified when new collections are released.',
   availableOriginalsCardDescription:
     'Original works are released in curated drops. New pieces will appear here when they become available.',
   comingSoonImage: undefined,
@@ -55,8 +55,8 @@ const DEFAULT_ORIGINALS_PAGE_SETTINGS: OriginalsPageSettings = {
     createLinkedParagraphBlock({
       beforeLink: 'A new collection is coming soon! Join my ',
       linkText: 'collector list',
-      linkHref: '/#collector-early-access',
-      afterLink: ' for updates and first access to new originals.',
+      linkHref: '/#collector-list',
+      afterLink: ' to be notified when new collections are released.',
     }),
   ],
   showCollections: false,
@@ -65,14 +65,14 @@ const DEFAULT_ORIGINALS_PAGE_SETTINGS: OriginalsPageSettings = {
   showPrints: false,
   printsLabel: 'Prints',
   printsDescription: 'Museum-quality prints of select works.',
-  earlyAccessHeading: 'Collector Early Access',
+  earlyAccessHeading: 'Join My Collector List',
   homeCollectorSubhead:
-    "Join my Collector List and I'll email you a private early access link 24 hours before new originals go live.",
+    "Join my Collector List and I'll email you a link when a new collection is released.",
   earlyAccessSubhead:
-    "Join my Collector List and I'll email you a private early access link 24 hours before new originals go live.",
-  earlyAccessButtonLabel: 'Get early access',
+    "Join my Collector List and I'll email you a link when a new collection is released.",
+  earlyAccessButtonLabel: 'Notify me',
   earlyAccessFinePrint:
-    "By signing up, you'll receive emails about new paintings and releases. Unsubscribe anytime.",
+    'Get an email when a new collection is released. Unsubscribe anytime.',
 };
 
 type PartialOriginalsPageSettings =
@@ -121,14 +121,14 @@ const buildLegacyComingSoonContent = (
   const linkText = normalizeNonEmptyString(settings?.comingSoonLinkText, 'collector list');
   const afterLink = normalizeNonEmptyString(
     settings?.comingSoonTextAfterLink,
-    ' for updates and first access to new originals.'
+    ' to be notified when new collections are released.'
   );
 
   return [
     createLinkedParagraphBlock({
       beforeLink,
       linkText,
-      linkHref: '/#collector-early-access',
+      linkHref: '/#collector-list',
       afterLink,
     }),
   ];

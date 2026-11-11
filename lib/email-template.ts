@@ -211,7 +211,7 @@ export const getEmailLinks = (branding?: Pick<EmailBranding, 'footerLinks' | 'so
     homeUrl: baseUrl,
     originalsUrl: makeUrl(baseUrl, '/originals'),
     printsUrl: makeUrl(baseUrl, '/prints'),
-    collectorUrl: makeUrl(baseUrl, '/#collector-early-access'),
+    collectorUrl: makeUrl(baseUrl, '/#collector-list'),
     contactUrl: makeUrl(baseUrl, '/contact'),
     footerLinks: normalizeFooterLinks(baseUrl, branding?.footerLinks),
     socialLinks: normalizeSocialLinks(baseUrl, branding?.socialLinks),

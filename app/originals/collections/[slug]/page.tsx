@@ -1,27 +1,31 @@
-import { redirect } from 'next/navigation';
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import OriginalsGalleryPage from '../../../components/OriginalsGalleryPage';
+import { fetchOriginalCollections } from '../../../../lib/originals';
+import { originalCollectionHref } from '../../../../lib/original-collections';
 
-const ALLOWED_SOURCE_PATHS = new Set([
-  '/originals',
-  '/hidden-originals',
-  '/originals-collectors-access',
-]);
+export const revalidate = 0;
 
 type CollectionPageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ from?: string | string[] }>;
 };
 
-function getFirstParam(value?: string | string[]) {
-  return Array.isArray(value) ? value[0] : value;
+export async function generateMetadata({ params }: CollectionPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const collection = (await fetchOriginalCollections()).find((item) => item.slug.current === slug);
+  return { title: `${collection?.title ?? 'Originals'} | Megan Houssian Art` };
 }
 
-function getSourcePath(value?: string | string[]) {
-  const sourcePath = getFirstParam(value);
-  return sourcePath && ALLOWED_SOURCE_PATHS.has(sourcePath) ? sourcePath : undefined;
-}
+export default async function OriginalCollectionPage({ params }: CollectionPageProps) {
+  const { slug } = await params;
+  const collections = await fetchOriginalCollections();
+  const collection = collections.find((item) => item.slug.current === slug);
+  if (!collection) notFound();
 
-export default async function OriginalCollectionPage({ searchParams }: CollectionPageProps) {
-  const resolvedSearchParams = await searchParams;
-  const sourcePath = getSourcePath(resolvedSearchParams.from);
-  redirect(sourcePath ?? '/originals');
+  return (
+    <OriginalsGalleryPage
+      sourcePath={originalCollectionHref(collection.slug.current)}
+      collection={collection}
+    />
+  );
 }

@@ -9,6 +9,8 @@ import type { Metadata } from 'next';
 import { fetchSiteSettings } from '../lib/site-settings';
 import { urlFor } from '../sanity/lib/image';
 import type { SiteTheme } from '../sanity/lib/siteTheme';
+import { fetchOriginalCollections } from '../lib/originals';
+import { originalCollectionLinks } from '../lib/original-collections';
 
 const GOOGLE_ANALYTICS_ID = 'G-SWFSW2Z76Q';
 
@@ -92,7 +94,10 @@ function buildThemeVariables(theme: SiteTheme): Record<string, string> {
 }
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const siteSettings = await fetchSiteSettings();
+  const [siteSettings, collections] = await Promise.all([
+    fetchSiteSettings(),
+    fetchOriginalCollections().catch(() => []),
+  ]);
   const themeVariables = buildThemeVariables(siteSettings.theme);
 
   return (
@@ -112,7 +117,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         </Script>
       </head>
       <body className={`${lora.className} bg-ivory text-brown min-h-screen flex flex-col`}>
-        <NavBar />
+        <NavBar originalCollections={originalCollectionLinks(collections)} />
         <main className="flex-grow">{children}</main>
         <Footer content={siteSettings.footerContent} />
       </body>

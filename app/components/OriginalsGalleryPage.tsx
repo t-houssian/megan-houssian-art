@@ -1,27 +1,35 @@
 import { cormorant, lora } from '../fonts';
-import { fetchOriginals } from '../../lib/originals';
+import { fetchOriginals, type OriginalCollectionSummary } from '../../lib/originals';
+import { originalDetailHref } from '../../lib/original-collections';
 import OriginalArtworkCard from './OriginalArtworkCard';
 
 type OriginalsGalleryPageProps = {
-  sourcePath: '/originals' | '/hidden-originals' | '/originals-collectors-access';
+  sourcePath: string;
+  collection?: OriginalCollectionSummary;
 };
 
-function buildDetailHref(slug: string, sourcePath: OriginalsGalleryPageProps['sourcePath']) {
-  const params = new URLSearchParams({ from: sourcePath });
-  return `/originals/${slug}?${params.toString()}`;
-}
-
-export default async function OriginalsGalleryPage({ sourcePath }: OriginalsGalleryPageProps) {
-  const originals = await fetchOriginals(sourcePath === '/hidden-originals' ? 'hidden' : 'public');
+export default async function OriginalsGalleryPage({
+  sourcePath,
+  collection,
+}: OriginalsGalleryPageProps) {
+  const allOriginals = await fetchOriginals(sourcePath === '/hidden-originals' ? 'hidden' : 'public');
+  const originals = collection
+    ? allOriginals.filter((item) => item.collections.some((assigned) => assigned._id === collection._id))
+    : allOriginals;
 
   return (
     <section className="min-h-screen bg-ivory">
-      <div className="max-w-7xl mx-auto px-6 pt-8 pb-16">
+      {collection && <h1 className="sr-only">{collection.title}</h1>}
+      <div className="max-w-7xl mx-auto px-0 pt-8 pb-16 sm:px-6">
         {originals.length === 0 ? (
-          <div className="max-w-3xl mx-auto border-y border-tan/40 py-10 text-center">
-            <h2 className={`${cormorant.className} text-3xl text-brown mb-3`}>No originals are listed yet</h2>
+          <div className="max-w-3xl mx-auto border-y border-tan/40 px-6 py-10 text-center sm:px-0">
+            <h2 className={`${cormorant.className} text-3xl text-brown mb-3`}>
+              {collection ? 'No pieces are listed in this collection yet' : 'No originals are listed yet'}
+            </h2>
             <p className={`${lora.className} text-warm-gray`}>
-              {sourcePath === '/hidden-originals'
+              {collection
+                ? 'Please check back for new work.'
+                : sourcePath === '/hidden-originals'
                 ? 'Mark originals as hidden in Sanity and they will appear here automatically.'
                 : 'Add original artworks in Sanity and they will appear here automatically.'}
             </p>
@@ -32,7 +40,7 @@ export default async function OriginalsGalleryPage({ sourcePath }: OriginalsGall
               <OriginalArtworkCard
                 key={item._id}
                 item={item}
-                detailHref={buildDetailHref(item.slug.current, sourcePath)}
+                detailHref={originalDetailHref(item.slug.current, sourcePath)}
               />
             ))}
           </div>

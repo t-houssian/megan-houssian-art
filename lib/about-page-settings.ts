@@ -1,4 +1,5 @@
 import { sanityClient } from './sanity';
+import { normalizeCollectorBlockLinks, normalizeCollectorHref } from './collector-links';
 import {
   createLinkedParagraphBlock,
   createParagraphBlock,
@@ -48,9 +49,9 @@ const DEFAULT_ABOUT_CONTENT: SanityRichTextBlock[] = [
   ),
   createLinkedParagraphBlock({
     beforeLink:
-      "Whether you are drawn to the reverent landscapes, atmospheric skies, or the story of a happy mom who has found meaning in creation, welcome. If you'd like first access to new work, studio updates, and shop restocks, ",
+      "Whether you are drawn to the reverent landscapes, atmospheric skies, or the story of a happy mom who has found meaning in creation, welcome. If you'd like an email when new collections are released and occasional studio updates, ",
     linkText: 'join my email list here',
-    linkHref: '/#collector-early-access',
+    linkHref: '/#collector-list',
     afterLink: ' so we can stay in touch.',
   }),
 ];
@@ -121,10 +122,12 @@ const buildLegacyAboutContent = (settings: LegacyAboutPageSettingsFields | null)
   );
   const closingPrefix = normalizeNonEmptyString(
     settings?.closingPrefix,
-    "Whether you are drawn to the reverent landscapes, atmospheric skies, or the story of a happy mom who has found meaning in creation, welcome. If you'd like first access to new work, studio updates, and shop restocks, "
+    "Whether you are drawn to the reverent landscapes, atmospheric skies, or the story of a happy mom who has found meaning in creation, welcome. If you'd like an email when new collections are released and occasional studio updates, "
   );
   const closingLinkText = normalizeNonEmptyString(settings?.closingLinkText, 'join my email list here');
-  const closingLinkHref = normalizeNonEmptyString(settings?.closingLinkHref, '/#collector-early-access');
+  const closingLinkHref = normalizeCollectorHref(
+    normalizeNonEmptyString(settings?.closingLinkHref, '/#collector-list')
+  );
   const closingSuffix = normalizeNonEmptyString(settings?.closingSuffix, ' so we can stay in touch.');
 
   return [
@@ -167,7 +170,7 @@ export async function fetchAboutPageSettings(): Promise<AboutPageSettings> {
     return {
       pageTitle: normalizeNonEmptyString(settings?.pageTitle, DEFAULT_ABOUT_PAGE_SETTINGS.pageTitle),
       aboutPageImage: settings?.aboutPageImage ?? legacyImageSettings?.aboutPageImage,
-      content: normalizeBlocks(settings?.content, buildLegacyAboutContent(settings)),
+      content: normalizeCollectorBlockLinks(normalizeBlocks(settings?.content, buildLegacyAboutContent(settings))),
     };
   } catch (error) {
     console.error('Failed to load about page settings from Sanity', error);

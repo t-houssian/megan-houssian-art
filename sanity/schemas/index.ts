@@ -10,5 +10,6 @@ import emailSettings from './emailSettings'
 import siteSettings from './siteSettings'
 import originalCollection from './originalCollection'
 import originalOrder from './originalOrder'
+import collectorSignupSettings from './collectorSignupSettings'
 
-export default [ siteSettings, emailSettings, gallery, galleryOrder, heroSettings, aboutPageSettings, originalsPageSettings, commissionsPageSettings, originalOrder, originalCollection, original, print ]
+export default [ siteSettings, collectorSignupSettings, emailSettings, gallery, galleryOrder, heroSettings, aboutPageSettings, originalsPageSettings, commissionsPageSettings, originalOrder, originalCollection, original, print ]

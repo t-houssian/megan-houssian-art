@@ -182,7 +182,7 @@ export default defineType({
           title: 'Button Link',
           type: 'string',
           initialValue: DEFAULT_HERO_CTA.href,
-          description: 'Use an internal path like /originals or /#collector-early-access.',
+          description: 'Use an internal path like /originals or /#collector-list.',
           hidden: ({ parent }) => parent?.enabled === false,
           validation: (rule) =>
             rule.custom((value) => {

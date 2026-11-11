@@ -3,20 +3,11 @@ import ArtworkGallery from "../../components/ArtworkGallery";
 import PurchaseSection from "../../components/PurchaseSection";
 import Link from "next/link";
 import { cormorant, lora } from "../../fonts";
-import { fetchOriginalBySlug } from "../../../lib/originals";
+import { fetchOriginalBySlug, fetchOriginalCollections } from "../../../lib/originals";
+import { originalBackHref, originalCollectionLinks, originalSlugFromParam } from "../../../lib/original-collections";
 import { urlFor } from "../../../sanity/lib/image";
 
 export const revalidate = 0;
-
-const ALLOWED_BACK_LINKS = new Set([
-  '/originals',
-  '/hidden-originals',
-  '/originals-collectors-access',
-]);
-
-function isAllowedBackHref(href: string) {
-  return ALLOWED_BACK_LINKS.has(href);
-}
 
 // Instead of typing props directly, we accept props as unknown and then assert its type.
 export default async function OriginalDetailPage({
@@ -27,14 +18,18 @@ export default async function OriginalDetailPage({
   searchParams: Promise<{ from?: string | string[] }>;
 }) {
   const { slug: rawSlug } = await params;
+  const slug = originalSlugFromParam(rawSlug);
   const resolvedSearchParams = await searchParams;
-  const slugParam = rawSlug;
-  const slug = decodeURIComponent(slugParam);
-  const artwork = await fetchOriginalBySlug(slug);
+  const [artwork, collections] = await Promise.all([
+    fetchOriginalBySlug(slug),
+    fetchOriginalCollections(),
+  ]);
   const fromParam = Array.isArray(resolvedSearchParams.from)
     ? resolvedSearchParams.from[0]
     : resolvedSearchParams.from;
-  const backHref = fromParam && isAllowedBackHref(fromParam) ? fromParam : '/originals';
+  const collectionLinks = originalCollectionLinks(collections);
+  const backHref = originalBackHref(fromParam, collectionLinks, artwork?.collections ?? [], artwork?.hiddenOriginal);
+  const backCollection = collectionLinks.find((collection) => collection.href === backHref);
 
   if (!artwork) {
     return (
@@ -56,7 +51,7 @@ export default async function OriginalDetailPage({
             <svg className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
-            <span>Back to Gallery</span>
+            <span>{backCollection ? `Back to ${backCollection.label}` : 'Back to Gallery'}</span>
           </Link>
         </div>
 

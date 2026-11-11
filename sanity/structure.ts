@@ -2,6 +2,7 @@ import type {StructureResolver} from 'sanity/structure'
 
 const singletonTypes = new Set([
   'siteSettings',
+  'collectorSignupSettings',
   'heroSettings',
   'aboutPageSettings',
   'originalsPageSettings',
@@ -26,6 +27,14 @@ export const structure: StructureResolver = (S) =>
           S.document()
             .schemaType('siteSettings')
             .documentId('siteSettings')
+        ),
+      S.listItem()
+        .title('Collector Signup')
+        .id('collectorSignupSettings')
+        .child(
+          S.document()
+            .schemaType('collectorSignupSettings')
+            .documentId('collectorSignupSettings')
         ),
       S.listItem()
         .title('Email Settings')

@@ -13,7 +13,7 @@ export default function CallToAction() {
           Stay Connected
         </h2>
         <p className={`text-[var(--text-brown)] mb-8 ${lora.className}`}>
-          Be the first to know about new artwork, upcoming exhibitions, and exclusive offers.
+          Join the Collector List to receive a link when new collections are released.
         </p>
         <form 
           onSubmit={(e) => e.preventDefault()} 

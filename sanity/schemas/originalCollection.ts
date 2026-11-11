@@ -75,14 +75,11 @@ export default defineType({
   preview: {
     select: {
       title: 'title',
-      pieces: 'pieces',
     },
-    prepare({title, pieces}) {
-      const pieceCount = Array.isArray(pieces) ? pieces.length : 0
-
+    prepare({title}) {
       return {
         title: title || 'Untitled collection',
-        subtitle: `${pieceCount} ${pieceCount === 1 ? 'piece' : 'pieces'}`,
+        subtitle: 'Original artwork collection',
       }
     },
   },
