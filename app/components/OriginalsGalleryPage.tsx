@@ -40,10 +40,11 @@ export default async function OriginalsGalleryPage({
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {originals.map((item) => (
+            {originals.map((item, index) => (
               <OriginalArtworkCard
                 key={item._id}
                 item={item}
+                preload={index === 0}
                 detailHref={originalDetailHref(item.slug.current, sourcePath)}
               />
             ))}

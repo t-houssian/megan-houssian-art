@@ -1,7 +1,7 @@
 "use client";
 import React, { useCallback, useRef, useState } from "react";
-import Image from "next/image";
-import { bestQualityImageUrl, urlFor } from "../../sanity/lib/image";
+import ArtworkImage, { ArtworkEnlargement } from "./ArtworkImage";
+import { urlFor } from "../../sanity/lib/image";
 
 type GalleryImage = {
   asset: { _ref: string };
@@ -30,11 +30,8 @@ const SWIPE_DISTANCE_RATIO = 0.09;
 const MIN_SWIPE_DISTANCE = 26;
 const MAX_SWIPE_DISTANCE = 42;
 const SWIPE_VELOCITY_THRESHOLD = 0.24;
-const PAGE_IMAGE_WIDTH = 3600;
-const MODAL_IMAGE_WIDTH = 4200;
-const PAGE_IMAGE_QUALITY = 100;
-const MODAL_IMAGE_QUALITY = 100;
-const THUMBNAIL_IMAGE_QUALITY = 90;
+const PAGE_SIZES = "(min-width: 1280px) 701px, (min-width: 1024px) calc((100vw - 112px) * 0.6), calc(100vw - 48px)";
+const THUMBNAIL_SIZES = "(min-width: 640px) 96px, 80px";
 
 export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGalleryProps) {
   // Combine the main image and additional gallery images into one array.
@@ -219,25 +216,17 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
           className="relative h-full min-w-0"
           style={{ flex: `0 0 ${slideBasis}%` }}
         >
-          <Image
-            src={bestQualityImageUrl(
-              image,
-              variant === "modal" ? MODAL_IMAGE_WIDTH : PAGE_IMAGE_WIDTH,
-              variant === "modal" ? MODAL_IMAGE_QUALITY : PAGE_IMAGE_QUALITY
-            )}
+          <ArtworkImage
+            src={urlFor(image).url()}
             alt={`${title} image ${index + 1}`}
             fill
-            quality={variant === "modal" ? MODAL_IMAGE_QUALITY : PAGE_IMAGE_QUALITY}
             draggable={false}
             className="select-none object-contain"
-            sizes={
-              variant === "modal"
-                ? "92vw"
-                : "(min-width: 1280px) 40vw, (min-width: 1024px) 45vw, (min-width: 768px) 60vw, 90vw"
-            }
-            priority={variant === "page" && index === 0}
-            unoptimized
+            quality={index === selectedIndex ? 95 : 90}
+            sizes={index === selectedIndex ? PAGE_SIZES : THUMBNAIL_SIZES}
+            preload={variant === "page" && index === 0 && selectedIndex === 0}
           />
+          {variant === "modal" && index === selectedIndex && <ArtworkEnlargement image={image} />}
         </div>
       ))}
     </div>
@@ -299,13 +288,13 @@ export default function ArtworkGallery({ mainImage, gallery, title }: ArtworkGal
             } bg-ivory`}
             onClick={() => setSelectedIndex(index)}
           >
-            <Image
-              src={urlFor(img).width(400).fit("max").quality(THUMBNAIL_IMAGE_QUALITY).url()}
+            <ArtworkImage
+              src={urlFor(img).url()}
               alt={`${title} thumbnail ${index + 1}`}
               fill
-              quality={THUMBNAIL_IMAGE_QUALITY}
               className="object-contain"
-              sizes="(min-width: 640px) 96px, 80px"
+              quality={90}
+              sizes={THUMBNAIL_SIZES}
             />
           </div>
         ))}

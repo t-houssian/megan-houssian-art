@@ -1,17 +1,20 @@
-import Image from 'next/image';
+'use client';
+
+import { useState } from 'react';
+import ArtworkImage from './ArtworkImage';
 import Link from 'next/link';
 import { formatCurrency } from '../../lib/money';
 import type { OriginalArtworkSummary } from '../../lib/originals';
-import { bestQualityImageUrl, getImageAssetDimensions } from '../../sanity/lib/image';
+import { getImageAssetDimensions, urlFor } from '../../sanity/lib/image';
 import { cormorant, lora } from '../fonts';
 
 type OriginalArtworkCardProps = {
   item: OriginalArtworkSummary;
   detailHref: string;
+  preload?: boolean;
 };
 
-const CARD_IMAGE_WIDTH = 2400;
-const CARD_IMAGE_QUALITY = 100;
+const CARD_SIZES = '(min-width: 1280px) 390px, (min-width: 1024px) calc((100vw - 112px) / 3), (min-width: 640px) calc((100vw - 80px) / 2), 100vw';
 
 function formatPrice(price?: number) {
   if (!Number.isFinite(price) || !price || price <= 0) {
@@ -24,37 +27,52 @@ function formatPrice(price?: number) {
 export default function OriginalArtworkCard({
   item,
   detailHref,
+  preload,
 }: OriginalArtworkCardProps) {
+  const [loadAlternate, setLoadAlternate] = useState(false);
+  const [alternateReady, setAlternateReady] = useState(false);
   const hoverImage = item.hoverImage?.asset ? item.hoverImage : null;
   const imageDimensions = item.mainImage?.asset ? getImageAssetDimensions(item.mainImage) : undefined;
   const titleWithSize = item.artworkSize ? `${item.title}, ${item.artworkSize}` : item.title;
 
   return (
-    <Link href={detailHref} className="group block h-full">
+    <Link
+      href={detailHref}
+      className="group block h-full"
+      onPointerEnter={(event) => {
+        if (event.pointerType === 'mouse' && window.matchMedia('(min-width: 768px)').matches) {
+          setLoadAlternate(true);
+        }
+      }}
+      onFocus={(event) => {
+        if (event.currentTarget.matches(':focus-visible') && window.matchMedia('(min-width: 768px)').matches) {
+          setLoadAlternate(true);
+        }
+      }}
+    >
       <article className="h-full">
         {item.mainImage?.asset && (
           <div className="artwork-frame relative w-full bg-ivory sm:flex sm:h-96 sm:items-center sm:justify-center lg:h-[26rem]">
-            <Image
-              src={bestQualityImageUrl(item.mainImage, CARD_IMAGE_WIDTH, CARD_IMAGE_QUALITY)}
+            <ArtworkImage
+              src={urlFor(item.mainImage).url()}
               alt={item.title}
-              width={imageDimensions?.width ?? CARD_IMAGE_WIDTH}
-              height={imageDimensions?.height ?? CARD_IMAGE_WIDTH}
-              quality={CARD_IMAGE_QUALITY}
-              unoptimized
-              className={`artwork-image h-auto w-full transition-opacity duration-300 sm:h-full sm:object-contain ${
-                hoverImage ? 'md:group-hover:opacity-0' : ''
-              }`}
-              sizes="(min-width: 1280px) 28vw, (min-width: 640px) 44vw, 100vw"
+              width={imageDimensions?.width ?? 1200}
+              height={imageDimensions?.height ?? 1200}
+              preload={preload}
+              className="artwork-image h-auto w-full sm:h-full sm:object-contain"
+              sizes={CARD_SIZES}
             />
-            {hoverImage && (
-              <Image
-                src={bestQualityImageUrl(hoverImage, CARD_IMAGE_WIDTH, CARD_IMAGE_QUALITY)}
+            {hoverImage && loadAlternate && (
+              <ArtworkImage
+                src={urlFor(hoverImage).url()}
                 alt={`${item.title} alternate view`}
                 fill
-                quality={CARD_IMAGE_QUALITY}
-                unoptimized
-                className="hidden object-contain opacity-0 transition-opacity duration-300 md:block md:group-hover:opacity-100"
-                sizes="(min-width: 1280px) 28vw, (min-width: 640px) 44vw, 100vw"
+                loading="eager"
+                onLoad={() => setAlternateReady(true)}
+                className={`hidden bg-ivory object-contain opacity-0 transition-opacity duration-300 md:block ${
+                  alternateReady ? 'md:group-hover:opacity-100 md:group-focus-visible:opacity-100' : ''
+                }`}
+                sizes={CARD_SIZES}
               />
             )}
           </div>

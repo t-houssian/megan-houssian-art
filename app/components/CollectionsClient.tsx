@@ -1,33 +1,22 @@
 // components/CollectionsClient.tsx
 'use client';
 
-import Image from 'next/image';
+import ArtworkImage, { ArtworkEnlargement } from './ArtworkImage';
 import { useState } from 'react';
 import { cormorant, lora } from "../fonts";
-import { bestQualityImageUrl } from '../../sanity/lib/image';
+import { getImageAssetDimensions, urlFor } from '../../sanity/lib/image';
 import type { ArtPiece } from './Collections';
 
 type CollectionsClientProps = {
   artPieces: ArtPiece[];
 };
 
-const GALLERY_IMAGE_WIDTH = 2200;
-const GALLERY_MODAL_IMAGE_WIDTH = 4200;
-const GALLERY_IMAGE_QUALITY = 100;
-
-function getImageDimensions(piece: ArtPiece) {
-  const match = piece.mainImage?.asset?._ref?.match(/-(\d+)x(\d+)-/);
-  const width = match ? Number(match[1]) : 1200;
-  const height = match ? Number(match[2]) : 1200;
-
-  return {
-    width: Number.isFinite(width) && width > 0 ? width : 1200,
-    height: Number.isFinite(height) && height > 0 ? height : 1200,
-  };
-}
+const GALLERY_SIZES = '(min-width: 1280px) 395px, (min-width: 640px) calc((100vw - 96px) / 3), 100vw';
 
 export default function CollectionsClient({ artPieces }: CollectionsClientProps) {
   const [selectedImage, setSelectedImage] = useState<ArtPiece | null>(null);
+
+  const selectedDimensions = selectedImage?.mainImage?.asset && getImageAssetDimensions(selectedImage.mainImage);
 
   // Used to center only the final row in a 3-col grid
   const remainder = artPieces.length % 3;
@@ -48,6 +37,7 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
   <div className="grid grid-cols-1 sm:grid-cols-6 gap-8">
         {artPieces.length > 0 ? (
           artPieces.map((piece, idx) => {
+            const dimensions = piece.mainImage?.asset && getImageAssetDimensions(piece.mainImage);
             const lastIdx = artPieces.length - 1;
             let positionClass = '';
             if (remainder === 1 && idx === lastIdx) {
@@ -65,15 +55,13 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
                 onClick={() => handleImageClick(piece)}
               >
               {piece.mainImage?.asset && (
-                <Image
-                  src={bestQualityImageUrl(piece.mainImage, GALLERY_IMAGE_WIDTH, GALLERY_IMAGE_QUALITY)}
+                <ArtworkImage
+                  src={urlFor(piece.mainImage).url()}
                   alt={piece.title || 'Gallery image'}
-                  width={getImageDimensions(piece).width}
-                  height={getImageDimensions(piece).height}
-                  quality={GALLERY_IMAGE_QUALITY}
-                  unoptimized
+                  width={dimensions?.width ?? 1200}
+                  height={dimensions?.height ?? 1200}
                   className="artwork-image h-auto w-full"
-                  sizes="(min-width: 1024px) 30vw, (min-width: 640px) 44vw, 100vw"
+                  sizes={GALLERY_SIZES}
                 />
               )}
               {/* Title removed per request; images only */}
@@ -94,7 +82,10 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
           onClick={handleCloseModal}
         >
           <div
-            className="relative inline-block"
+            className="relative max-w-[92vw]"
+            style={selectedDimensions && {
+              width: `min(${selectedDimensions.width}px, ${88 * selectedDimensions.width / selectedDimensions.height}vh)`,
+            }}
             onClick={(event) => event.stopPropagation()}
           >
             <button 
@@ -109,19 +100,17 @@ export default function CollectionsClient({ artPieces }: CollectionsClientProps)
               </svg>
             </button>
             {selectedImage.mainImage?.asset && (
-              <Image
-                src={bestQualityImageUrl(
-                  selectedImage.mainImage,
-                  GALLERY_MODAL_IMAGE_WIDTH,
-                  GALLERY_IMAGE_QUALITY
-                )}
-                alt={selectedImage.title || 'Gallery image enlarged'}
-                width={getImageDimensions(selectedImage).width}
-                height={getImageDimensions(selectedImage).height}
-                quality={GALLERY_IMAGE_QUALITY}
-                unoptimized
-                className="block h-auto max-h-[88vh] w-auto max-w-[92vw] object-contain"
-              />
+              <>
+                <ArtworkImage
+                  src={urlFor(selectedImage.mainImage).url()}
+                  alt={selectedImage.title || 'Gallery image enlarged'}
+                  width={selectedDimensions?.width ?? 1200}
+                  height={selectedDimensions?.height ?? 1200}
+                  sizes={GALLERY_SIZES}
+                  className="block h-auto max-h-[88vh] w-full object-contain"
+                />
+                <ArtworkEnlargement image={selectedImage.mainImage} />
+              </>
             )}
           </div>
         </div>

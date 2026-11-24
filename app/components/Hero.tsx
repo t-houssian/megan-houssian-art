@@ -1,6 +1,6 @@
 // components/Hero.tsx
 import type { CSSProperties } from 'react';
-import Image from 'next/image';
+import { getImageProps } from 'next/image';
 import Link from 'next/link';
 import { sanityClient } from '../../lib/sanity';
 import {
@@ -8,7 +8,7 @@ import {
   HERO_CTA_COLOR_SCHEMES,
   type HeroCtaColorSchemeKey,
 } from '../../sanity/lib/heroCtaColorSchemes';
-import { getOriginalImageUrl, urlFor } from '../../sanity/lib/image';
+import { getImageAssetDimensions, sanityImageLoader, urlFor } from '../../sanity/lib/image';
 import { lora } from '../fonts';
 
 const HERO_COLOR_PRESETS = {
@@ -279,12 +279,36 @@ async function fetchHeroSettings(): Promise<HeroSettings | null> {
 export default async function Hero() {
   const heroSettings = await fetchHeroSettings();
 
-  const heroImageUrl = heroSettings?.backgroundImage?.asset
-    ? getOriginalImageUrl(heroSettings.backgroundImage) ??
-      urlFor(heroSettings.backgroundImage).fit('max').quality(100).format('jpg').url()
-    : '/images/blueBG.jpg';
+  const image = heroSettings?.backgroundImage;
+  const heroImageUrl = image?.asset ? urlFor(image).url() : '/images/blueBG.jpg';
+  const dimensions = image?.asset ? getImageAssetDimensions(image) : undefined;
+  const aspectRatio = dimensions ? dimensions.width / dimensions.height : 3 / 4;
 
-  const heroAlt = heroSettings?.backgroundImage?.alt?.trim() || 'Hero Image';
+  const heroAlt = image?.alt?.trim() || 'Hero Image';
+  const { props: heroProps } = getImageProps({
+    src: heroImageUrl,
+    alt: heroAlt,
+    fill: true,
+    loading: 'eager',
+    fetchPriority: 'high',
+    quality: 90,
+    loader: image?.asset ? sanityImageLoader : undefined,
+    sizes: `max(100vw, ${(80 * aspectRatio).toFixed(2)}vh)`,
+    className: 'object-cover object-center',
+  });
+
+  // At 4:3 or wider, the 80vh hero can only show a central strip of a portrait.
+  // Crop that strip at the CDN and let object-cover finish the exact framing.
+  let landscapeSrcSet: string | undefined;
+  if (image?.asset && dimensions && aspectRatio < 5 / 3) {
+    const height = Math.round(dimensions.width * 3 / 5);
+    const top = Math.round((dimensions.height - height) / 2);
+    const src = urlFor(image).rect(0, top, dimensions.width, height).url();
+    landscapeSrcSet = getImageProps({
+      src, alt: heroAlt, fill: true, sizes: '100vw', loader: sanityImageLoader, quality: 90,
+    }).props.srcSet;
+  }
+
   const cta = heroSettings?.cta;
   const shouldShowCta = Boolean(cta?.enabled);
   const ctaLabel = normalizeString(cta?.label, DEFAULT_HERO_CTA.label);
@@ -311,17 +335,10 @@ export default async function Hero() {
 
   return (
     <section className="relative w-full h-[80vh] overflow-hidden">
-      <Image
-        src={heroImageUrl}
-        alt={heroAlt}
-        fill
-        quality={100}
-        sizes="100vw"
-        unoptimized
-        style={{ objectFit: 'cover' }}
-        className="object-cover object-center"
-        priority
-      />
+      <picture>
+        {landscapeSrcSet && <source media="(min-aspect-ratio: 4/3)" sizes="100vw" srcSet={landscapeSrcSet} />}
+        <img {...heroProps} alt={heroAlt} />
+      </picture>
       <div className="absolute inset-0 bg-hero-overlay/40"></div>
       {shouldShowCta && (
         <div

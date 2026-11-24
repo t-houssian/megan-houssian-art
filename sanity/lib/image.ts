@@ -1,5 +1,6 @@
 import createImageUrlBuilder from '@sanity/image-url'
-import { SanityImageSource } from "@sanity/image-url/lib/types/types";
+import type { ImageLoaderProps } from "next/image";
+import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 
 import { dataset, projectId } from '../env'
 
@@ -21,33 +22,29 @@ function getAssetRef(source: unknown) {
   return typeof ref === 'string' ? ref : undefined
 }
 
-export function getOriginalImageUrl(source: SanityImageSource) {
-  const ref = getAssetRef(source)
-  const match = ref?.match(SANITY_IMAGE_REF_PATTERN)
-  if (!match) return undefined
-
-  const [, assetId, width, height, extension] = match
-  return `https://cdn.sanity.io/images/${projectId}/${dataset}/${assetId}-${width}x${height}.${extension}`
-}
-
 export function getImageAssetDimensions(source: SanityImageSource) {
   const ref = getAssetRef(source)
   const match = ref?.match(SANITY_IMAGE_REF_PATTERN)
   if (!match) return undefined
 
+  const width = Number(match[2])
+  const height = Number(match[3])
+  const crop = typeof source === 'object' && 'crop' in source ? source.crop : undefined
+  if (!crop) return { width, height }
+
   return {
-    width: Number(match[2]),
-    height: Number(match[3]),
+    width: Math.round(width * (1 - crop.left - crop.right)),
+    height: Math.round(height * (1 - crop.top - crop.bottom)),
   }
 }
 
-export function bestQualityImageUrl(source: SanityImageSource, width: number, quality = 100) {
-  const originalUrl = getOriginalImageUrl(source)
-  const dimensions = getImageAssetDimensions(source)
-
-  if (originalUrl && dimensions && dimensions.width <= width) {
-    return originalUrl
-  }
-
-  return urlFor(source).width(width).fit('max').quality(quality).url()
+// Keep the Studio crop already present in src. Let the browser pick the width
+// and Sanity encode it once in a format supported by that browser.
+export function sanityImageLoader({ src, width, quality }: ImageLoaderProps) {
+  const url = new URL(src);
+  url.searchParams.set('w', String(width));
+  url.searchParams.set('q', String(quality ?? 90));
+  url.searchParams.set('fit', 'max');
+  url.searchParams.set('auto', 'format');
+  return url.href;
 }
